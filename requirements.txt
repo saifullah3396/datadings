@@ -1,0 +1,4 @@
+six
+numpy
+scipy
+msgpack-python>=0.4.8
