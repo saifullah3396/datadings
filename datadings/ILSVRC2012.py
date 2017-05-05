@@ -7,6 +7,7 @@ import codecs
 import csv
 import io
 from multiprocessing.dummy import Pool as ThreadPool
+from multiprocessing import cpu_count
 import threading as th
 
 from PIL import Image
@@ -68,7 +69,7 @@ def write_ilsvrc2012(indir, outdir):
                 with lock:
                     packer.write(jpegdata, image)
                 printer.update()
-            pool = ThreadPool(64)
+            pool = ThreadPool(cpu_count()*4)
             result = pool.map_async(write_image, gen)
             while not result.ready():
                 result.wait(1000)
