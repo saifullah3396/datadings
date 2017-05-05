@@ -46,7 +46,7 @@ class Writer(object):
 class ImageWriter(Writer):
     def write(self, jpegdata, image):
         self._indices[image.filename] = self._outfile.tell()
-        Writer._write(self, (image, jpegdata))
+        Writer._write(self, (jpegdata, image))
 
 
 def _load_index(path):
