@@ -13,10 +13,6 @@ from datadings.sets.ILSVRC2012 import ILSVRC2012Image
 from datadings.tools import FrequencyPrinter
 
 
-class ILSVRC2012Writer(ImageWriter):
-    pass
-
-
 def __yield_ilsvrc2012_metadata(txtpath):
     import codecs
     import csv
@@ -37,7 +33,7 @@ def write_ilsvrc2012(indir, outdir):
         sys.stdout.flush()
         gen = __yield_ilsvrc2012_metadata(pt.join(indir, name + '.txt'))
         lock = th.Lock()
-        with ILSVRC2012Writer(pt.join(outdir, name + '.msgpack')) as packer:
+        with ImageWriter(pt.join(outdir, name + '.msgpack')) as packer:
             def write_image(image):
                 path = pt.join(datadir, image.filename.replace('/', os.sep))
                 with io.FileIO(path) as f:

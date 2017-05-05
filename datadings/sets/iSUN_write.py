@@ -12,10 +12,6 @@ from datadings.sets.iSUN import iSUNExperiment
 from datadings.sets.iSUN import iSUNImage
 
 
-class ISUNWriter(ImageWriter):
-    pass
-
-
 def __convert_image(entry):
     image = text_type(entry[0][0][0])
     if not image.endswith('.jpg'):
@@ -58,7 +54,7 @@ def write_isun(indir, outdir):
         for name in ('training', 'validation', 'testing'):
             print('%s...' % name, end=' ')
             sys.stdout.flush()
-            with ISUNWriter(pt.join(outdir, name + '.msgpack')) as packer:
+            with ImageWriter(pt.join(outdir, name + '.msgpack')) as packer:
                 for image in __yield_isun_metadata(pt.join(indir, name + '.mat')):
                     __write_image(image, imagezip, packer)
             print('done.')
