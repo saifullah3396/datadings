@@ -10,6 +10,7 @@ from six import text_type
 from datadings.writer import ImageWriter
 from datadings.sets.iSUN import iSUNExperiment
 from datadings.sets.iSUN import iSUNImage
+from datadings.tools import FrequencyPrinter
 
 
 def __convert_image(entry):
@@ -52,12 +53,14 @@ def __write_image(image, imagezip, packer):
 def write_isun(indir, outdir):
     with zipfile.ZipFile(pt.join(indir, 'image.zip')) as imagezip:
         for name in ('training', 'validation', 'testing'):
-            print('%s...' % name, end=' ')
+            print(name)
+            printer = FrequencyPrinter()
             sys.stdout.flush()
             with ImageWriter(pt.join(outdir, name + '.msgpack')) as packer:
                 for image in __yield_isun_metadata(pt.join(indir, name + '.mat')):
                     __write_image(image, imagezip, packer)
-            print('done.')
+                    printer.update()
+            print()
 
 
 def main():

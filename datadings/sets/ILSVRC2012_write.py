@@ -28,6 +28,7 @@ def __get_dimensions(jpegdata):
 
 def write_ilsvrc2012(indir, outdir):
     for name in ('train', 'val'):
+        print(name)
         printer = FrequencyPrinter()
         datadir = pt.join(indir, name)
         sys.stdout.flush()
@@ -50,7 +51,7 @@ def write_ilsvrc2012(indir, outdir):
             result = pool.map_async(write_image, gen)
             while not result.ready():
                 result.wait(1000)
-        print('done.')
+        print()
 
 
 def main():
