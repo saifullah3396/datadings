@@ -1,37 +1,15 @@
-from __future__ import print_function, division
+from __future__ import print_function
 
-import zipfile
 import os.path as pt
-from collections import namedtuple
+import sys
+import zipfile
 
-from six import text_type
 import numpy as np
-import scipy.io as sio
+from six import text_type
 
-from datadings import ImageWriter
-from datadings import Reader
-
-
-iSUNImage = namedtuple(
-    'iSUNImage',
-    ('experiments', 'dimensions', 'filename', 'scenecategory')
-)
-iSUNExperiment = namedtuple(
-    'iSUNExperiment',
-    ('locations', 'timestamps', 'fixations')
-)
-
-
-def convert_isun(item):
-    jpegdata, image = item
-    image = iSUNImage(*image)
-    for i, experiment in enumerate(image.experiments):
-        image.experiments[i] = iSUNExperiment(*experiment)
-    return jpegdata, image
-
-
-class ISUNReader(Reader):
-    _convert = staticmethod(convert_isun)
+from datadings.writer import ImageWriter
+from datadings.sets.iSUN import iSUNExperiment
+from datadings.sets.iSUN import iSUNImage
 
 
 class ISUNWriter(ImageWriter):
@@ -59,8 +37,9 @@ def __convert_image(entry):
     return iSUNImage(experiments, resolution, image, scenecategory)
 
 
-def yield_isun_metadata(matpath):
-    data = sio.loadmat(matpath)
+def __yield_isun_metadata(matpath):
+    import scipy.io
+    data = scipy.io.loadmat(matpath)
     valid = {k: v for k, v in data.items() if not k.startswith('__')}
     if len(valid) > 1:
         raise ValueError('too many keys: %s' % ', '.join(valid))
@@ -75,13 +54,12 @@ def __write_image(image, imagezip, packer):
 
 
 def write_isun(indir, outdir):
-    import sys
     with zipfile.ZipFile(pt.join(indir, 'image.zip')) as imagezip:
         for name in ('training', 'validation', 'testing'):
             print('%s...' % name, end=' ')
             sys.stdout.flush()
             with ISUNWriter(pt.join(outdir, name + '.msgpack')) as packer:
-                for image in yield_isun_metadata(pt.join(indir, name + '.mat')):
+                for image in __yield_isun_metadata(pt.join(indir, name + '.mat')):
                     __write_image(image, imagezip, packer)
             print('done.')
 

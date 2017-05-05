@@ -1,4 +1,5 @@
 six
 numpy
 scipy
+pillow
 msgpack-python>=0.4.8

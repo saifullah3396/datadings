@@ -1,43 +1,25 @@
-from __future__ import print_function, division
-
+import sys
+import threading as th
 import os
 import os.path as pt
-from collections import namedtuple
-import codecs
-import csv
 import io
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
-import threading as th
 
 from PIL import Image
 
-from datadings import ImageWriter
-from datadings import Reader
+from datadings.writer import ImageWriter
+from datadings.sets.ILSVRC2012 import ILSVRC2012Image
 from datadings.tools import FrequencyPrinter
-
-
-ILSVRC2012Image = namedtuple(
-    'ILSVRC2012Image',
-    ('label', 'dimensions', 'filename')
-)
-
-
-def convert_ilsvrc2012(item):
-    jpegdata, image = item
-    image = ILSVRC2012Image(*image)
-    return jpegdata, image
-
-
-class ILSVRC2012Reader(Reader):
-    _convert = staticmethod(convert_ilsvrc2012)
 
 
 class ILSVRC2012Writer(ImageWriter):
     pass
 
 
-def yield_ilsvrc2012_metadata(txtpath):
+def __yield_ilsvrc2012_metadata(txtpath):
+    import codecs
+    import csv
     with codecs.open(txtpath, encoding='utf8') as f:
         for path, label in csv.reader(f, delimiter=' '):
             yield ILSVRC2012Image(int(label), (0, 0),  path)
@@ -49,12 +31,11 @@ def __get_dimensions(jpegdata):
 
 
 def write_ilsvrc2012(indir, outdir):
-    import sys
     for name in ('train', 'val'):
         printer = FrequencyPrinter()
         datadir = pt.join(indir, name)
         sys.stdout.flush()
-        gen = yield_ilsvrc2012_metadata(pt.join(indir, name + '.txt'))
+        gen = __yield_ilsvrc2012_metadata(pt.join(indir, name + '.txt'))
         lock = th.Lock()
         with ILSVRC2012Writer(pt.join(outdir, name + '.msgpack')) as packer:
             def write_image(image):
