@@ -68,7 +68,7 @@ def write_ilsvrc2012(indir, outdir):
                 with lock:
                     packer.write(jpegdata, image)
                 printer.update()
-            pool = ThreadPool(128)
+            pool = ThreadPool(64)
             result = pool.map_async(write_image, gen)
             while not result.ready():
                 result.wait(1000)
@@ -93,7 +93,10 @@ def main():
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_ilsvrc2012(args.indir, outdir)
+    try:
+        write_ilsvrc2012(args.indir, outdir)
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == '__main__':
