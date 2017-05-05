@@ -15,7 +15,7 @@ def _default(o):
 class Writer(object):
     def __init__(self, outfile):
         self._path = outfile
-        self._outfile = io.FileIO(outfile, 'wb')
+        self._outfile = io.open(outfile, 'wb', 1024*1024)
         self._packer = msgpack.Packer(
             default=_default, use_bin_type=True, encoding='utf8'
         )
