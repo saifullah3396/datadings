@@ -72,7 +72,6 @@ def yield_isun_metadata(matpath):
 def __write_image(image, imagezip, packer):
     jpegdata = imagezip.read(pt.join('images', image.filename))
     packer.write(jpegdata, image)
-    pass
 
 
 def write_isun(indir, outdir):
