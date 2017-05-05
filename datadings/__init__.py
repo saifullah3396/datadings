@@ -43,6 +43,12 @@ class Writer(object):
         raise NotImplementedError()
 
 
+class ImageWriter(Writer):
+    def write(self, jpegdata, image):
+        self._indices[image.filename] = self._outfile.tell()
+        Writer._write(self, (image, jpegdata))
+
+
 def _load_index(path):
     try:
         with io.FileIO(path, 'rb') as f:

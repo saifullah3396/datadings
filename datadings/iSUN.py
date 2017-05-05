@@ -8,7 +8,7 @@ from six import text_type
 import numpy as np
 import scipy.io as sio
 
-from datadings import Writer
+from datadings import ImageWriter
 from datadings import Reader
 
 
@@ -34,10 +34,8 @@ class ISUNReader(Reader):
     _convert = convert_isun
 
 
-class ISUNWriter(Writer):
-    def write(self, jpegdata, image):
-        self._indices[image.filename] = self._outfile.tell()
-        Writer._write(self, (image, jpegdata))
+class ISUNWriter(ImageWriter):
+    pass
 
 
 def __write_image(image, imagezip, packer):
@@ -67,8 +65,8 @@ def __convert_image(entry):
     return iSUNImage(experiments, resolution, image, scenecategory)
 
 
-def yield_isun_metadata(path):
-    data = sio.loadmat(path)
+def yield_isun_metadata(matpath):
+    data = sio.loadmat(matpath)
     valid = {k: v for k, v in data.items() if not k.startswith('__')}
     if len(valid) > 1:
         raise ValueError('too many keys: %s' % ', '.join(valid))
