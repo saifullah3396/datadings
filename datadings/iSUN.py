@@ -22,7 +22,31 @@ iSUNExperiment = namedtuple(
 )
 
 
-def _convert_image(entry):
+def convert_isun(item):
+    jpegdata, image = item
+    image = iSUNImage(*image)
+    for i, experiment in enumerate(image.experiments):
+        image.experiments[i] = iSUNExperiment(*experiment)
+    return jpegdata, image
+
+
+class ISUNReader(Reader):
+    _convert = convert_isun
+
+
+class ISUNWriter(Writer):
+    def write(self, jpegdata, image):
+        self._indices[image.filename] = self._outfile.tell()
+        Writer._write(self, (image, jpegdata))
+
+
+def __write_image(image, imagezip, packer):
+    jpegdata = imagezip.read(pt.join('images', image.filename))
+    packer.write(jpegdata, image)
+    pass
+
+
+def __convert_image(entry):
     image = text_type(entry[0][0][0])
     if not image.endswith('.jpg'):
         image += '.jpg'
@@ -50,29 +74,7 @@ def yield_isun_metadata(path):
         raise ValueError('too many keys: %s' % ', '.join(valid))
     images = list(valid.values())[0]
     for entry in images:
-        yield _convert_image(entry)
-
-
-class ISUNWriter(Writer):
-    def write(self, jpegdata, image):
-        self._indices[image.filename] = self._outfile.tell()
-        Writer._write(self, (image, jpegdata))
-        pass
-
-
-def _write_image(image, imagezip, packer):
-    jpegdata = imagezip.read(pt.join('images', image.filename))
-    packer.write(jpegdata, image)
-    pass
-
-
-class ISUNReader(Reader):
-    def _convert(self, item):
-        jpegdata, image = item
-        image = iSUNImage(*image)
-        for i, experiment in enumerate(image.experiments):
-            image.experiments[i] = iSUNExperiment(*experiment)
-        return jpegdata, image
+        yield __convert_image(entry)
 
 
 def write_isun(indir, outdir):
@@ -83,7 +85,7 @@ def write_isun(indir, outdir):
             sys.stdout.flush()
             with ISUNWriter(pt.join(outdir, name + '.msgpack')) as packer:
                 for image in yield_isun_metadata(pt.join(indir, name + '.mat')):
-                    _write_image(image, imagezip, packer)
+                    __write_image(image, imagezip, packer)
             print('done.')
 
 
