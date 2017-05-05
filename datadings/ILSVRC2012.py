@@ -30,7 +30,7 @@ def convert_ilsvrc2012(item):
 
 
 class ILSVRC2012Reader(Reader):
-    _convert = convert_ilsvrc2012
+    _convert = staticmethod(convert_ilsvrc2012)
 
 
 class ILSVRC2012Writer(ImageWriter):

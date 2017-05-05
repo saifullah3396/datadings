@@ -31,7 +31,7 @@ def convert_isun(item):
 
 
 class ISUNReader(Reader):
-    _convert = convert_isun
+    _convert = staticmethod(convert_isun)
 
 
 class ISUNWriter(ImageWriter):
