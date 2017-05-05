@@ -38,12 +38,6 @@ class ISUNWriter(ImageWriter):
     pass
 
 
-def __write_image(image, imagezip, packer):
-    jpegdata = imagezip.read(pt.join('images', image.filename))
-    packer.write(jpegdata, image)
-    pass
-
-
 def __convert_image(entry):
     image = text_type(entry[0][0][0])
     if not image.endswith('.jpg'):
@@ -73,6 +67,12 @@ def yield_isun_metadata(matpath):
     images = list(valid.values())[0]
     for entry in images:
         yield __convert_image(entry)
+
+
+def __write_image(image, imagezip, packer):
+    jpegdata = imagezip.read(pt.join('images', image.filename))
+    packer.write(jpegdata, image)
+    pass
 
 
 def write_isun(indir, outdir):
