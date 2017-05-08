@@ -1,4 +1,5 @@
 import io
+import hashlib
 from collections import OrderedDict
 
 import msgpack
@@ -15,6 +16,7 @@ def _load_index(path):
 
 class Reader(object):
     def __init__(self, infile):
+        self._path = infile
         self._infile = io.FileIO(infile, 'rb')
         self._name_index = _load_index(infile + '.index')
         self._name_to_index = {f: i for i, f in enumerate(self._name_index)}
@@ -58,6 +60,19 @@ class Reader(object):
         self._infile.seek(self._name_index[name], 0)
         self._i = self._name_to_index[name]
         self._unpacker = msgpack.Unpacker(self._infile, encoding='utf8')
+
+    def verify(self, read_size=64*1024):
+        with io.FileIO(self._path + '.md5', 'rb') as f:
+            expected_hash = f.read()
+        with io.FileIO(self._path, 'rb') as f:
+            md5 = hashlib.md5()
+            while 1:
+                data = f.read(read_size)
+                if not data:
+                    break
+                md5.update(data)
+            file_hash = md5.hexdigest()
+        return expected_hash == file_hash
 
     def _convert(self, item):
         raise NotImplementedError()

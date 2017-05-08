@@ -1,4 +1,5 @@
 import io
+import hashlib
 from collections import OrderedDict
 
 import numpy as np
@@ -19,6 +20,7 @@ class Writer(object):
         )
         self._indices = OrderedDict()
         self.written = 0
+        self._hash = hashlib.md5()
 
     def __enter__(self):
         return self
@@ -26,11 +28,15 @@ class Writer(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._outfile.flush()
         self._outfile.close()
-        with io.FileIO(self._path + '.index', 'w') as f:
+        with io.FileIO(self._path + '.md5', 'wb') as f:
+            f.write(self._hash.hexdigest())
+        with io.FileIO(self._path + '.index', 'wb') as f:
             msgpack.pack(self._indices, f)
 
     def _write(self, data):
-        self._outfile.write(self._packer.pack(data))
+        packed = self._packer.pack(data)
+        self._hash.update(packed)
+        self._outfile.write(packed)
         self.written += 1
 
     def write(self, *args):
@@ -38,6 +44,6 @@ class Writer(object):
 
 
 class ImageWriter(Writer):
-    def write(self, jpegdata, image):
+    def write(self, image):
         self._indices[image.filename] = self._outfile.tell()
-        Writer._write(self, (jpegdata, image))
+        Writer._write(self, image)
