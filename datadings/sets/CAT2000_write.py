@@ -17,8 +17,9 @@ from PIL import Image
 from PIL import ImageChops
 
 from datadings.writer import ImageWriter
-from datadings.sets.CAT2000 import CAT2000Image
 from datadings.tools import FrequencyPrinter
+from datadings.sets import SaliencyData
+from datadings.sets import SaliencyExperiment
 
 
 def __find_bbox(im):
@@ -85,9 +86,14 @@ def __write_image(imagezip, stimuluspath, writer):
         locations = []
     dimensions = cropped.size
     filename = os.sep.join(stimuluspath.split(os.sep)[-2:])
-    response = CAT2000Image(locations, dimensions, filename)
+    item = SaliencyData(
+        stimulusdata,
+        [SaliencyExperiment(locations, None)],
+        dimensions,
+        filename,
+    )
 
-    writer.write(stimulusdata, response)
+    writer.write(item)
 
 
 def __is_stimulus(path):
