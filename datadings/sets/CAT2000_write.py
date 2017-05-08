@@ -1,3 +1,9 @@
+"""Create ILSVRC 2012 data set files.
+
+Download and image archives found here:
+    http://saliency.mit.edu/results_cat2000.html
+
+Image ZIP-files have to be left as-is."""
 from __future__ import division
 
 import io
@@ -105,12 +111,12 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(
         description=__doc__,
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains iSUN mat and zip files'
+        help='directory that contains CAT2000 archives'
     )
     parser.add_argument(
         '-o', '--outdir',

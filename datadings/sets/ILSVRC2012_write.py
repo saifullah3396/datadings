@@ -1,3 +1,11 @@
+"""Create ILSVRC 2012 data set files.
+
+Download and unpack the image archives found here:
+    http://image-net.org/challenges/LSVRC/2012/index
+
+Also download and unpack additional files provided by Caffe:
+    https://github.com/BVLC/caffe/tree/master/data/ilsvrc12"""
+
 import sys
 import threading as th
 import os
@@ -58,12 +66,12 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(
         description=__doc__,
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains iSUN mat and zip files'
+        help='directory that contains unpacked ILSRCV2012 images and image lists'
     )
     parser.add_argument(
         '-o', '--outdir',

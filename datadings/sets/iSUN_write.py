@@ -1,3 +1,9 @@
+"""Create iSUN data set files.
+
+Download everything expect "Saliency Map Ground Truth" from here:
+    http://lsun.cs.princeton.edu/2016/
+
+Image ZIP-file has to be left as-is."""
 from __future__ import print_function
 
 import os.path as pt
@@ -67,7 +73,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(
         description=__doc__,
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
         'indir',
