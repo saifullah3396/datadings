@@ -3,22 +3,21 @@ from collections import namedtuple
 from datadings.reader import Reader
 
 
-iSUNImage = namedtuple(
-    'iSUNImage',
-    ('experiments', 'dimensions', 'filename', 'scenecategory')
+iSUNData = namedtuple(
+    'iSUNData',
+    ('image', 'groundtruth', 'filename', 'scenecategory')
 )
 iSUNExperiment = namedtuple(
     'iSUNExperiment',
-    ('locations', 'timestamps', 'fixations')
+    ('locations', 'map', 'timestamps', 'fixations')
 )
 
 
 def convert_isun(item):
-    jpegdata, image = item
-    image = iSUNImage(*image)
-    for i, experiment in enumerate(image.experiments):
-        image.experiments[i] = iSUNExperiment(*experiment)
-    return jpegdata, image
+    item = iSUNData(*item)
+    for i, experiment in enumerate(item.groundtruth):
+        item.groundtruth[i] = iSUNExperiment(*experiment)
+    return item
 
 
 class ISUNReader(Reader):

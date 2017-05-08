@@ -14,30 +14,31 @@ import numpy as np
 from six import text_type
 
 from datadings.writer import ImageWriter
+from datadings.sets.iSUN import iSUNData
 from datadings.sets.iSUN import iSUNExperiment
-from datadings.sets.iSUN import iSUNImage
 from datadings.tools import FrequencyPrinter
 
 
-def __convert_image(entry):
-    image = text_type(entry[0][0][0])
-    if not image.endswith('.jpg'):
-        image += '.jpg'
+def __convert_item(entry):
+    filename = text_type(entry[0][0][0])
+    if not filename.endswith('.jpg'):
+        filename += '.jpg'
     scenecategory = text_type(entry[0][2][0])
-    resolution = tuple(entry[0][1][0].tolist()[::-1])
+    # resolution = tuple(entry[0][1][0].tolist()[::-1])
     try:
         experiments = [
             iSUNExperiment(
                 subject[0].astype(np.float32).reshape((-1, 2)),  # locations
+                None,
                 subject[1].astype(np.float32).flatten(),  # timestamps
                 subject[2].astype(np.float32).reshape((-1, 2)),  # fixations
             )
-            for whatever_this_is_thx_iSUN in entry[0][3]
-            for subject in whatever_this_is_thx_iSUN
+            for whatever_this_is in entry[0][3]
+            for subject in whatever_this_is
         ]
     except IndexError:
         experiments = []
-    return iSUNImage(experiments, resolution, image, scenecategory)
+    return experiments, filename, scenecategory
 
 
 def __yield_isun_metadata(matpath):
@@ -48,12 +49,14 @@ def __yield_isun_metadata(matpath):
         raise ValueError('too many keys: %s' % ', '.join(valid))
     images = list(valid.values())[0]
     for entry in images:
-        yield __convert_image(entry)
+        yield __convert_item(entry)
 
 
-def __write_image(image, imagezip, packer):
-    jpegdata = imagezip.read(pt.join('images', image.filename))
-    packer.write(jpegdata, image)
+def __write_image(item, imagezip, packer):
+    experiments, filename, scenecategory = item
+    jpegdata = imagezip.read(pt.join('images', filename))
+    item = iSUNData(jpegdata, experiments, filename, scenecategory)
+    packer.write(item)
 
 
 def write_isun(indir, outdir):
