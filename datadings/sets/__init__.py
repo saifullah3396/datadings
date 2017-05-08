@@ -7,24 +7,10 @@ ClassificationData = namedtuple(
     'ClassificationData',
     ('image', 'groundtruth', 'filename')
 )
-
-
-class ClassificationReader(Reader):
-    def _convert(self, item):
-        return ClassificationData(*item[:4])
-
-
 SegmentationData = namedtuple(
     'SegmentationData',
     ('image', 'groundtruth', 'filename')
 )
-
-
-class SegmentationReader(Reader):
-    def _convert(self, item):
-        return SegmentationData(*item[:4])
-
-
 SaliencyData = namedtuple(
     'SaliencyData',
     ('image', 'groundtruth', 'filename')
@@ -35,11 +21,30 @@ SaliencyExperiment = namedtuple(
 )
 
 
-class SaliencyReader(Reader):
-    def _convert(self, item):
-        return SaliencyData(
+def convert_classification(item):
+        return ClassificationData(*item[:4])
+
+
+class ClassificationReader(Reader):
+    _convert = staticmethod(convert_classification)
+
+
+def convert_segementation(item):
+    return SegmentationData(*item[:4])
+
+
+class SegmentationReader(Reader):
+    _convert = staticmethod(convert_segementation)
+
+
+def convert_saliency(item):
+    return SaliencyData(
             item[0],
             [SaliencyExperiment(experiment[:2]) for experiment in item[1]],
             item[2],
             item[3],
-        )
+    )
+
+
+class SaliencyReader(Reader):
+    _convert = staticmethod(convert_saliency)
