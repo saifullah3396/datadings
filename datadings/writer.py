@@ -1,4 +1,5 @@
 import io
+import codecs
 import hashlib
 from collections import OrderedDict
 
@@ -28,7 +29,7 @@ class Writer(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._outfile.flush()
         self._outfile.close()
-        with io.FileIO(self._path + '.md5', 'wb') as f:
+        with codecs.open(self._path + '.md5', 'w') as f:
             f.write(self._hash.hexdigest())
         with io.FileIO(self._path + '.index', 'wb') as f:
             msgpack.pack(self._indices, f)
