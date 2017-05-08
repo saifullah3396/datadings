@@ -1,5 +1,2 @@
-from datadings.sets import ClassificationReader
-
-
-class ILSVRC2012Reader(ClassificationReader):
-    pass
+from datadings.sets import convert_classification as convert_ilsvrc2012
+from datadings.sets import ClassificationReader as ILSVRC2012Reader

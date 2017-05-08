@@ -65,11 +65,11 @@ def write_isun(indir, outdir):
             print(name)
             printer = FrequencyPrinter()
             sys.stdout.flush()
-            with ImageWriter(pt.join(outdir, name + '.msgpack')) as packer:
+            with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
                 for image in __yield_isun_metadata(pt.join(indir, name + '.mat')):
-                    __write_image(image, imagezip, packer)
+                    __write_image(image, imagezip, writer)
                     printer.update()
-            print()
+            print('\r%d samples written                       ' % writer.written)
 
 
 def main():

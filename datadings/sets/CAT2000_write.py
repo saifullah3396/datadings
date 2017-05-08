@@ -1,10 +1,10 @@
-"""Create ILSVRC 2012 data set files.
+"""Create CAT2000 data set files.
 
 Download and image archives found here:
     http://saliency.mit.edu/results_cat2000.html
 
 Image ZIP-files have to be left as-is."""
-from __future__ import division
+from __future__ import print_function, division
 
 import io
 import os
@@ -55,16 +55,16 @@ def __load_fixmap(imagezip, stimuluspath):
     return scipy.io.loadmat(buf)['fixLocs']
 
 
-def __find_points(arr):
+def find_fixpoints(arr):
     # must flip (x,y) coordinate
     return np.transpose(np.nonzero(arr)[::-1]).astype(np.float32)
 
 
-def __transform_points(points, offset, r):
-    return (points - offset[:2]) * r
+def transform_points(points, offset, scale_factor):
+    return (points - offset[:2]) * scale_factor
 
 
-def __filter_points(points, size):
+def filter_invalid_fixpoints(points, size):
     w, h = size
     ind = (points > 0).any(axis=1)
     ind = np.logical_and(ind, points[:, 0] < w)
@@ -72,7 +72,7 @@ def __filter_points(points, size):
     return points[ind]
 
 
-def __write_image(imagezip, stimuluspath, writer):
+def write_image(imagezip, stimuluspath, writer):
     with imagezip.open(stimuluspath) as f:
         stimulus = Image.open(f)
         bbox = __find_bbox(stimulus)
@@ -80,19 +80,16 @@ def __write_image(imagezip, stimuluspath, writer):
         stimulusdata = __crompress(cropped)
     try:
         response = __load_fixmap(imagezip, stimuluspath)
-        locations = __transform_points(__find_points(response), bbox, r)
-        locations = __filter_points(locations, cropped.size)
+        locations = transform_points(find_fixpoints(response), bbox, r)
+        locations = filter_invalid_fixpoints(locations, cropped.size)
     except KeyError:
-        locations = []
-    dimensions = cropped.size
+        locations = None
     filename = os.sep.join(stimuluspath.split(os.sep)[-2:])
     item = SaliencyData(
         stimulusdata,
         [SaliencyExperiment(locations, None)],
-        dimensions,
         filename,
     )
-
     writer.write(item)
 
 
@@ -108,9 +105,9 @@ def write_cat2000(indir, outdir):
             with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
                 for path in imagezip.namelist():
                     if __is_stimulus(path):
-                        __write_image(imagezip, path, writer)
+                        write_image(imagezip, path, writer)
                         printer.update()
-        print()
+            print('\r%d samples written                       ' % writer.written)
 
 
 def main():
