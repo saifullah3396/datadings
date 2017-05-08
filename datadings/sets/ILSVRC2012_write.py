@@ -11,27 +11,32 @@ import threading as th
 import os
 import os.path as pt
 import io
+import random
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 
 from PIL import Image
 
 from datadings.writer import ImageWriter
-from datadings.sets.ILSVRC2012 import ILSVRC2012Image
+from datadings.sets import ClassificationData
 from datadings.tools import FrequencyPrinter
 
 
-def __yield_ilsvrc2012_metadata(txtpath):
+def __yield_ilsvrc2012_metadata(txtpath, shuffle=True):
     import codecs
     import csv
     with codecs.open(txtpath, encoding='utf8') as f:
-        for path, label in csv.reader(f, delimiter=' '):
-            yield ILSVRC2012Image(int(label), (0, 0),  path)
+        items = csv.reader(f, delimiter=' ')
+    if shuffle:
+        items = list(items)
+        random.shuffle(items)
+    for item in items:
+        yield item
 
 
-def __get_dimensions(jpegdata):
-    buf = io.BytesIO(jpegdata)
-    return Image.open(buf).size
+def __verify_image(data):
+    buf = io.BytesIO(data)
+    Image.open(buf).load()
 
 
 def write_ilsvrc2012(indir, outdir):
@@ -43,17 +48,19 @@ def write_ilsvrc2012(indir, outdir):
         gen = __yield_ilsvrc2012_metadata(pt.join(indir, name + '.txt'))
         lock = th.Lock()
         with ImageWriter(pt.join(outdir, name + '.msgpack')) as packer:
-            def write_image(image):
-                path = pt.join(datadir, image.filename.replace('/', os.sep))
+            def write_image(item):
+                filename, label = item
+                path = pt.join(datadir, filename.replace('/', os.sep))
                 with io.FileIO(path) as f:
-                    jpegdata = f.read()
-                image = ILSVRC2012Image(
-                    image.label,
-                    __get_dimensions(jpegdata),
-                    image.filename,
-                )
+                    data = f.read()
+                    __verify_image(data)
+                    image = ClassificationData(
+                        data,
+                        int(label),
+                        filename,
+                    )
                 with lock:
-                    packer.write(jpegdata, image)
+                    packer.write(image)
                 printer.update()
             pool = ThreadPool(cpu_count()*4)
             result = pool.map_async(write_image, gen)
@@ -71,7 +78,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains unpacked ILSRCV2012 images and image lists'
+        help='directory that contains ILSRCV 2012 image directories and lists'
     )
     parser.add_argument(
         '-o', '--outdir',
