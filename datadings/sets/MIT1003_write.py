@@ -14,7 +14,6 @@ from collections import defaultdict
 
 import scipy.io
 import numpy as np
-from PIL import Image
 
 from datadings.writer import ImageWriter
 from datadings.tools import FrequencyPrinter
