@@ -39,8 +39,7 @@ def __load_fixpoints(datazip, mat_files, stimuluspath):
 
 
 def write_image(imagezip, datazip, mat_files, stimuluspath, writer):
-    with imagezip.open(stimuluspath) as f:
-        stimulusdata = f.read()
+    stimulusdata = imagezip.read(stimuluspath)
     experiments = [
         SaliencyExperiment(exp, None)
         for exp in __load_fixpoints(datazip, mat_files, stimuluspath)
