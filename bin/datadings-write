@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+
+import os
+import os.path as pt
+import sys
+import importlib
+
+
+def find_writers():
+    return [
+        mod.split('_')[0]
+        for mod in os.listdir(pt.join(pt.dirname(__file__), 'sets'))
+        if mod.endswith('_write.py')
+    ]
+
+
+def main():
+    import argparse
+    writers = find_writers()
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        add_help=False,
+    )
+    parser.add_argument(
+        'writer',
+        nargs='?',
+        choices=writers,
+        help='writer program to run'
+    )
+    parser.add_argument(
+        '-h', '--help',
+        action='store_true',
+        help='show this help message and exit'
+    )
+    args, unknown = parser.parse_known_args()
+
+    if not args.writer:
+        if args.help:
+            parser.print_help()
+            sys.exit(0)
+        else:
+            parser.print_usage()
+            sys.exit(1)
+
+    sys.argv.pop(0)
+    writer = importlib.import_module('datadings.sets.' + args.writer + '_write')
+    writer.main()
+
+
+if __name__ == '__main__':
+    main()
