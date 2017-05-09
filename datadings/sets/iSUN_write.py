@@ -59,7 +59,7 @@ def __write_image(item, imagezip, packer):
     packer.write(item)
 
 
-def write_isun(indir, outdir):
+def write_sets(indir, outdir):
     with zipfile.ZipFile(pt.join(indir, 'image.zip')) as imagezip:
         for name in ('training', 'validation', 'testing'):
             print(name)
@@ -90,7 +90,7 @@ def main():
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_isun(args.indir, outdir)
+    write_sets(args.indir, outdir)
 
 
 if __name__ == '__main__':

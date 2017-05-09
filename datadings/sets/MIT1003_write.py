@@ -63,7 +63,7 @@ def __find_all_experiments(datazip):
     return mapping
 
 
-def write_mit1003(indir, outdir):
+def write_sets(indir, outdir):
     printer = FrequencyPrinter()
     with zipfile.ZipFile(pt.join(indir, 'ALLSTIMULI.zip')) as imagezip:
         with zipfile.ZipFile(pt.join(indir, 'DATA.zip')) as datazip:
@@ -96,7 +96,7 @@ def main():
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     try:
-        write_mit1003(args.indir, outdir)
+        write_sets(args.indir, outdir)
     except KeyboardInterrupt:
         pass
 

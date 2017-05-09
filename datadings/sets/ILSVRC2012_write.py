@@ -39,7 +39,7 @@ def __verify_image(data):
     Image.open(buf).load()
 
 
-def write_ilsvrc2012(indir, outdir):
+def write_sets(indir, outdir):
     for name in ('train', 'val'):
         print(name)
         printer = FrequencyPrinter()
@@ -88,7 +88,7 @@ def main():
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     try:
-        write_ilsvrc2012(args.indir, outdir)
+        write_sets(args.indir, outdir)
     except KeyboardInterrupt:
         pass
 

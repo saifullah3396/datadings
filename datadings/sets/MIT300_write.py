@@ -24,7 +24,7 @@ def write_image(imagezip, stimuluspath, writer):
     writer.write(item)
 
 
-def write_mit300(indir, outdir):
+def write_sets(indir, outdir):
     printer = FrequencyPrinter()
     with zipfile.ZipFile(pt.join(indir, 'BenchmarkIMAGES.zip')) as imagezip:
         with ImageWriter(pt.join(outdir, 'MIT300.msgpack')) as writer:
@@ -55,7 +55,7 @@ def main():
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     try:
-        write_mit300(args.indir, outdir)
+        write_sets(args.indir, outdir)
     except KeyboardInterrupt:
         pass
 

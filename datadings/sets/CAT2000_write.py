@@ -97,7 +97,7 @@ def __is_stimulus(path):
     return 'Stimuli' in path and 'Output' not in path and path.endswith('.jpg')
 
 
-def write_cat2000(indir, outdir):
+def write_sets(indir, outdir):
     for name in ('train', 'test'):
         print(name)
         printer = FrequencyPrinter()
@@ -129,7 +129,7 @@ def main():
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     try:
-        write_cat2000(args.indir, outdir)
+        write_sets(args.indir, outdir)
     except KeyboardInterrupt:
         pass
 
