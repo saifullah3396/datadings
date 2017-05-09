@@ -7,9 +7,10 @@ import importlib
 
 
 def find_writers():
+    import datadings
     return [
         mod.split('_')[0]
-        for mod in os.listdir(pt.join(pt.dirname(__file__), 'sets'))
+        for mod in os.listdir(pt.join(pt.dirname(datadings.__file__), 'sets'))
         if mod.endswith('_write.py')
     ]
 
