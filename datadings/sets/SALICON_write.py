@@ -1,7 +1,6 @@
 """Create SALICON data set files.
 
-Download everything expect "Saliency Map Ground Truth", toolkits and
-documentation from here:
+Download training, validation, and testing set, and "All Images in JPG":
     http://lsun.cs.princeton.edu/2016/
 
 Image ZIP-file has to be left as-is."""
@@ -12,6 +11,7 @@ import sys
 import zipfile
 
 import numpy as np
+import scipy.io
 from six import text_type
 
 from datadings.writer import ImageWriter
@@ -42,7 +42,6 @@ def __convert_item(entry):
 
 
 def _yield_salicon_metadata(matpath):
-    import scipy.io
     data = scipy.io.loadmat(matpath)
     valid = {k: v for k, v in data.items() if not k.startswith('__')}
     if len(valid) > 1:
