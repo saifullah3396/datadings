@@ -10,6 +10,7 @@ import io
 import os
 import os.path as pt
 import zipfile
+import random
 
 import scipy.io
 import numpy as np
@@ -97,13 +98,16 @@ def __is_stimulus(path):
     return 'Stimuli' in path and 'Output' not in path and path.endswith('.jpg')
 
 
-def write_sets(indir, outdir):
+def write_sets(indir, outdir, shuffle=True):
     for name in ('train', 'test'):
         print(name)
         printer = FrequencyPrinter()
         with zipfile.ZipFile(pt.join(indir, name + 'Set.zip')) as imagezip:
             with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
-                for path in imagezip.namelist():
+                names = imagezip.namelist()
+                if shuffle:
+                    random.shuffle(names)
+                for path in names:
                     if __is_stimulus(path):
                         write_image(imagezip, path, writer)
                         printer.update()

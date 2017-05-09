@@ -10,6 +10,7 @@ import io
 import os
 import os.path as pt
 import zipfile
+import random
 from collections import defaultdict
 
 import scipy.io
@@ -63,13 +64,16 @@ def __find_all_experiments(datazip):
     return mapping
 
 
-def write_sets(indir, outdir):
+def write_sets(indir, outdir, shuffle=True):
     printer = FrequencyPrinter()
     with zipfile.ZipFile(pt.join(indir, 'ALLSTIMULI.zip')) as imagezip:
         with zipfile.ZipFile(pt.join(indir, 'DATA.zip')) as datazip:
             experiments = __find_all_experiments(datazip)
             with ImageWriter(pt.join(outdir, 'MIT1003.msgpack')) as writer:
-                for path in imagezip.namelist():
+                names = imagezip.namelist()
+                if shuffle:
+                    random.shuffle(names)
+                for path in names:
                     if path.endswith(os.sep):
                         continue
                     write_image(imagezip, datazip, experiments, path, writer)

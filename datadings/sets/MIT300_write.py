@@ -8,6 +8,7 @@ from __future__ import print_function, division
 
 import os.path as pt
 import zipfile
+import random
 
 from datadings.writer import ImageWriter
 from datadings.tools import FrequencyPrinter
@@ -24,11 +25,14 @@ def write_image(imagezip, stimuluspath, writer):
     writer.write(item)
 
 
-def write_sets(indir, outdir):
+def write_sets(indir, outdir, shuffle=True):
     printer = FrequencyPrinter()
     with zipfile.ZipFile(pt.join(indir, 'BenchmarkIMAGES.zip')) as imagezip:
         with ImageWriter(pt.join(outdir, 'MIT300.msgpack')) as writer:
-            for path in imagezip.namelist():
+            names = imagezip.namelist()
+            if shuffle:
+                random.shuffle(names)
+            for path in names:
                 if path.startswith('__') or not path.endswith('.jpg') or 'SM' in path:
                     continue
                 write_image(imagezip, path, writer)

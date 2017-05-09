@@ -22,7 +22,7 @@ from datadings.sets import ClassificationData
 from datadings.tools import FrequencyPrinter
 
 
-def __yield_ilsvrc2012_metadata(txtpath, shuffle=True):
+def __yield_ilsvrc2012_metadata(txtpath, shuffle):
     import codecs
     import csv
     with codecs.open(txtpath, encoding='utf8') as f:
@@ -39,13 +39,16 @@ def __verify_image(data):
     Image.open(buf).load()
 
 
-def write_sets(indir, outdir):
+def write_sets(indir, outdir, shuffle=True):
     for name in ('train', 'val'):
         print(name)
         printer = FrequencyPrinter()
         datadir = pt.join(indir, name)
         sys.stdout.flush()
-        gen = __yield_ilsvrc2012_metadata(pt.join(indir, name + '.txt'))
+        gen = __yield_ilsvrc2012_metadata(
+            pt.join(indir, name + '.txt'),
+            shuffle,
+        )
         lock = th.Lock()
         with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
             def write_image(item):

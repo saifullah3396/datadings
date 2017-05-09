@@ -9,6 +9,7 @@ from __future__ import print_function
 import os.path as pt
 import sys
 import zipfile
+import random
 
 import numpy as np
 from six import text_type
@@ -41,13 +42,16 @@ def __convert_item(entry):
     return experiments, filename, scenecategory
 
 
-def __yield_isun_metadata(matpath):
+def __yield_isun_metadata(matpath, shuffle):
     import scipy.io
     data = scipy.io.loadmat(matpath)
     valid = {k: v for k, v in data.items() if not k.startswith('__')}
     if len(valid) > 1:
         raise ValueError('too many keys: %s' % ', '.join(valid))
     images = list(valid.values())[0]
+    if shuffle:
+        images = list(images)
+        random.shuffle(images)
     for entry in images:
         yield __convert_item(entry)
 
@@ -59,14 +63,17 @@ def __write_image(item, imagezip, packer):
     packer.write(item)
 
 
-def write_sets(indir, outdir):
+def write_sets(indir, outdir, shuffle=True):
     with zipfile.ZipFile(pt.join(indir, 'image.zip')) as imagezip:
         for name in ('training', 'validation', 'testing'):
             print(name)
             printer = FrequencyPrinter()
             sys.stdout.flush()
             with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
-                for image in __yield_isun_metadata(pt.join(indir, name + '.mat')):
+                for image in __yield_isun_metadata(
+                        pt.join(indir, name + '.mat'),
+                        shuffle,
+                ):
                     __write_image(image, imagezip, writer)
                     printer.update()
             print('\r%d samples written                       ' % writer.written)

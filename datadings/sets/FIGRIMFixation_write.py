@@ -8,6 +8,7 @@ from __future__ import print_function
 
 import os.path as pt
 import zipfile
+import random
 
 import numpy as np
 import scipy.io
@@ -43,10 +44,13 @@ def __get_experiments(subjects):
     return experiments
 
 
-def write_images(imagezip, mat_file, writer):
+def write_images(imagezip, mat_file, writer, shuffle):
     printer = FrequencyPrinter()
     locs = __load_mat_file(mat_file)
-    for path in imagezip.namelist():
+    names = imagezip.namelist()
+    if shuffle:
+        random.shuffle(names)
+    for path in names:
         if not path.endswith('.jpg'):
             continue
         jpegdata = imagezip.read(path)
@@ -61,7 +65,7 @@ def write_images(imagezip, mat_file, writer):
         printer.update()
 
 
-def write_sets(indir, outdir):
+def write_sets(indir, outdir, shuffle=True):
     for name, mat_file in (
             ('Targets', 'allImages_release.mat'),
             ('Fillers', 'allImages_fillers.mat'),
@@ -70,7 +74,7 @@ def write_sets(indir, outdir):
         with zipfile.ZipFile(pt.join(indir, name + '.zip')) as imagezip:
             with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
                 mat_file = pt.join(indir, mat_file)
-                write_images(imagezip, mat_file, writer)
+                write_images(imagezip, mat_file, writer, shuffle)
         print('\r%d samples written                       ' % writer.written)
 
 
