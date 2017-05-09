@@ -47,7 +47,7 @@ def write_sets(indir, outdir):
         sys.stdout.flush()
         gen = __yield_ilsvrc2012_metadata(pt.join(indir, name + '.txt'))
         lock = th.Lock()
-        with ImageWriter(pt.join(outdir, name + '.msgpack')) as packer:
+        with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
             def write_image(item):
                 filename, label = item
                 path = pt.join(datadir, filename.replace('/', os.sep))
@@ -60,13 +60,13 @@ def write_sets(indir, outdir):
                         filename,
                     )
                 with lock:
-                    packer.write(image)
+                    writer.write(image)
                 printer.update()
             pool = ThreadPool(cpu_count()*4)
             result = pool.map_async(write_image, gen)
             while not result.ready():
                 result.wait(1000)
-        print()
+        print('\r%d samples written                       ' % writer.written)
 
 
 def main():
