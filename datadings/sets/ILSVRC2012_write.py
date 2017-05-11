@@ -27,11 +27,11 @@ def __yield_ilsvrc2012_metadata(txtpath, shuffle):
     import csv
     with codecs.open(txtpath, encoding='utf8') as f:
         items = csv.reader(f, delimiter=' ')
-    if shuffle:
-        items = list(items)
-        random.shuffle(items)
-    for item in items:
-        yield item
+        if shuffle:
+            items = list(items)
+            random.shuffle(items)
+        for item in items:
+            yield item
 
 
 def __verify_image(data):
