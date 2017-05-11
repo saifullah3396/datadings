@@ -1,4 +1,5 @@
 import io
+import codecs
 import hashlib
 from collections import OrderedDict
 
@@ -62,7 +63,7 @@ class Reader(object):
         self._unpacker = msgpack.Unpacker(self._infile, encoding='utf8')
 
     def verify(self, read_size=64*1024):
-        with io.FileIO(self._path + '.md5', 'rb') as f:
+        with codecs.open(self._path + '.md5', encoding='utf-8') as f:
             expected_hash = f.read()
         with io.FileIO(self._path, 'rb') as f:
             md5 = hashlib.md5()
