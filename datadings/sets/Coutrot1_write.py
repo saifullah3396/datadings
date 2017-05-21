@@ -60,7 +60,7 @@ class LucasKanade(object):
             @param frame: next frame
             @return: dict {point: (x, y)}
         """
-        frame_gray = frame.mean(axis=2)
+        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if self.frame_gray is not None and self.points:
             # attempt tracking
             img0, img1 = self.frame_gray, frame_gray
