@@ -122,14 +122,17 @@ def __group_points(locations):
     return list(groups.values())
 
 
-def write_video(clip_data, path, writer, printer, min_fixpoints=1):
-    clip = path.split(os.sep)[-1].split('.')[0]
-    locations = clip_data[clip]
+def iter_frames_with_fixpoints(frame_gen, experiments):
+    for key, frame in frame_gen:
+        yield key, frame, [ex[key] for ex in experiments]
+
+
+def write_video(name_prefix, frame_gen, experiments, writer, printer, min_fixpoints=1):
     tracker = LucasKanade()
-    for i, frame in __iter_video(path):
-        for s, subject in enumerate(locations):
+    for key, frame in frame_gen:
+        for s, subject in enumerate(experiments):
             try:
-                tracker.track(subject[i], (s, i))
+                tracker.track(subject[key], (s, key))
             except IndexError:
                 continue
         points = tracker.update(frame)
@@ -145,13 +148,13 @@ def write_video(clip_data, path, writer, printer, min_fixpoints=1):
         item = SaliencyData(
             jpegdata,
             experiments,
-            pt.join('ERB3_Stimuli', '%s.avi_%06d' % (clip, i)),
+            pt.join('ERB3_Stimuli', name_prefix + '_%06d' % key),
         )
         writer.write(item)
         printer.update()
 
 
-def write_sets(indir, outdir, shuffle=True):
+def write_sets(indir, outdir, shuffle=False):
     printer = FrequencyPrinter()
     mat = loadmat(pt.join(indir, 'coutrot_database1.mat'))
     clip_data = __parse_mat(mat['Coutrot_Database1'])
@@ -161,7 +164,11 @@ def write_sets(indir, outdir, shuffle=True):
             # TODO shuffle if possible
             if not path.endswith('.avi'):
                 continue
-            write_video(clip_data, path, writer, printer)
+            name = path.split(os.sep)[-1].split('.')[0]
+            clip = name.split('.')[0]
+            experiments = clip_data[clip]
+            frame_gen = __iter_video(path)
+            write_video(name, frame_gen, experiments, writer, printer)
             printer.update()
         print('\r%d samples written                       ' % writer.written)
 
