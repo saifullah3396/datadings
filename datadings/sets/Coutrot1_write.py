@@ -171,10 +171,11 @@ def write_sets(indir, outdir, shuffle=False):
             experiments = clip_data[clip]
             frame_gen = iter_video_frames_opencv(path)
             write_video(name, frame_gen, experiments, writer, printer)
-            print('\r%d samples written                       ' % writer.written)
-            samples_written += writer.written
+            print('\r%d samples written                       '
+                  % (writer.written - samples_written))
+            samples_written = writer.written
     print('total')
-    print('\r%d samples written                       ' % samples_written)
+    print('\r%d samples written                       ' % writer.written)
 
 
 def main():
