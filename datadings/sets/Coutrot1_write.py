@@ -173,6 +173,7 @@ def write_sets(indir, outdir, shuffle=False):
             write_video(name, frame_gen, experiments, writer, printer)
             print('\r%d samples written                       ' % writer.written)
             samples_written += writer.written
+    print('total')
     print('\r%d samples written                       ' % samples_written)
 
 
