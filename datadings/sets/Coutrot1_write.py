@@ -103,7 +103,7 @@ def __parse_mat(mat):
     return clips
 
 
-def __iter_video(path):
+def iter_video_frames_opencv(path):
     video = cv2.VideoCapture(path)
     i = 0
     while video.isOpened():
@@ -130,24 +130,24 @@ def iter_frames_with_fixpoints(frame_gen, experiments):
 def write_video(name_prefix, frame_gen, experiments, writer, printer, min_fixpoints=1):
     tracker = LucasKanade()
     for key, frame in frame_gen:
-        for s, subject in enumerate(experiments):
+        for s, experiment in enumerate(experiments):
             try:
-                tracker.track(subject[key], (s, key))
+                tracker.track(experiment[key], (s, key))
             except IndexError:
                 continue
         points = tracker.update(frame)
         groups = __group_points(points)
-        experiments = [
+        tracked_experiments = [
             SaliencyExperiment(group, None)
             for group in groups
             if len(group) >= min_fixpoints
         ]
-        if not experiments:
+        if not tracked_experiments:
             continue
         jpegdata = bytes(cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95]))
         item = SaliencyData(
             jpegdata,
-            experiments,
+            tracked_experiments,
             pt.join('ERB3_Stimuli', name_prefix + '_%06d' % key),
         )
         writer.write(item)
@@ -167,7 +167,7 @@ def write_sets(indir, outdir, shuffle=False):
             name = path.split(os.sep)[-1].split('.')[0]
             clip = name.split('.')[0]
             experiments = clip_data[clip]
-            frame_gen = __iter_video(path)
+            frame_gen = iter_video_frames_opencv(path)
             write_video(name, frame_gen, experiments, writer, printer)
             printer.update()
         print('\r%d samples written                       ' % writer.written)
