@@ -23,9 +23,8 @@ from datadings.sets import SaliencyData
 from datadings.sets import SaliencyExperiment
 
 
-def __load_fixpoints(datazip, mat_files, stimuluspath):
+def __iter_fixpoints(datazip, mat_files, stimuluspath):
     stimulus = stimuluspath.split(os.sep)[1]
-    experiments = []
     for exp in mat_files[stimulus]:
         mat_data = datazip.read(exp)
         buf = io.BytesIO(mat_data)
@@ -34,17 +33,16 @@ def __load_fixpoints(datazip, mat_files, stimuluspath):
             if not k.startswith('__')
         ][0]
         try:
-            experiments.append(mat[0][0][4][0][0][2].astype(np.float32))
+            yield mat[0][0][4][0][0][2].astype(np.float32)
         except IndexError:
-            experiments.append(mat[0][0][0][0][0][2].astype(np.float32))
-    return experiments
+            yield mat[0][0][0][0][0][2].astype(np.float32)
 
 
 def write_image(imagezip, datazip, mat_files, stimuluspath, writer):
     stimulusdata = imagezip.read(stimuluspath)
     experiments = [
         SaliencyExperiment(exp, None)
-        for exp in __load_fixpoints(datazip, mat_files, stimuluspath)
+        for exp in __iter_fixpoints(datazip, mat_files, stimuluspath)
     ]
     filename = os.sep.join(stimuluspath.split(os.sep)[-2:])
     item = SaliencyData(
@@ -81,12 +79,10 @@ def write_sets(indir, outdir, shuffle=True):
         with zipfile.ZipFile(datapath) as datazip:
             experiments = __find_all_experiments(datazip)
             with ImageWriter(pt.join(outdir, 'MIT1003.msgpack')) as writer:
-                names = imagezip.namelist()
+                names = [f for f in imagezip.namelist() if f.endswith('.jpeg')]
                 if shuffle:
                     random.shuffle(names)
                 for path in names:
-                    if path.endswith(os.sep):
-                        continue
                     write_image(imagezip, datazip, experiments, path, writer)
                     printer.update()
         print('\r%d samples written                       ' % writer.written)
