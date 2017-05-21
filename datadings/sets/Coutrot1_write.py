@@ -165,6 +165,7 @@ def write_sets(indir, outdir, shuffle=False):
             if not path.endswith('.avi'):
                 continue
             name = path.split(os.sep)[-1].split('.')[0]
+            print(name)
             clip = name.split('.')[0]
             experiments = clip_data[clip]
             frame_gen = iter_video_frames_opencv(path)
