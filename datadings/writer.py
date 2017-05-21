@@ -1,3 +1,4 @@
+import os.path as pt
 import io
 import codecs
 import hashlib
@@ -29,10 +30,14 @@ class Writer(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._outfile.flush()
         self._outfile.close()
-        with codecs.open(self._path + '.md5', 'w') as f:
-            f.write(self._hash.hexdigest())
         with io.FileIO(self._path + '.index', 'wb') as f:
-            msgpack.pack(self._indices, f)
+            indexdata = msgpack.packb(self._indices)
+            f.write(indexdata)
+            indexhash = hashlib.md5(indexdata).hexdigest()
+        with codecs.open(self._path + '.md5', 'w') as f:
+            name = pt.basename(self._path)
+            f.write('%s  %s\n' % (self._hash.hexdigest(), name))
+            f.write('%s  %s\n' % (indexhash, name + '.index'))
 
     def _write(self, data):
         packed = self._packer.pack(data)
