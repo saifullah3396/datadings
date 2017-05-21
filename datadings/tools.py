@@ -78,7 +78,9 @@ def format_time(seconds):
             break
         parts.pop(0)
     s = ':'.join('%02d' % p for p in parts) + ' ' + unit
-    return s.lstrip('0')
+    if len(s) > 1:
+        s.lstrip('0')
+    return s
 
 
 def _estimate_speed(snapshots):
@@ -118,3 +120,4 @@ def download_if_not_found(url, path):
 
         print('downloading', filename, '-->', path)
         wget.download(url, path, bar=_progress)
+        print()
