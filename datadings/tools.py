@@ -2,6 +2,10 @@ from __future__ import print_function, division
 
 import time
 import sys
+import os
+import os.path as pt
+
+import wget
 
 
 class FrequencyPrinter(object):
@@ -48,3 +52,69 @@ class FrequencyPrinter(object):
             self.last_print = now
             self.start = now
             self.new_updates = 0
+
+
+def find_best_unit(value, multiples, units):
+    for m, unit in zip(multiples, units):
+        if value > m:
+            value /= m
+        else:
+            return value, unit
+
+
+def find_byte_unit(value):
+    return find_best_unit(value, [1024]*5, ['B', 'KB', 'MB', 'GB', 'TB'])
+
+
+def format_time(seconds):
+    parts = []
+    for divisor in (86400, 3600, 60, 1):
+        t = seconds // divisor
+        seconds -= t * divisor
+        parts.append(t)
+    units = ['days', 'hours', 'minutes', 'seconds']
+    for unit in units:
+        if parts[0] > 0:
+            break
+        parts.pop(0)
+    s = ':'.join('%02d' % p for p in parts) + ' ' + unit
+    return s.lstrip('0')
+
+
+def _estimate_speed(snapshots):
+    if not snapshots:
+        return None
+    time_a, rem_a = snapshots[0]
+    time_b, rem_b = snapshots[-1]
+    loaded = rem_a - rem_b
+    seconds = time_b - time_a
+    if seconds <= 1:
+        return None
+    return loaded / seconds
+
+
+def download_if_not_found(url, path):
+    if not pt.exists(path):
+        parent = pt.dirname(path)
+        if parent and not pt.exists(parent):
+            os.makedirs(parent, mode=0777)
+        snapshots = []
+        filename = pt.basename(path)
+        fmt_first = ' %s / %s      '
+        fmt = ' %s / %s, %s/s, %s left      '
+
+        def _progress(current, total, width=80, _snapshots=snapshots, _fmt=fmt, _fmt_first=fmt_first):
+            s_current = '%7.2f %s' % find_byte_unit(current)
+            s_total = '%.2f %s' % find_byte_unit(total)
+            rem = total - current
+            _snapshots.append((time.time(), rem))
+            _snapshots = _snapshots[:-10]
+            speed = _estimate_speed(_snapshots)
+            if speed is None:
+                return _fmt_first % (s_current, s_total)
+            s_rem = format_time(rem / speed)
+            s_speed = '%6.1f %s' % find_byte_unit(speed)
+            return _fmt % (s_current, s_total, s_speed, s_rem)
+
+        print('downloading', filename, '-->', path)
+        wget.download(url, path, bar=_progress)

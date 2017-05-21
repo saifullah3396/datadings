@@ -18,6 +18,7 @@ import numpy as np
 
 from datadings.writer import ImageWriter
 from datadings.tools import FrequencyPrinter
+from datadings.tools import download_if_not_found
 from datadings.sets import SaliencyData
 from datadings.sets import SaliencyExperiment
 
@@ -65,9 +66,19 @@ def __find_all_experiments(datazip):
 
 
 def write_sets(indir, outdir, shuffle=True):
+    imagepath = pt.join(indir, 'ALLSTIMULI.zip')
+    download_if_not_found(
+        'http://people.csail.mit.edu/tjudd/WherePeopleLook/ALLSTIMULI.zip',
+        imagepath
+    )
+    datapath = pt.join(indir, 'DATA.zip')
+    download_if_not_found(
+        'http://people.csail.mit.edu/tjudd/WherePeopleLook/DATA.zip',
+        datapath
+    )
     printer = FrequencyPrinter()
-    with zipfile.ZipFile(pt.join(indir, 'ALLSTIMULI.zip')) as imagezip:
-        with zipfile.ZipFile(pt.join(indir, 'DATA.zip')) as datazip:
+    with zipfile.ZipFile(imagepath) as imagezip:
+        with zipfile.ZipFile(datapath) as datazip:
             experiments = __find_all_experiments(datazip)
             with ImageWriter(pt.join(outdir, 'MIT1003.msgpack')) as writer:
                 names = imagezip.namelist()
@@ -102,7 +113,7 @@ def main():
     try:
         write_sets(args.indir, outdir)
     except KeyboardInterrupt:
-        pass
+        print()
 
 
 if __name__ == '__main__':
