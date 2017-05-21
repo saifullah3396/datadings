@@ -122,7 +122,7 @@ def __group_points(locations):
     return list(groups.values())
 
 
-def write_video(clip_data, path, writer, min_fixpoints=60):
+def write_video(clip_data, path, writer, printer, min_fixpoints=60):
     clip = path.split(os.sep)[-1].split('.')[0]
     locations = clip_data[clip]
     tracker = LucasKanade()
@@ -145,6 +145,7 @@ def write_video(clip_data, path, writer, min_fixpoints=60):
             pt.join('ERB3_Stimuli', '%s.avi_%06d' % (clip, i)),
         )
         writer.write(item)
+        printer.update()
 
 
 def write_sets(indir, outdir, shuffle=True):
@@ -157,7 +158,7 @@ def write_sets(indir, outdir, shuffle=True):
             # TODO shuffle if possible
             if not path.endswith('.avi'):
                 continue
-            write_video(clip_data, path, writer)
+            write_video(clip_data, path, writer, printer)
             printer.update()
         print('\r%d samples written                       ' % writer.written)
 
