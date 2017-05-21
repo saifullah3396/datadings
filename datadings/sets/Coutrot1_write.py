@@ -128,7 +128,10 @@ def write_video(clip_data, path, writer, printer, min_fixpoints=60):
     tracker = LucasKanade()
     for i, frame in __iter_video(path):
         for s, subject in enumerate(locations):
-            tracker.track(subject[i], (s, i))
+            try:
+                tracker.track(subject[i], (s, i))
+            except IndexError:
+                continue
         points = tracker.update(frame)
         groups = __group_points(points)
         experiments = [
