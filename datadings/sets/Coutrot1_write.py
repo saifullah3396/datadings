@@ -1,16 +1,13 @@
+"""Create Coutrot 1 data set files.
 
-"""Create MIT300 data set files.
+Download video ZIP-file and Matlab file from here:
+    http://antoinecoutrot.magix.net/public/databases.html
 
-Download image ZIP-file from here:
-    http://saliency.mit.edu/results_mit300.html
-
-Image ZIP-file has to be left as-is."""
+Video files must be unzipped."""
 from __future__ import print_function, division
 
 import os
 import os.path as pt
-import zipfile
-import random
 from math import floor
 from math import log
 from collections import defaultdict
@@ -114,6 +111,8 @@ def __iter_video(path):
         ret, frame = video.read()
         if ret:
             yield i, frame
+        else:
+            break
 
 
 def __group_points(locations):
