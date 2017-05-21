@@ -155,11 +155,12 @@ def write_video(name_prefix, frame_gen, experiments, writer, printer, min_fixpoi
 
 
 def write_sets(indir, outdir, shuffle=False):
-    printer = FrequencyPrinter()
+    samples_written = 0
     mat = loadmat(pt.join(indir, 'coutrot_database1.mat'))
     clip_data = __parse_mat(mat['Coutrot_Database1'])
     with ImageWriter(pt.join(outdir, 'Coutrot1.msgpack')) as writer:
         for path in os.listdir(pt.join(indir, 'ERB3_Stimuli')):
+            printer = FrequencyPrinter()
             path = pt.join(indir, 'ERB3_Stimuli', path)
             # TODO shuffle if possible
             if not path.endswith('.avi'):
@@ -170,8 +171,9 @@ def write_sets(indir, outdir, shuffle=False):
             experiments = clip_data[clip]
             frame_gen = iter_video_frames_opencv(path)
             write_video(name, frame_gen, experiments, writer, printer)
-            printer.update()
-        print('\r%d samples written                       ' % writer.written)
+            print('\r%d samples written                       ' % writer.written)
+            samples_written += writer.written
+    print('\r%d samples written                       ' % samples_written)
 
 
 def main():
