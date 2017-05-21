@@ -122,7 +122,7 @@ def __group_points(locations):
     return list(groups.values())
 
 
-def write_video(clip_data, path, writer, printer, min_fixpoints=60):
+def write_video(clip_data, path, writer, printer, min_fixpoints=1):
     clip = path.split(os.sep)[-1].split('.')[0]
     locations = clip_data[clip]
     tracker = LucasKanade()
