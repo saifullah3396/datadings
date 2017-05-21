@@ -52,7 +52,8 @@ class LucasKanade(object):
         self.frame_idx = 0
 
     def track(self, xy, pointid):
-        self.points[pointid] = tuple(xy)
+        if not any(np.isnan(xy)):
+            self.points[pointid] = tuple(xy)
 
     def update(self, frame):
         """ Update the tracking result for a new frame.
@@ -64,8 +65,9 @@ class LucasKanade(object):
         if self.frame_gray is not None and self.points:
             # attempt tracking
             img0, img1 = self.frame_gray, frame_gray
-            p0 = np.array([point for point in self.points.values()],
-                          dtype=np.float32).reshape((-1, 1, 2))
+            pointids = list(self.points.keys())
+            points = list(self.points.values())
+            p0 = np.array(points, dtype=np.float32).reshape((-1, 1, 2))
             params = dict(
                 winSize=(21, 21),
                 criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)
@@ -82,12 +84,10 @@ class LucasKanade(object):
 
             # update tracks
             new_points = {}
-            for trackid, (x, y), is_good \
-                    in zip(self.points.items(), p1.reshape(-1, 2), good):
-                # tracking result was not good,
-                # add this track's descriptors to the missing list
+            for pointid, point, is_good \
+                    in zip(pointids, p1.reshape(-1, 2), good):
                 if is_good:
-                    new_points[trackid] = (x, y)
+                    new_points[pointid] = point
             self.points = new_points
         self.frame_gray = frame_gray
         return dict(self.points)
@@ -110,30 +110,30 @@ def __iter_video(path):
         ret, frame = video.read()
         if ret:
             yield i, frame
+            i += 1
         else:
             break
 
 
 def __group_points(locations):
     groups = defaultdict(lambda: [])
-    for pointid, xy in locations.items():
-        subject = int(pointid.split('_')[0])
+    for (subject, _), xy in locations.items():
         groups[subject].append(xy)
-    return groups
+    return list(groups.values())
 
 
-def write_video(clip_data, path, writer, min_fixpoints=30):
+def write_video(clip_data, path, writer, min_fixpoints=60):
     clip = path.split(os.sep)[-1].split('.')[0]
     locations = clip_data[clip]
     tracker = LucasKanade()
     for i, frame in __iter_video(path):
         for s, subject in enumerate(locations):
-            tracker.track(subject[i], '%d_%d' % (s, i))
-        locations = tracker.update(frame)
-        groups = __group_points(locations)
+            tracker.track(subject[i], (s, i))
+        points = tracker.update(frame)
+        groups = __group_points(points)
         experiments = [
             SaliencyExperiment(group, None)
-            for group in groups.values()
+            for group in groups
             if len(group) >= min_fixpoints
         ]
         if not experiments:
@@ -144,7 +144,6 @@ def write_video(clip_data, path, writer, min_fixpoints=30):
             experiments,
             pt.join('ERB3_Stimuli', '%s.avi_%06d' % (clip, i)),
         )
-        print('write', item.filename, len(item.image), len(item.groundtruth))
         writer.write(item)
 
 
