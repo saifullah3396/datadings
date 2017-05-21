@@ -68,7 +68,6 @@ class LucasKanade(object):
                           dtype=np.float32).reshape((-1, 1, 2))
             params = dict(
                 winSize=(21, 21),
-                maxLevel=5,  # this will be replaced when the frame size is known
                 criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03)
             )
             params['maxLevel'] = _max_level(params, frame_gray)
@@ -123,7 +122,7 @@ def __group_points(locations):
     return groups
 
 
-def write_video(clip_data, path, writer):
+def write_video(clip_data, path, writer, min_fixpoints=30):
     clip = path.split(os.sep)[-1].split('.')[0]
     locations = clip_data[clip]
     tracker = LucasKanade()
@@ -132,13 +131,20 @@ def write_video(clip_data, path, writer):
             tracker.track(subject[i], '%d_%d' % (s, i))
         locations = tracker.update(frame)
         groups = __group_points(locations)
-        jpegdata = cv2.imencode('JPEG', frame, [(int(cv2.IMWRITE_JPEG_QUALITY), 95)])
+        experiments = [
+            SaliencyExperiment(group, None)
+            for group in groups.values()
+            if len(group) >= min_fixpoints
+        ]
+        if not experiments:
+            continue
+        jpegdata = bytes(cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95]))
         item = SaliencyData(
             jpegdata,
-            [SaliencyExperiment(group, None)
-             for group in groups.values()],
-            pt.join('ERB3_Stimuli', clip + '.avi'),
+            experiments,
+            pt.join('ERB3_Stimuli', '%s.avi_%06d' % (clip, i)),
         )
+        print('write', item.filename, len(item.image), len(item.groundtruth))
         writer.write(item)
 
 
