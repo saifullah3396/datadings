@@ -1,9 +1,15 @@
 """Create FIGRIM Fixation data set files.
 
-For both target and filler sets, download images and location files:
+The data set is described here:
     http://figrim.mit.edu/index_eyetracking.html
 
-ZIP-files have to be left as-is."""
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - Targets.zip
+    - allImages_release.mat
+    - Fillers.zip
+    - allImages_fillers.mat
+"""
 from __future__ import print_function
 
 import os.path as pt
@@ -18,6 +24,7 @@ from datadings.writer import ImageWriter
 from datadings.sets import SaliencyData
 from datadings.sets import SaliencyExperiment
 from datadings.tools import FrequencyPrinter
+from datadings.tools import download_if_not_found
 
 
 def __load_mat_file(mat_file):
@@ -44,18 +51,15 @@ def __get_experiments(subjects):
     return experiments
 
 
-def write_images(imagezip, mat_file, writer, shuffle):
+def write_images(imagezip, locations, writer, shuffle):
     printer = FrequencyPrinter()
-    locs = __load_mat_file(mat_file)
-    names = imagezip.namelist()
+    names = [f for f in imagezip.namelist() if f.endswith('.jpg')]
     if shuffle:
         random.shuffle(names)
     for path in names:
-        if not path.endswith('.jpg'):
-            continue
         jpegdata = imagezip.read(path)
         try:
-            experiments = __get_experiments(locs[path])
+            experiments = __get_experiments(locations[path])
         except KeyError:
             # some images don't have fixation data
             # print(datapath, 'not found')
@@ -66,15 +70,21 @@ def write_images(imagezip, mat_file, writer, shuffle):
 
 
 def write_sets(indir, outdir, shuffle=True):
-    for name, mat_file in (
-            ('Targets', 'allImages_release.mat'),
-            ('Fillers', 'allImages_fillers.mat'),
-    ):
+    url_prefix = 'http://figrim.mit.edu/'
+    g = 'https://github.com/cvzoya/figrim/raw/master/'
+    target = 'Targets', 'release', g + 'targetData/allImages_release.mat'
+    filler = 'Fillers', 'fillers', g + 'fillerData/allImages_fillers.mat'
+    for name, mat_name, mat_url in (target, filler):
         print(name)
+        imagepath = pt.join(indir, name + '.zip')
+        download_if_not_found(url_prefix + name + '.zip', imagepath)
+        dataname = 'allImages_%s.mat' % mat_name
+        datapath = pt.join(indir, dataname)
+        download_if_not_found(mat_url, datapath)
+        locations = __load_mat_file(datapath)
         with zipfile.ZipFile(pt.join(indir, name + '.zip')) as imagezip:
             with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
-                mat_file = pt.join(indir, mat_file)
-                write_images(imagezip, mat_file, writer, shuffle)
+                write_images(imagezip, locations, writer, shuffle)
         print('\r%d samples written                       ' % writer.written)
 
 
@@ -87,7 +97,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains SALICON mat and zip files'
+        help='directory that contains FIGRIM fixation files'
     )
     parser.add_argument(
         '-o', '--outdir',

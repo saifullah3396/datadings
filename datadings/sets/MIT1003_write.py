@@ -1,9 +1,13 @@
 """Create MIT1003 data set files.
 
-Download "Stimuli" and "Eye Tracking Data" listed under "Eye tracking database":
+The data set is described here:
     http://people.csail.mit.edu/tjudd/WherePeopleLook/index.html
 
-Image ZIP-files have to be left as-is."""
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - ALLSTIMULI.zip
+    - DATA.zip
+"""
 from __future__ import print_function, division
 
 import io
@@ -97,7 +101,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains CAT2000 archives'
+        help='directory that contains MIT1003 archives'
     )
     parser.add_argument(
         '-o', '--outdir',

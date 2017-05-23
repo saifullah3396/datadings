@@ -1,9 +1,15 @@
 """Create iSUN data set files.
 
-Download everything expect "Saliency Map Ground Truth" from here:
+The data set is described here:
     http://lsun.cs.princeton.edu/2016/
 
-Image ZIP-file has to be left as-is."""
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - image.zip
+    - training.mat
+    - validation.mat
+    - testing.mat
+"""
 from __future__ import print_function
 
 import os.path as pt
@@ -18,6 +24,7 @@ from datadings.writer import ImageWriter
 from datadings.sets.iSUN import iSUNData
 from datadings.sets.iSUN import iSUNExperiment
 from datadings.tools import FrequencyPrinter
+from datadings.tools import download_if_not_found
 
 
 def __convert_item(entry):
@@ -56,24 +63,26 @@ def __yield_isun_metadata(matpath, shuffle):
         yield __convert_item(entry)
 
 
-def __write_image(item, imagezip, packer):
-    experiments, filename, scenecategory = item
+def __write_image(image, imagezip, writer):
+    experiments, filename, scenecategory = image
     jpegdata = imagezip.read(pt.join('images', filename))
     item = iSUNData(jpegdata, experiments, filename, scenecategory)
-    packer.write(item)
+    writer.write(item)
 
 
 def write_sets(indir, outdir, shuffle=True):
-    with zipfile.ZipFile(pt.join(indir, 'image.zip')) as imagezip:
+    url_prefix = 'http://lsun.cs.princeton.edu/challenge/2015/eyetracking/data/'
+    imagepath = pt.join(indir, 'image.zip')
+    download_if_not_found(url_prefix + 'image.zip', imagepath)
+    with zipfile.ZipFile(imagepath) as imagezip:
         for name in ('training', 'validation', 'testing'):
             print(name)
             printer = FrequencyPrinter()
             sys.stdout.flush()
+            datapath = pt.join(indir, name + '.mat')
+            download_if_not_found(url_prefix + '%s.mat' % name, datapath)
             with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
-                for image in __yield_isun_metadata(
-                        pt.join(indir, name + '.mat'),
-                        shuffle,
-                ):
+                for image in __yield_isun_metadata(datapath, shuffle):
                     __write_image(image, imagezip, writer)
                     printer.update()
             print('\r%d samples written                       ' % writer.written)
@@ -88,7 +97,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains iSUN mat and zip files'
+        help='directory that contains iSUN files'
     )
     parser.add_argument(
         '-o', '--outdir',
@@ -97,7 +106,10 @@ def main():
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+    try:
+        write_sets(args.indir, outdir)
+    except KeyboardInterrupt:
+        print()
 
 
 if __name__ == '__main__':

@@ -1,9 +1,12 @@
 """Create MIT300 data set files.
 
-Download image ZIP-file from here:
+The data set is described here:
     http://saliency.mit.edu/results_mit300.html
 
-Image ZIP-file has to be left as-is."""
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - BenchmarkIMAGES.zip
+"""
 from __future__ import print_function, division
 
 import os.path as pt
@@ -12,6 +15,7 @@ import random
 
 from datadings.writer import ImageWriter
 from datadings.tools import FrequencyPrinter
+from datadings.tools import download_if_not_found
 from datadings.sets import SaliencyData
 
 
@@ -25,16 +29,23 @@ def write_image(imagezip, stimuluspath, writer):
     writer.write(item)
 
 
+def _isimage(f):
+    return f.endswith('.jpg') and 'SM' not in f and not f.startswith('__')
+
+
 def write_sets(indir, outdir, shuffle=True):
+    imagepath = pt.join(indir, 'BenchmarkIMAGES.zip')
+    download_if_not_found(
+        'http://saliency.mit.edu/BenchmarkIMAGES.zip',
+        imagepath
+    )
     printer = FrequencyPrinter()
-    with zipfile.ZipFile(pt.join(indir, 'BenchmarkIMAGES.zip')) as imagezip:
+    with zipfile.ZipFile(imagepath) as imagezip:
         with ImageWriter(pt.join(outdir, 'MIT300.msgpack')) as writer:
-            names = imagezip.namelist()
+            names = [f for f in imagezip.namelist() if _isimage(f)]
             if shuffle:
                 random.shuffle(names)
             for path in names:
-                if path.startswith('__') or not path.endswith('.jpg') or 'SM' in path:
-                    continue
                 write_image(imagezip, path, writer)
                 printer.update()
         print('\r%d samples written                       ' % writer.written)
@@ -49,7 +60,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains CAT2000 archives'
+        help='directory that contains MIT300 files'
     )
     parser.add_argument(
         '-o', '--outdir',
@@ -61,7 +72,7 @@ def main():
     try:
         write_sets(args.indir, outdir)
     except KeyboardInterrupt:
-        pass
+        print()
 
 
 if __name__ == '__main__':

@@ -1,10 +1,13 @@
 """Create ILSVRC 2012 data set files.
 
-Download and unpack the image archives found here:
+The data set is described here:
     http://image-net.org/challenges/LSVRC/2012/index
 
+The tar files needs to be unpacked.
+
 Also download and unpack additional files provided by Caffe:
-    https://github.com/BVLC/caffe/tree/master/data/ilsvrc12"""
+    https://github.com/BVLC/caffe/tree/master/data/ilsvrc12
+"""
 
 import sys
 import threading as th

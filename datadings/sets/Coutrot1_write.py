@@ -1,9 +1,11 @@
 """Create Coutrot 1 data set files.
 
-Download video ZIP-file and Matlab file from here:
+The data set is described here:
     http://antoinecoutrot.magix.net/public/databases.html
 
-Video files must be unzipped."""
+Download video ZIP-file and Matlab files manually.
+Video files must be unzipped.
+"""
 from __future__ import print_function, division
 
 import os
@@ -187,7 +189,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains CAT2000 archives'
+        help='directory that contains Coutrot DB 1 files'
     )
     parser.add_argument(
         '-o', '--outdir',
