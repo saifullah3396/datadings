@@ -5,6 +5,7 @@ The data set is described here:
 
 Download video ZIP-file and Matlab files manually.
 Video files must be unzipped.
+Note that samples are NOT SHUFFLED!
 """
 from __future__ import print_function, division
 
