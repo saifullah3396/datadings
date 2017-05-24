@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import io
 import pylab as plt
+import warnings
 from six import text_type
 from PIL import Image
 
@@ -10,16 +11,23 @@ from datadings.sets import SaliencyReader
 
 
 def show_saliency(path, delay):
+    warnings.filterwarnings("ignore", ".*GUI is implemented.*")
     reader = SaliencyReader(path)
+    fig, ax = plt.subplots()
+    im = None
     for sample in reader:
-        fig, ax = plt.subplots()
+        ax.clear()
         image = Image.open(io.BytesIO(sample.image))
-        ax.imshow(image)
+        if im is None:
+            ax.imshow(image)
+        else:
+            im.set_data(image)
         for experiment in sample.groundtruth:
             for point in experiment.locations:
                 ax.add_artist(plt.Circle(point, 3, color='red'))
-        plt.show()
-        plt.close(fig)
+        plt.draw()
+        plt.pause(delay)
+    plt.close(fig)
 
 
 def main():
@@ -40,8 +48,8 @@ def main():
     )
     parser.add_argument(
         '-d', '--delay',
-        type=int,
-        default=2000,
+        type=float,
+        default=1,
         help='delay between images'
     )
     args = parser.parse_args()
