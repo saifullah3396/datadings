@@ -12,7 +12,6 @@ and download them if necessary:
 from __future__ import print_function
 
 import os.path as pt
-import sys
 import zipfile
 import random
 
