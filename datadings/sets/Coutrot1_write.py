@@ -148,7 +148,10 @@ def write_video(name_prefix, frame_gen, experiments, writer, printer, min_fixpoi
         ]
         if not tracked_experiments:
             continue
-        jpegdata = bytes(cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95]))
+        success, data = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+        if not success:
+            continue
+        jpegdata = data.tostring()
         item = SaliencyData(
             jpegdata,
             tracked_experiments,

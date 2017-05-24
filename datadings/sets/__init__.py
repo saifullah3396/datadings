@@ -40,9 +40,8 @@ class SegmentationReader(Reader):
 def convert_saliency(item):
     return SaliencyData(
             item[0],
-            [SaliencyExperiment(experiment[:2]) for experiment in item[1]],
+            [SaliencyExperiment(*experiment[:2]) for experiment in item[1]],
             item[2],
-            item[3],
     )
 
 
