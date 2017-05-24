@@ -64,6 +64,7 @@ dependencies = [
     'pillow',
     'msgpack-python >= 0.4.8',
     'wget',
+    'matplotlib',
 ]
 
 
