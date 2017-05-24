@@ -131,15 +131,22 @@ def iter_frames_with_fixpoints(frame_gen, experiments):
         yield key, frame, [ex[key] for ex in experiments]
 
 
-def write_video(name_prefix, frame_gen, experiments, writer, printer, min_fixpoints=1):
+def write_video(name_prefix, frame_gen, experiments, writer, printer,
+                min_fixpoints=30, write_delta=10, max_fixpoint_age=60):
     tracker = LucasKanade()
+    last_written = 0
     for key, frame in frame_gen:
         for s, experiment in enumerate(experiments):
             try:
                 tracker.track(experiment[key], (s, key))
             except IndexError:
                 continue
+        for s, age in list(tracker.points.keys()):
+            if key - age > max_fixpoint_age:
+                tracker.points.pop((s, age))
         points = tracker.update(frame)
+        if key - last_written < write_delta:
+            continue
         groups = __group_points(points)
         tracked_experiments = [
             SaliencyExperiment(group, None)
@@ -158,6 +165,7 @@ def write_video(name_prefix, frame_gen, experiments, writer, printer, min_fixpoi
             pt.join('ERB3_Stimuli', name_prefix + '_%06d' % key),
         )
         writer.write(item)
+        last_written = key
         printer.update()
 
 
