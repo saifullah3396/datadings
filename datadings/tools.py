@@ -8,6 +8,21 @@ import os.path as pt
 import wget
 
 
+def _pad(s, width):
+    return s + ' ' * max(0, (width - len(s)))
+
+
+def print_over(*args, **kwargs):
+    end = kwargs.pop('end', '\n')
+    kwargs['end'] = ''
+    flush = kwargs.pop('flush', False)
+    stream = kwargs.pop('file', sys.stdout)
+    print(*args, **kwargs)
+    print('\033[K', end=end)
+    if flush:
+        stream.flush()
+
+
 class FrequencyPrinter(object):
     """ Convenient printer for framerates.
         Call update every time a new frame is shown
@@ -15,7 +30,7 @@ class FrequencyPrinter(object):
     """
     def __init__(self,
                  interval=2,
-                 formatstring='%12d samples, %.2f samples/s           ',
+                 formatstring='%12d samples, %.2f samples/s',
                  printlines=False):
         """ @param interval: Interval in seconds between print output
             @param formatstring: String format used to print;
@@ -32,6 +47,7 @@ class FrequencyPrinter(object):
         self.total_updates = 0
         self.last_print = 0
         self.start = 0
+        self._maxlen = 0
 
     def update(self):
         """ Call update every time a new frame is shown
@@ -45,13 +61,15 @@ class FrequencyPrinter(object):
             self.last_print = now
         if now - self.last_print > self.interval:
             seconds = now - self.start
-            print(self.formatstring % (self.total_updates,
-                                       self.new_updates / seconds),
-                  end='')
-            sys.stdout.flush()
+            print_over(self.formatstring % (
+                self.total_updates, self.new_updates / seconds
+            ), end='', flush=True)
             self.last_print = now
             self.start = now
             self.new_updates = 0
+
+    def print_total_updates(self):
+        print_over('\r%d samples written' % self.total_updates)
 
 
 def find_best_unit(value, multiples, units):

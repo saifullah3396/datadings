@@ -20,5 +20,5 @@ def convert_salicon(item):
     return image
 
 
-class ISUNReader(Reader):
+class SALICONReader(Reader):
     _convert = staticmethod(convert_salicon)

@@ -118,7 +118,7 @@ def write_sets(indir, outdir, shuffle=True):
                 for path in names:
                     write_image(imagezip, path, writer)
                     printer.update()
-            print('\r%d samples written                       ' % writer.written)
+        printer.print_total_updates()
 
 
 def main():

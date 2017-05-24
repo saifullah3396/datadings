@@ -67,25 +67,26 @@ def write_images(imagezip, locations, writer, shuffle):
         item = SaliencyData(jpegdata, experiments, path)
         writer.write(item)
         printer.update()
+    printer.print_total_updates()
 
 
 def write_sets(indir, outdir, shuffle=True):
-    url_prefix = 'http://figrim.mit.edu/'
+    u = 'http://figrim.mit.edu/'
     g = 'https://github.com/cvzoya/figrim/raw/master/'
     target = 'Targets', 'release', g + 'targetData/allImages_release.mat'
     filler = 'Fillers', 'fillers', g + 'fillerData/allImages_fillers.mat'
     for name, mat_name, mat_url in (target, filler):
         print(name)
         imagepath = pt.join(indir, name + '.zip')
-        download_if_not_found(url_prefix + name + '.zip', imagepath)
         dataname = 'allImages_%s.mat' % mat_name
         datapath = pt.join(indir, dataname)
+        outpath = pt.join(outdir, name.lower() + '.msgpack')
+        download_if_not_found(u + name + '.zip', imagepath)
         download_if_not_found(mat_url, datapath)
         locations = __load_mat_file(datapath)
-        with zipfile.ZipFile(pt.join(indir, name + '.zip')) as imagezip:
-            with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
+        with zipfile.ZipFile(imagepath) as imagezip:
+            with ImageWriter(outpath) as writer:
                 write_images(imagezip, locations, writer, shuffle)
-        print('\r%d samples written                       ' % writer.written)
 
 
 def main():

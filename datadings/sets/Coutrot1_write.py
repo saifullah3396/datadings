@@ -25,6 +25,7 @@ import numpy as np
 
 from datadings.writer import ImageWriter
 from datadings.tools import FrequencyPrinter
+from datadings.tools import print_over
 from datadings.sets import SaliencyData
 from datadings.sets import SaliencyExperiment
 from datadings.matlab import loadmat
@@ -158,27 +159,22 @@ def write_video(name_prefix, frame_gen, experiments, writer, printer, min_fixpoi
 
 
 def write_sets(indir, outdir, shuffle=False):
-    samples_written = 0
+    printer = FrequencyPrinter()
     mat = loadmat(pt.join(indir, 'coutrot_database1.mat'))
     clip_data = __parse_mat(mat['Coutrot_Database1'])
     with ImageWriter(pt.join(outdir, 'Coutrot1.msgpack')) as writer:
         for path in os.listdir(pt.join(indir, 'ERB3_Stimuli')):
-            printer = FrequencyPrinter()
             path = pt.join(indir, 'ERB3_Stimuli', path)
             # TODO shuffle if possible
             if not path.endswith('.avi'):
                 continue
             name = path.split(os.sep)[-1].split('.')[0]
-            print(name)
+            print_over('\r' + name)
             clip = name.split('.')[0]
             experiments = clip_data[clip]
             frame_gen = iter_video_frames_opencv(path)
             write_video(name, frame_gen, experiments, writer, printer)
-            print('\r%d samples written                       '
-                  % (writer.written - samples_written))
-            samples_written = writer.written
-    print('total')
-    print('\r%d samples written                       ' % writer.written)
+    printer.print_total_updates()
 
 
 def main():
@@ -202,7 +198,7 @@ def main():
     try:
         write_sets(args.indir, outdir)
     except KeyboardInterrupt:
-        pass
+        print()
 
 
 if __name__ == '__main__':

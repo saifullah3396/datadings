@@ -78,14 +78,13 @@ def write_sets(indir, outdir, shuffle=True):
         for name in ('training', 'validation', 'testing'):
             print(name)
             printer = FrequencyPrinter()
-            sys.stdout.flush()
             datapath = pt.join(indir, name + '.mat')
             download_if_not_found(url_prefix + '%s.mat' % name, datapath)
             with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
                 for image in __yield_isun_metadata(datapath, shuffle):
                     __write_image(image, imagezip, writer)
                     printer.update()
-            print('\r%d samples written                       ' % writer.written)
+            printer.print_total_updates()
 
 
 def main():

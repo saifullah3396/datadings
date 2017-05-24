@@ -8,8 +8,8 @@ The tar files needs to be unpacked.
 Also download and unpack additional files provided by Caffe:
     https://github.com/BVLC/caffe/tree/master/data/ilsvrc12
 """
+from __future__ import print_function
 
-import sys
 import threading as th
 import os
 import os.path as pt
@@ -47,7 +47,6 @@ def write_sets(indir, outdir, shuffle=True):
         print(name)
         printer = FrequencyPrinter()
         datadir = pt.join(indir, name)
-        sys.stdout.flush()
         gen = __yield_ilsvrc2012_metadata(
             pt.join(indir, name + '.txt'),
             shuffle,
@@ -72,7 +71,7 @@ def write_sets(indir, outdir, shuffle=True):
             result = pool.map_async(write_image, gen)
             while not result.ready():
                 result.wait(1000)
-        print('\r%d samples written                       ' % writer.written)
+        printer.print_total_updates()
 
 
 def main():
