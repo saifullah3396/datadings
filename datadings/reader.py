@@ -42,7 +42,6 @@ class Reader(object):
         self._index = list(self._key_index.values())
         self._len = len(self._index)
         self._i = 0
-        self._unpacker = msgpack.Unpacker(self._infile, encoding='utf8')
 
     def __enter__(self):
         return self
@@ -57,8 +56,7 @@ class Reader(object):
         return self._len
 
     def __next__(self):
-        self._i += 1
-        return self._convert(next(self._unpacker))
+        return msgpack.unpackb(self.rawnext(), encoding='utf8')
 
     next = __next__
 
@@ -80,14 +78,12 @@ class Reader(object):
     def seek_index(self, i):
         self._infile.seek(self._index[i], 0)
         self._i = i
-        self._unpacker = msgpack.Unpacker(self._infile, encoding='utf8')
 
     seek = seek_index
 
     def seek_key(self, key):
         self._infile.seek(self._key_index[key], 0)
         self._i = self._key_to_index[key]
-        self._unpacker = msgpack.Unpacker(self._infile, encoding='utf8')
 
     def verify_data(self, read_size=64*1024):
         hashes = load_md5file(self._path + '.md5')
@@ -106,22 +102,15 @@ class Reader(object):
 class ShuffledReader(object):
     def __init__(self, reader):
         self._reader = reader
-        self._order = list(range(len(reader)))
-        random.shuffle(self._order)
 
     def __iter__(self):
-        n = len(self._reader)
-        i = 0
-        while i < n:
-            self._reader.seek_index(self._order[i])
-            yield next(self._reader)
-            i += 1
+        for raw in self.rawiter():
+            yield msgpack.unpackb(raw, encoding='utf8')
 
     def rawiter(self):
         n = len(self._reader)
-        i = 0
-        while i < n:
-            self._reader._i = i
-            self._reader._infile.seek(self._reader._index[self._order[i]], 0)
+        order = list(range(n))
+        random.shuffle(order)
+        for i in order:
+            self._reader.seek_index(i)
             yield self._reader.rawnext()
-            i += 1
