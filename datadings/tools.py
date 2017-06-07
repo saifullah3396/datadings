@@ -117,7 +117,7 @@ def download_if_not_found(url, path):
     if not pt.exists(path):
         parent = pt.dirname(path)
         if parent and not pt.exists(parent):
-            os.makedirs(parent, mode=0777)
+            os.makedirs(parent, mode=0o777)
         snapshots = []
         filename = pt.basename(path)
         fmt_first = ' %s / %s      '
