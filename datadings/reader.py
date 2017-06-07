@@ -99,6 +99,11 @@ class Reader(object):
         raise NotImplementedError()
 
 
+class IdentityReader(Reader):
+    def _convert(self, sample):
+        return sample
+
+
 class ShuffledReader(object):
     def __init__(self, reader):
         self._reader = reader
