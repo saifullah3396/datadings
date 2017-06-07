@@ -1,6 +1,7 @@
 import io
 import codecs
 import hashlib
+import random
 from collections import OrderedDict
 
 import msgpack
@@ -19,9 +20,9 @@ class Reader(object):
     def __init__(self, infile):
         self._path = infile
         self._infile = io.FileIO(infile, 'rb')
-        self._name_index = _load_index(infile + '.index')
-        self._name_to_index = {f: i for i, f in enumerate(self._name_index)}
-        self._index = list(self._name_index.values())
+        self._key_index = _load_index(infile + '.index')
+        self._key_to_index = {f: i for i, f in enumerate(self._key_index)}
+        self._index = list(self._key_index.values())
         self._len = len(self._index)
         self._i = 0
         self._unpacker = msgpack.Unpacker(self._infile, encoding='utf8')
@@ -44,22 +45,30 @@ class Reader(object):
 
     next = __next__
 
-    def rawiter(self):
-        while self._i < self._len - 1:
+    def rawnext(self):
+        try:
             self._i += 1
-            yield self._infile.read(
-                self._index[self._i] - self._index[self._i - 1]
-            )
-        yield self._infile.read()
+            n = self._index[self._i] - self._index[self._i - 1]
+        except IndexError:
+            n = -1
+        return self._infile.read(n)
+
+    def rawiter(self):
+        raw = self.rawnext()
+        while raw:
+            yield raw
+            raw = self.rawnext()
 
     def seek_index(self, i):
         self._infile.seek(self._index[i], 0)
         self._i = i
         self._unpacker = msgpack.Unpacker(self._infile, encoding='utf8')
 
-    def seek_file(self, name):
-        self._infile.seek(self._name_index[name], 0)
-        self._i = self._name_to_index[name]
+    seek = seek_index
+
+    def seek_key(self, key):
+        self._infile.seek(self._key_index[key], 0)
+        self._i = self._key_to_index[key]
         self._unpacker = msgpack.Unpacker(self._infile, encoding='utf8')
 
     def verify(self, read_size=64*1024):
@@ -77,3 +86,27 @@ class Reader(object):
 
     def _convert(self, item):
         raise NotImplementedError()
+
+
+class ShuffledReader(object):
+    def __init__(self, reader):
+        self._reader = reader
+        self._order = list(range(len(reader)))
+        random.shuffle(self._order)
+
+    def __iter__(self):
+        n = len(self._reader)
+        i = 0
+        while i < n:
+            self._reader.seek_index(self._order[i])
+            yield next(self._reader)
+            i += 1
+
+    def rawiter(self):
+        n = len(self._reader)
+        i = 0
+        while i < n:
+            self._reader._i = i
+            self._reader._infile.seek(self._reader._index[self._order[i]], 0)
+            yield self._reader.rawnext()
+            i += 1
