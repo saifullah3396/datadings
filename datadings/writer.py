@@ -17,9 +17,6 @@ class Writer(object):
     def __init__(self, outfile):
         self._path = outfile
         self._outfile = io.open(outfile, 'wb', 1024*1024)
-        self._packer = msgpack.Packer(
-            default=_default, use_bin_type=True, encoding='utf8'
-        )
         self._indices = OrderedDict()
         self.written = 0
         self._hash = hashlib.md5()
@@ -39,11 +36,17 @@ class Writer(object):
             f.write('%s  %s\n' % (self._hash.hexdigest(), name))
             f.write('%s  %s\n' % (indexhash, name + '.index'))
 
-    def _write(self, data):
-        packed = self._packer.pack(data)
+    def _write_data(self, packed):
         self._hash.update(packed)
         self._outfile.write(packed)
         self.written += 1
+
+    def _write(self, sample):
+        packed = msgpack.packb(
+            sample,
+            default=_default, use_bin_type=True, encoding='utf8'
+        )
+        self._write_data(packed)
 
     def write(self, *args):
         raise NotImplementedError()
@@ -52,4 +55,4 @@ class Writer(object):
 class ImageWriter(Writer):
     def write(self, image):
         self._indices[image.filename] = self._outfile.tell()
-        Writer._write(self, image)
+        self._write(image)
