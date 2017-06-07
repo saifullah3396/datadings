@@ -56,7 +56,7 @@ class Reader(object):
         return self._len
 
     def __next__(self):
-        return msgpack.unpackb(self.rawnext(), encoding='utf8')
+        return self._convert(msgpack.unpackb(self.rawnext(), encoding='utf8'))
 
     next = __next__
 
@@ -104,8 +104,12 @@ class ShuffledReader(object):
         self._reader = reader
 
     def __iter__(self):
-        for raw in self.rawiter():
-            yield msgpack.unpackb(raw, encoding='utf8')
+        n = len(self._reader)
+        order = list(range(n))
+        random.shuffle(order)
+        for i in order:
+            self._reader.seek_index(i)
+            yield self._reader.next()
 
     def rawiter(self):
         n = len(self._reader)
