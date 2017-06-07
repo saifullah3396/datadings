@@ -85,6 +85,9 @@ class Reader(object):
         self._infile.seek(self._key_index[key], 0)
         self._i = self._key_to_index[key]
 
+    def get_key(self, index=None):
+        return self._key_index[index or self._i]
+
     def verify_data(self, read_size=64*1024):
         hashes = load_md5file(self._path + '.md5')
         dataname = pt.basename(self._path)
@@ -104,7 +107,7 @@ class IdentityReader(Reader):
         return sample
 
 
-class ShuffledReader(object):
+class Shuffler(object):
     def __init__(self, reader):
         self._reader = reader
 
