@@ -12,7 +12,7 @@ def _load_index(path):
     try:
         with io.FileIO(path, 'rb') as f:
             return msgpack.unpack(f, encoding='utf8',
-                                  object_pairs_hook=OrderedDict)
+                                  object_pairs_hook=list)
     except IOError:
         return OrderedDict()
 
@@ -37,10 +37,11 @@ class Reader(object):
     def __init__(self, infile):
         self._path = infile
         self._infile = io.FileIO(infile, 'rb')
-        self._key_index = _load_index(infile + '.index')
-        self._key_to_index = {f: i for i, f in enumerate(self._key_index)}
-        self._index = list(self._key_index.values())
-        self._len = len(self._index)
+        key_to_position = _load_index(infile + '.index')
+        self._keys = [v for v, _ in key_to_position]
+        self._positions = [v for _, v in key_to_position]
+        self._key_to_index_dict = None
+        self._len = len(self._positions)
         self._i = 0
 
     def __enter__(self):
@@ -62,7 +63,7 @@ class Reader(object):
 
     def rawnext(self):
         try:
-            n = self._index[self._i+1] - self._index[self._i]
+            n = self._positions[self._i + 1] - self._positions[self._i]
             self._i += 1
             return self._infile.read(n)
         except IndexError:
@@ -75,18 +76,24 @@ class Reader(object):
         while 1:
             yield self.rawnext()
 
-    def seek_index(self, i):
-        self._infile.seek(self._index[i], 0)
-        self._i = i
+    def seek_index(self, index):
+        self._infile.seek(self._positions[index], 0)
+        self._i = index
 
     seek = seek_index
 
+    @property
+    def _key_to_index(self):
+        if self._key_to_index_dict is None:
+            self._key_to_index_dict = dict(enumerate(self._keys))
+        return self._key_to_index_dict
+
     def seek_key(self, key):
-        self._infile.seek(self._key_index[key], 0)
-        self._i = self._key_to_index[key]
+        index = self._key_to_index[key]
+        self.seek_index(index)
 
     def get_key(self, index=None):
-        return self._key_index[index or self._i]
+        return self._keys[index or self._i]
 
     def verify_data(self, read_size=64*1024):
         hashes = load_md5file(self._path + '.md5')
@@ -119,10 +126,15 @@ class Shuffler(object):
             self._reader.seek_index(i)
             yield self._reader.next()
 
-    def rawiter(self):
+    def rawiter(self, yield_key=False):
         n = len(self._reader)
         order = list(range(n))
         random.shuffle(order)
-        for i in order:
-            self._reader.seek_index(i)
-            yield self._reader.rawnext()
+        if yield_key:
+            for i in order:
+                self._reader.seek_index(i)
+                yield self._reader.get_key(), self._reader.rawnext()
+        else:
+            for i in order:
+                self._reader.seek_index(i)
+                yield self._reader.rawnext()
