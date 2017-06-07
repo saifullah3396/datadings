@@ -64,17 +64,18 @@ class Reader(object):
 
     def rawnext(self):
         try:
+            n = self._index[self._i+1] - self._index[self._i]
             self._i += 1
-            n = self._index[self._i] - self._index[self._i - 1]
+            return self._infile.read(n)
         except IndexError:
-            n = -1
-        return self._infile.read(n)
+            raw = self._infile.read()
+            if not raw:
+                raise StopIteration()
+            return raw
 
     def rawiter(self):
-        raw = self.rawnext()
-        while raw:
-            yield raw
-            raw = self.rawnext()
+        while 1:
+            yield self.rawnext()
 
     def seek_index(self, i):
         self._infile.seek(self._index[i], 0)
