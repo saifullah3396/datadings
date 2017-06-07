@@ -6,6 +6,7 @@ import os.path as pt
 from datadings.reader import IdentityReader
 from datadings.reader import Shuffler
 from datadings.writer import Writer
+from datadings.tools import FrequencyPrinter
 
 
 class RawWriter(Writer):
@@ -17,9 +18,11 @@ class RawWriter(Writer):
 def shuffle(infile, outfile):
     r = IdentityReader(infile)
     shuffler = Shuffler(r)
+    printer = FrequencyPrinter()
     with RawWriter(outfile) as writer:
         for key, raw in shuffler.rawiter(yield_key=True):
             writer.write(key, raw)
+            printer.update()
 
 
 def main():
@@ -45,4 +48,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print()
