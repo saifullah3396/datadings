@@ -1,12 +1,15 @@
 """Create ILSVRC 2012 data set files.
 
-Download and unpack the image archives found here:
+The data set is described here:
     http://image-net.org/challenges/LSVRC/2012/index
 
-Also download and unpack additional files provided by Caffe:
-    https://github.com/BVLC/caffe/tree/master/data/ilsvrc12"""
+The tar files needs to be unpacked.
 
-import sys
+Also download and unpack additional files provided by Caffe:
+    https://github.com/BVLC/caffe/tree/master/data/ilsvrc12
+"""
+from __future__ import print_function
+
 import threading as th
 import os
 import os.path as pt
@@ -44,7 +47,6 @@ def write_sets(indir, outdir, shuffle=True):
         print(name)
         printer = FrequencyPrinter()
         datadir = pt.join(indir, name)
-        sys.stdout.flush()
         gen = __yield_ilsvrc2012_metadata(
             pt.join(indir, name + '.txt'),
             shuffle,
@@ -69,7 +71,7 @@ def write_sets(indir, outdir, shuffle=True):
             result = pool.map_async(write_image, gen)
             while not result.ready():
                 result.wait(1000)
-        print('\r%d samples written                       ' % writer.written)
+        printer.print_total_updates()
 
 
 def main():

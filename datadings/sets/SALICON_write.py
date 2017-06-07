@@ -1,13 +1,17 @@
-"""Create SALICON data set files.
+"""Create SALICON (LSUN release) data set files.
 
-Download training, validation, and testing set, and "All Images in JPG":
+The data set is described here:
     http://lsun.cs.princeton.edu/2016/
 
-Image ZIP-file has to be left as-is."""
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - image.zip
+    - training.mat
+    - validation.mat
+    - testing.mat"""
 from __future__ import print_function
 
 import os.path as pt
-import sys
 import zipfile
 import random
 
@@ -19,6 +23,7 @@ from datadings.writer import ImageWriter
 from datadings.sets.SALICON import SALICONData
 from datadings.sets.SALICON import SALICONExperiment
 from datadings.tools import FrequencyPrinter
+from datadings.tools import download_if_not_found
 
 
 def __convert_item(entry):
@@ -55,23 +60,28 @@ def _yield_salicon_metadata(matpath, shuffle):
         yield __convert_item(entry)
 
 
+def __write_image(image, imagezip, writer):
+    experiments, filename = image
+    jpegdata = imagezip.read(pt.join('images', filename))
+    item = SALICONData(jpegdata, experiments, filename)
+    writer.write(item)
+
+
 def write_sets(indir, outdir, shuffle=True):
+    url_prefix = 'http://lsun.cs.princeton.edu/challenge/2015/eyetracking_salicon/data/'
+    imagepath = pt.join(indir, 'image.zip')
+    download_if_not_found(url_prefix + 'image.zip', imagepath)
     with zipfile.ZipFile(pt.join(indir, 'image.zip')) as imagezip:
         for name in ('training', 'validation', 'testing'):
             print(name)
             printer = FrequencyPrinter()
-            sys.stdout.flush()
-            with ImageWriter(pt.join(outdir, name + '.msgpack')) as packer:
-                for image in _yield_salicon_metadata(
-                        pt.join(indir, name + '.mat'),
-                        shuffle,
-                ):
-                    experiments, filename = image
-                    jpegdata = imagezip.read(pt.join('images', filename))
-                    item = SALICONData(jpegdata, experiments, filename)
-                    packer.write(item)
+            datapath = pt.join(indir, name + '.mat')
+            download_if_not_found(url_prefix + '%s.mat' % name, datapath)
+            with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
+                for image in _yield_salicon_metadata(datapath, shuffle):
+                    __write_image(image, imagezip, writer)
                     printer.update()
-            print('\r%d samples written                       ' % packer.written)
+            printer.print_total_updates()
 
 
 def main():
@@ -83,7 +93,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains SALICON mat and zip files'
+        help='directory that contains SALICON files'
     )
     parser.add_argument(
         '-o', '--outdir',

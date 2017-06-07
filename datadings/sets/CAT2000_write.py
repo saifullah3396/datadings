@@ -1,9 +1,13 @@
 """Create CAT2000 data set files.
 
-Download and image archives found here:
+The data set is described here:
     http://saliency.mit.edu/results_cat2000.html
 
-Image ZIP-files have to be left as-is."""
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - ALLSTIMULI.zip
+    - DATA.zip
+"""
 from __future__ import print_function, division
 
 import io
@@ -19,6 +23,7 @@ from PIL import ImageChops
 
 from datadings.writer import ImageWriter
 from datadings.tools import FrequencyPrinter
+from datadings.tools import download_if_not_found
 from datadings.sets import SaliencyData
 from datadings.sets import SaliencyExperiment
 
@@ -99,19 +104,21 @@ def __is_stimulus(path):
 
 
 def write_sets(indir, outdir, shuffle=True):
+    url_prefix = 'http://saliency.mit.edu/'
     for name in ('train', 'test'):
         print(name)
         printer = FrequencyPrinter()
-        with zipfile.ZipFile(pt.join(indir, name + 'Set.zip')) as imagezip:
+        imagepath = pt.join(indir, name + 'Set.zip')
+        download_if_not_found(url_prefix + '%sSet.zip' % name, imagepath)
+        with zipfile.ZipFile(imagepath) as imagezip:
             with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
-                names = imagezip.namelist()
+                names = [f for f in imagezip.namelist() if __is_stimulus(f)]
                 if shuffle:
                     random.shuffle(names)
                 for path in names:
-                    if __is_stimulus(path):
-                        write_image(imagezip, path, writer)
-                        printer.update()
-            print('\r%d samples written                       ' % writer.written)
+                    write_image(imagezip, path, writer)
+                    printer.update()
+        printer.print_total_updates()
 
 
 def main():
@@ -123,7 +130,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains CAT2000 archives'
+        help='directory that contains CAT2000 files'
     )
     parser.add_argument(
         '-o', '--outdir',
@@ -135,7 +142,7 @@ def main():
     try:
         write_sets(args.indir, outdir)
     except KeyboardInterrupt:
-        pass
+        print()
 
 
 if __name__ == '__main__':

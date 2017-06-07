@@ -1,9 +1,12 @@
 """Create Coutrot 1 data set files.
 
-Download video ZIP-file and Matlab file from here:
+The data set is described here:
     http://antoinecoutrot.magix.net/public/databases.html
 
-Video files must be unzipped."""
+Download video ZIP-file and Matlab files manually.
+Video files must be unzipped.
+Note that samples are NOT SHUFFLED!
+"""
 from __future__ import print_function, division
 
 import os
@@ -22,6 +25,7 @@ import numpy as np
 
 from datadings.writer import ImageWriter
 from datadings.tools import FrequencyPrinter
+from datadings.tools import print_over
 from datadings.sets import SaliencyData
 from datadings.sets import SaliencyExperiment
 from datadings.matlab import loadmat
@@ -127,15 +131,22 @@ def iter_frames_with_fixpoints(frame_gen, experiments):
         yield key, frame, [ex[key] for ex in experiments]
 
 
-def write_video(name_prefix, frame_gen, experiments, writer, printer, min_fixpoints=1):
+def write_video(name_prefix, frame_gen, experiments, writer, printer,
+                min_fixpoints=30, write_delta=10, max_fixpoint_age=60):
     tracker = LucasKanade()
+    last_written = 0
     for key, frame in frame_gen:
         for s, experiment in enumerate(experiments):
             try:
                 tracker.track(experiment[key], (s, key))
             except IndexError:
                 continue
+        for s, age in list(tracker.points.keys()):
+            if key - age > max_fixpoint_age:
+                tracker.points.pop((s, age))
         points = tracker.update(frame)
+        if key - last_written < write_delta:
+            continue
         groups = __group_points(points)
         tracked_experiments = [
             SaliencyExperiment(group, None)
@@ -144,38 +155,37 @@ def write_video(name_prefix, frame_gen, experiments, writer, printer, min_fixpoi
         ]
         if not tracked_experiments:
             continue
-        jpegdata = bytes(cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95]))
+        success, data = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+        if not success:
+            continue
+        jpegdata = data.tostring()
         item = SaliencyData(
             jpegdata,
             tracked_experiments,
             pt.join('ERB3_Stimuli', name_prefix + '_%06d' % key),
         )
         writer.write(item)
+        last_written = key
         printer.update()
 
 
 def write_sets(indir, outdir, shuffle=False):
-    samples_written = 0
+    printer = FrequencyPrinter()
     mat = loadmat(pt.join(indir, 'coutrot_database1.mat'))
     clip_data = __parse_mat(mat['Coutrot_Database1'])
     with ImageWriter(pt.join(outdir, 'Coutrot1.msgpack')) as writer:
         for path in os.listdir(pt.join(indir, 'ERB3_Stimuli')):
-            printer = FrequencyPrinter()
             path = pt.join(indir, 'ERB3_Stimuli', path)
             # TODO shuffle if possible
             if not path.endswith('.avi'):
                 continue
             name = path.split(os.sep)[-1].split('.')[0]
-            print(name)
+            print_over('\r' + name)
             clip = name.split('.')[0]
             experiments = clip_data[clip]
             frame_gen = iter_video_frames_opencv(path)
             write_video(name, frame_gen, experiments, writer, printer)
-            print('\r%d samples written                       '
-                  % (writer.written - samples_written))
-            samples_written = writer.written
-    print('total')
-    print('\r%d samples written                       ' % writer.written)
+    printer.print_total_updates()
 
 
 def main():
@@ -187,7 +197,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains CAT2000 archives'
+        help='directory that contains Coutrot DB 1 files'
     )
     parser.add_argument(
         '-o', '--outdir',
@@ -199,7 +209,7 @@ def main():
     try:
         write_sets(args.indir, outdir)
     except KeyboardInterrupt:
-        pass
+        print()
 
 
 if __name__ == '__main__':

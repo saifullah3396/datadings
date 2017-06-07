@@ -1,9 +1,13 @@
 """Create MIT1003 data set files.
 
-Download "Stimuli" and "Eye Tracking Data" listed under "Eye tracking database":
+The data set is described here:
     http://people.csail.mit.edu/tjudd/WherePeopleLook/index.html
 
-Image ZIP-files have to be left as-is."""
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - ALLSTIMULI.zip
+    - DATA.zip
+"""
 from __future__ import print_function, division
 
 import io
@@ -18,13 +22,13 @@ import numpy as np
 
 from datadings.writer import ImageWriter
 from datadings.tools import FrequencyPrinter
+from datadings.tools import download_if_not_found
 from datadings.sets import SaliencyData
 from datadings.sets import SaliencyExperiment
 
 
-def __load_fixpoints(datazip, mat_files, stimuluspath):
+def __iter_fixpoints(datazip, mat_files, stimuluspath):
     stimulus = stimuluspath.split(os.sep)[1]
-    experiments = []
     for exp in mat_files[stimulus]:
         mat_data = datazip.read(exp)
         buf = io.BytesIO(mat_data)
@@ -33,17 +37,16 @@ def __load_fixpoints(datazip, mat_files, stimuluspath):
             if not k.startswith('__')
         ][0]
         try:
-            experiments.append(mat[0][0][4][0][0][2].astype(np.float32))
+            yield mat[0][0][4][0][0][2].astype(np.float32)
         except IndexError:
-            experiments.append(mat[0][0][0][0][0][2].astype(np.float32))
-    return experiments
+            yield mat[0][0][0][0][0][2].astype(np.float32)
 
 
 def write_image(imagezip, datazip, mat_files, stimuluspath, writer):
     stimulusdata = imagezip.read(stimuluspath)
     experiments = [
         SaliencyExperiment(exp, None)
-        for exp in __load_fixpoints(datazip, mat_files, stimuluspath)
+        for exp in __iter_fixpoints(datazip, mat_files, stimuluspath)
     ]
     filename = os.sep.join(stimuluspath.split(os.sep)[-2:])
     item = SaliencyData(
@@ -65,20 +68,28 @@ def __find_all_experiments(datazip):
 
 
 def write_sets(indir, outdir, shuffle=True):
+    imagepath = pt.join(indir, 'ALLSTIMULI.zip')
+    download_if_not_found(
+        'http://people.csail.mit.edu/tjudd/WherePeopleLook/ALLSTIMULI.zip',
+        imagepath
+    )
+    datapath = pt.join(indir, 'DATA.zip')
+    download_if_not_found(
+        'http://people.csail.mit.edu/tjudd/WherePeopleLook/DATA.zip',
+        datapath
+    )
     printer = FrequencyPrinter()
-    with zipfile.ZipFile(pt.join(indir, 'ALLSTIMULI.zip')) as imagezip:
-        with zipfile.ZipFile(pt.join(indir, 'DATA.zip')) as datazip:
+    with zipfile.ZipFile(imagepath) as imagezip:
+        with zipfile.ZipFile(datapath) as datazip:
             experiments = __find_all_experiments(datazip)
             with ImageWriter(pt.join(outdir, 'MIT1003.msgpack')) as writer:
-                names = imagezip.namelist()
+                names = [f for f in imagezip.namelist() if f.endswith('.jpeg')]
                 if shuffle:
                     random.shuffle(names)
                 for path in names:
-                    if path.endswith(os.sep):
-                        continue
                     write_image(imagezip, datazip, experiments, path, writer)
                     printer.update()
-        print('\r%d samples written                       ' % writer.written)
+    printer.print_total_updates()
 
 
 def main():
@@ -90,7 +101,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains CAT2000 archives'
+        help='directory that contains MIT1003 archives'
     )
     parser.add_argument(
         '-o', '--outdir',
@@ -102,7 +113,7 @@ def main():
     try:
         write_sets(args.indir, outdir)
     except KeyboardInterrupt:
-        pass
+        print()
 
 
 if __name__ == '__main__':
