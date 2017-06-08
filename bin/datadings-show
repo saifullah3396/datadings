@@ -44,7 +44,7 @@ def main():
     parser.add_argument(
         'path',
         type=text_type,
-        help='type of dataset'
+        help='path to dataset file'
     )
     parser.add_argument(
         '-d', '--delay',
@@ -53,12 +53,14 @@ def main():
         help='delay between images'
     )
     args = parser.parse_args()
-    try:
-        if args.datatype == 'saliency':
-            show_saliency(args.path, args.delay)
-    except KeyboardInterrupt:
-        print()
+    if args.datatype == 'saliency':
+        show_saliency(args.path, args.delay)
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print()

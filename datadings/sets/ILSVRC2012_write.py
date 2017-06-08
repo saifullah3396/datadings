@@ -92,11 +92,13 @@ def main():
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    try:
-        write_sets(args.indir, outdir)
-    except KeyboardInterrupt:
-        pass
+    write_sets(args.indir, outdir)
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print()

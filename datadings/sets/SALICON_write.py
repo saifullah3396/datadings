@@ -100,10 +100,20 @@ def main():
         metavar='OUTPATH',
         help='output directory; defaults to indir'
     )
+    parser.add_argument(
+        '--no-shuffle',
+        action='store_true',
+        help='disable shuffling'
+    )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+    write_sets(args.indir, outdir, not args.no_shuffle)
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print()
