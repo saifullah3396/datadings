@@ -118,13 +118,20 @@ class Shuffler(object):
     def __init__(self, reader):
         self._reader = reader
 
-    def __iter__(self):
+    def iter(self, yield_key=False):
         n = len(self._reader)
         order = list(range(n))
         random.shuffle(order)
-        for i in order:
-            self._reader.seek_index(i)
-            yield self._reader.next()
+        if yield_key:
+            for i in order:
+                self._reader.seek_index(i)
+                yield self._reader.get_key(), self._reader.next()
+        else:
+            for i in order:
+                self._reader.seek_index(i)
+                yield self._reader.next()
+
+    __iter__ = iter
 
     def rawiter(self, yield_key=False):
         n = len(self._reader)
