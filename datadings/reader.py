@@ -129,13 +129,18 @@ class Reader(object):
                 raise StopIteration()
             return raw
 
-    def rawiter(self):
+    def rawiter(self, yield_key=False):
         """
         Like iter, but yields raw bytes.
-        :return:
+
+        :param yield_key: if True, yields (key, sample) pairs
         """
-        while 1:
-            yield self.rawnext()
+        if yield_key:
+            while 1:
+                yield self.get_key(), self.rawnext()
+        else:
+            while 1:
+                yield self.rawnext()
 
     def seek_index(self, index):
         """
@@ -219,6 +224,9 @@ class Shuffler(object):
         :param reader: Reader to shuffle
         """
         self._reader = reader
+
+    def __len__(self):
+        return len(self._reader)
 
     def iter(self, yield_key=False):
         """
