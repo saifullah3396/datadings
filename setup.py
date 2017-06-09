@@ -35,7 +35,7 @@ def find_version(*file_paths):
 
 
 # Use the README as the long description
-with open(pt.join(PACKAGE_DIR, 'README.md'), encoding='utf-8') as f:
+with open(pt.join(PACKAGE_DIR, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 
