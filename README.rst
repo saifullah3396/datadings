@@ -25,6 +25,8 @@ Command Line Tools
 
 * _datadings-write_
   creates new dataset files
+* _datadings_merge_
+  merges two or more dataset files
 * _datadings-shuffle_
   shuffles an existing dataset file
 * _datadings-show_

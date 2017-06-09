@@ -62,10 +62,11 @@ with open(pt.join(PACKAGE_DIR, 'requirements.txt')) as f:
 
 
 scripts = [
+    'bin/datadings-bench',
+    'bin/datadings-merge',
     'bin/datadings-show',
     'bin/datadings-shuffle',
     'bin/datadings-write',
-    'bin/datadings-bench',
 ]
 
 
