@@ -57,15 +57,8 @@ package_data = {
 }
 
 
-dependencies = [
-    'six',
-    'numpy',
-    'scipy',
-    'pillow',
-    'msgpack-python >= 0.4.8',
-    'wget',
-    'matplotlib',
-]
+with open(pt.join(PACKAGE_DIR, 'requirements.txt')) as f:
+    dependencies = [l.strip(' \n') for l in f]
 
 
 scripts = [
