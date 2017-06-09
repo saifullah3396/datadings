@@ -9,20 +9,29 @@ import wget
 
 
 def print_over(*args, **kwargs):
+    """ Wrapper around print that replaces the current line.
+        It prints from the start of the line and clears remaining
+        characters.
+        Accepts the same kwargs as the print function.
+
+        @param flush: if True, flush after printing
+    """
     end = kwargs.pop('end', '\n')
     kwargs['end'] = ''
     flush = kwargs.pop('flush', False)
     stream = kwargs.pop('file', sys.stdout)
+    # return cursor to front and print
     print('\r', *args, **kwargs)
+    # clear rest of the line
     print('\033[K', end=end)
     if flush:
         stream.flush()
 
 
 class FrequencyPrinter(object):
-    """ Convenient printer for framerates.
-        Call update every time a new frame is shown
-        to regularly print the current framerate.
+    """ Convenient printer for frequencies.
+        Call update every time something happens
+        to regularly print the current frequency.
     """
     def __init__(self,
                  interval=2,
@@ -36,7 +45,7 @@ class FrequencyPrinter(object):
         """
         self.interval = interval
         if not printlines:
-            formatstring = '\r'+formatstring
+            formatstring = formatstring
         self.formatstring = formatstring
         self.end = None if printlines else ''
         self.new_updates = 0
