@@ -42,7 +42,7 @@ def __transform_image(im, bbox, size=1024):
     r = size / d
     return r, cropped.resize(
         (int(round(w*r)), int(round(h*r))),
-        Image.BICUBIC,
+        Image.ANTIALIAS,
     )
 
 
