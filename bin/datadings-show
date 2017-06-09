@@ -1,33 +1,24 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-import io
-import pylab as plt
-import warnings
 from six import text_type
-from PIL import Image
+
+import numpy as np
+import cv2
 
 from datadings.sets import SaliencyReader
 
 
 def show_saliency(path, delay):
-    warnings.filterwarnings("ignore", ".*GUI is implemented.*")
+    delay = int(delay*1000)
     reader = SaliencyReader(path)
-    fig, ax = plt.subplots()
-    im = None
     for sample in reader:
-        ax.clear()
-        image = Image.open(io.BytesIO(sample.image))
-        if im is None:
-            ax.imshow(image)
-        else:
-            im.set_data(image)
-        for experiment in sample.groundtruth:
-            for point in experiment.locations:
-                ax.add_artist(plt.Circle(point, 3, color='red'))
-        plt.draw()
-        plt.pause(delay)
-    plt.close(fig)
+        im = cv2.imdecode(np.frombuffer(sample.image, dtype=np.uint8), cv2.IMREAD_COLOR)
+        for x, y in sample.groundtruth[0].locations:
+            cv2.circle(im, (int(x), int(y)), 3, (0, 0, 255), -1)
+        cv2.imshow('Press Q to exit', im)
+        if cv2.waitKey(delay) == ord('q'):
+            break
 
 
 def main():
