@@ -77,6 +77,10 @@ Reading samples as raw bytes:
     for raw in reader.rawiter():
         print(type(raw), len(raw))
 
+Number of samples:
+
+    print(len(reader))
+
 
 
 
