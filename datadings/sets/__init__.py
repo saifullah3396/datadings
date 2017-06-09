@@ -5,15 +5,15 @@ from datadings.reader import Reader
 
 ClassificationData = namedtuple(
     'ClassificationData',
-    ('image', 'groundtruth', 'filename')
+    ('sample', 'groundtruth', 'filename')
 )
 SegmentationData = namedtuple(
     'SegmentationData',
-    ('image', 'groundtruth', 'filename')
+    ('sample', 'groundtruth', 'filename')
 )
 SaliencyData = namedtuple(
     'SaliencyData',
-    ('image', 'groundtruth', 'filename')
+    ('sample', 'groundtruth', 'filename')
 )
 SaliencyExperiment = namedtuple(
     'SaliencyExperiment',

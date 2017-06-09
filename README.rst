@@ -8,7 +8,7 @@ for machine learning, based on simple principles.
     A sample is a tuple.
 
 E.g., for supervised training each sample is a tuple
-``(data, groundtruth)``.
+``(sample, groundtruth)``.
 More values (meta-data) may be added though.
 
 messagepack is used as an efficient binary serialization format.
