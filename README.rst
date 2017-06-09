@@ -35,7 +35,7 @@ Command Line Tools
 * *datadings-shuffle*
   shuffles an existing dataset file
 * *datadings-show*
-  displays the contents of a dataset file
+  displays the contents of a dataset file; **requires OpenCV**
 * *datadings-bench*
   runs a benchmark to see how many samples/s can be read
   from a given dataset file
