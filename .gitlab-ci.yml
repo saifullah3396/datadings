@@ -1,0 +1,22 @@
+devel:
+  image: quay.io/pypa/manylinux1_x86_64
+  stage: build
+  script:
+  - ./dist.sh
+  artifacts:
+    paths:
+    - ./*.whl
+    expire_in: 8 hours
+  except:
+  - tags
+
+release:
+  image: quay.io/pypa/manylinux1_x86_64
+  stage: build
+  script:
+  - ./dist.sh
+  artifacts:
+    paths:
+    - ./*.whl
+  only:
+  - tags
