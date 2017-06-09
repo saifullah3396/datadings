@@ -2,7 +2,7 @@ devel:
   image: quay.io/pypa/manylinux1_x86_64
   stage: build
   script:
-  - ./dist.sh
+  - ./build_wheels.sh
   artifacts:
     paths:
     - ./*.whl
@@ -14,7 +14,7 @@ release:
   image: quay.io/pypa/manylinux1_x86_64
   stage: build
   script:
-  - ./dist.sh
+  - ./build_wheels.sh
   artifacts:
     paths:
     - ./*.whl
