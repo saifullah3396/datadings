@@ -8,16 +8,12 @@ import os.path as pt
 import wget
 
 
-def _pad(s, width):
-    return s + ' ' * max(0, (width - len(s)))
-
-
 def print_over(*args, **kwargs):
     end = kwargs.pop('end', '\n')
     kwargs['end'] = ''
     flush = kwargs.pop('flush', False)
     stream = kwargs.pop('file', sys.stdout)
-    print(*args, **kwargs)
+    print('\r', *args, **kwargs)
     print('\033[K', end=end)
     if flush:
         stream.flush()
