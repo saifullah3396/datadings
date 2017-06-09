@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-
+"""Shuffle an existing dataset file.
+"""
 import sys
 import os.path as pt
 
@@ -27,9 +28,11 @@ def main():
     )
     parser.add_argument(
         'infile',
+        help='file to shuffle',
     )
     parser.add_argument(
         'outfile',
+        help='output file; cannot be same as infile',
     )
     args, unknown = parser.parse_known_args()
     infile = pt.abspath(args.infile)

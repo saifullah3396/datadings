@@ -95,8 +95,7 @@ def main():
     )
     parser.add_argument(
         'outfile',
-        nargs=1,
-        help=''
+        help='output file'
     )
     parser.add_argument(
         '-s', '--strategy',
@@ -111,7 +110,7 @@ def main():
     )
     args, unknown = parser.parse_known_args()
     infiles = [pt.abspath(f) for f in args.infile + args.infiles]
-    outfile = pt.abspath(args.outfile[0])
+    outfile = pt.abspath(args.outfile)
     if outfile in infiles:
         parser.print_usage()
         print('Cannot write to input files.')

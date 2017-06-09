@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-
+"""Create new dataset files.
+"""
 import os
 import os.path as pt
 import sys
