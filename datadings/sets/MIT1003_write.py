@@ -20,7 +20,7 @@ from collections import defaultdict
 import scipy.io
 import numpy as np
 
-from datadings.writer import ImageWriter
+from datadings.writer import FileWriter
 from datadings.tools import FrequencyPrinter
 from datadings.tools import download_if_not_found
 from datadings.sets import SaliencyData
@@ -82,7 +82,7 @@ def write_sets(indir, outdir, shuffle=True):
     with zipfile.ZipFile(imagepath) as imagezip:
         with zipfile.ZipFile(datapath) as datazip:
             experiments = __find_all_experiments(datazip)
-            with ImageWriter(pt.join(outdir, 'MIT1003.msgpack')) as writer:
+            with FileWriter(pt.join(outdir, 'MIT1003.msgpack')) as writer:
                 names = [f for f in imagezip.namelist() if f.endswith('.jpeg')]
                 if shuffle:
                     random.shuffle(names)

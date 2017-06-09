@@ -20,7 +20,7 @@ from multiprocessing import cpu_count
 
 from PIL import Image
 
-from datadings.writer import ImageWriter
+from datadings.writer import FileWriter
 from datadings.sets import ClassificationData
 from datadings.tools import FrequencyPrinter
 
@@ -52,7 +52,7 @@ def write_sets(indir, outdir, shuffle=True):
             shuffle,
         )
         lock = th.Lock()
-        with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
+        with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
             def write_image(item):
                 filename, label = item
                 path = pt.join(datadir, filename.replace('/', os.sep))
