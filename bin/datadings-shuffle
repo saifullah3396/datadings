@@ -5,14 +5,8 @@ import os.path as pt
 
 from datadings.reader import IdentityReader
 from datadings.reader import Shuffler
-from datadings.writer import Writer
+from datadings.writer import RawWriter
 from datadings.tools import FrequencyPrinter
-
-
-class RawWriter(Writer):
-    def write(self, key, data):
-        self._indices[key] = self._outfile.tell()
-        self._write_data(data)
 
 
 def shuffle(infile, outfile):

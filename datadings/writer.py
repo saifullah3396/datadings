@@ -94,6 +94,17 @@ class Writer(object):
         pass
 
 
+class RawWriter(Writer):
+    """
+    Writer for raw data.
+    No packing is done.
+    write requires key and data as arguments.
+    """
+    def write(self, key, data):
+        self._indices[key] = self._outfile.tell()
+        self._write_data(data)
+
+
 class FileWriter(Writer):
     """
     Writer for file-based datasets.
