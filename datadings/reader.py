@@ -99,10 +99,18 @@ class Reader(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._infile.close()
 
-    def __iter__(self):
-        return self
+    def iter(self, yield_key=False):
+        """
+        :param yield_key: if True, yields (key, sample) pairs
+        """
+        if yield_key:
+            while 1:
+                yield self.get_key(), self.next()
+        else:
+            while 1:
+                yield self.next()
 
-    iter = __iter__
+    __iter__ = iter
 
     def __len__(self):
         return self._len
@@ -251,8 +259,6 @@ class Shuffler(_Augment):
     Iterate over the contents of a Reader in random order.
     Not thread safe!
     """
-    __iter__ = iter
-
     def iter(self, yield_key=False):
         """
         Iterate over the wrapper Reader in random order.
@@ -270,6 +276,8 @@ class Shuffler(_Augment):
             for i in order:
                 self._reader.seek_index(i)
                 yield self._reader.next()
+
+    __iter__ = iter
 
     def rawiter(self, yield_key=False):
         """
@@ -296,8 +304,6 @@ class Cycler(_Augment):
     Cycle over the contents of a Reader or Shuffler.
     Not thread safe!
     """
-    __iter__ = iter
-
     def iter(self, yield_key=False):
         """
         Cycle over the wrapper Reader.
@@ -307,6 +313,8 @@ class Cycler(_Augment):
         while 1:
             for sample in self._reader.iter(yield_key):
                 yield sample
+
+    __iter__ = iter
 
     def rawiter(self, yield_key=False):
         """
