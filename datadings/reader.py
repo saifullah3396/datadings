@@ -313,6 +313,7 @@ class Cycler(_Augment):
         while 1:
             for sample in self._reader.iter(yield_key):
                 yield sample
+            self._reader.seek_index(0)
 
     __iter__ = iter
 
@@ -326,3 +327,4 @@ class Cycler(_Augment):
         while 1:
             for sample in self._reader.rawiter(yield_key):
                 yield sample
+            self._reader.seek_index(0)
