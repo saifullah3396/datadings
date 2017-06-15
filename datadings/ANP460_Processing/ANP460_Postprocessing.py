@@ -91,50 +91,6 @@ def draw_saliency_map(image_name, fixation_points, percentage_salient):
     scipy.misc.imsave(path, boolean_map)
     # cv2.imwrite(path, boolean_map)
 
-def draw_convex_hull(image_name, fixation_points):
-    dim = calculate_dimensions(image_name)
-    fix_normalized = StandardScaler().fit_transform(fixation_points)
-    db = DBSCAN(eps=0.27, min_samples=5).fit(fix_normalized)
-    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-    core_samples_mask[db.core_sample_indices_] = True
-    labels = db.labels_
-    unique_labels = set(labels)
-    convex_map = np.array(Image.new('L', (dim[0], dim[1]), 0))
-    for k in unique_labels:
-        if k == -1:
-            continue
-        class_member_mask = (labels == k)
-        # would you like to include non core samples?
-        xy = fixation_points[class_member_mask & core_samples_mask]
-        if len(np.unique(xy[:, 0]))<3:
-            continue
-        hull = ConvexHull(xy)
-        img = Image.new('L', (dim[0], dim[1]), 0)
-        pts = [(x[0], x[1]) for x in xy[hull.vertices,:]]
-        ImageDraw.Draw(img).polygon(pts, outline=1, fill=20)
-        convex_map += np.array(img)
-    convex_map[convex_map >= 1] = 255
-    convex_map = np.flipud(convex_map)
-    path = os.path.join(outdir_convex, image_name[0:3] + '.png')
-    cv2.imwrite(path, convex_map)
-
-def draw_gaussian_boolean_map_from_cluster(image_name, fixation_points):
-    dim = calculate_dimensions(image_name)
-    fix_normalized = StandardScaler().fit_transform(fixation_points)
-    db = DBSCAN(eps=0.27, min_samples=5).fit(fix_normalized)
-    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
-    core_samples_mask[db.core_sample_indices_] = True
-    labels = db.labels_
-    class_member_mask = (labels != -1)
-    # would you like to include non core samples?
-    cluster_points = fixation_points[class_member_mask & core_samples_mask]
-    if len(np.unique(cluster_points[:, 0])) < 3:
-        pass
-    grid = salicon_gaze(cluster_points, image_name)
-    saliency_map = fixation_map(grid)
-    path = os.path.join(outdir_gaussian_cluster, image_name[0:3] + '.png')
-    scipy.misc.imsave(path, saliency_map)
-
 def create_maps(first_n_fixations = 6, percentage_salient = 80):
     for image_name in image_names:
         fixation_points = []
@@ -150,56 +106,7 @@ def create_maps(first_n_fixations = 6, percentage_salient = 80):
                     fixation_points.append(np.load(fixpath)[0:first_n_fixations])
         fixation_points = np.concatenate(fixation_points, axis=0)
         draw_saliency_map(image_name, fixation_points, percentage_salient)
-        #draw_convex_hull(image_name, fixation_points)
-        #draw_gaussian_boolean_map_from_cluster(image_name, fixation_points)
 
-def get_image(image_name):
-    path = os.path.join(im_root, image_name)
-    img = sci.imread(path)
-    dim = calculate_dimensions(image_name)
-    dim = (int(dim[0]), int(dim[1]), 3)
-    img = sci.imresize(img, dim)
-    return img
-
-def view_convex_bool_map():
-    boolean_path =[join(outdir_bool, f) for f in listdir(outdir_bool)
-                   if f.endswith('.png')]
-    convex_path = [join(outdir_convex, f) for f in listdir(outdir_convex)
-                   if f.endswith('.png')]
-    for i, image_name in enumerate(image_names):
-        dim = calculate_dimensions(image_name)
-        img = get_image(image_name)
-        f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
-        ax1.imshow(img, zorder=0, extent=[0, dim[0], 0, dim[1]])
-        ax2.imshow(img, zorder=0, extent=[0, dim[0], 0, dim[1]])
-        boolean_map = np.asarray(Image.open(boolean_path[i]))
-        convex_map = np.asarray(Image.open(convex_path[i]))
-        ax1.matshow(boolean_map, zorder=1, alpha=0.8, cmap=trans_black,
-                                                extent=[0, dim[0], 0, dim[1]])
-        ax2.matshow(convex_map, zorder=1, alpha=0.8, cmap=trans_black,
-                                                      extent=[0, dim[0], 0, dim[1]])
-        plt.show()
-    pass
-
-def view_gaussians():
-    boolean_path =[join(outdir_gaussian_cluster, f) for f in listdir(outdir_gaussian_cluster)
-                   if f.endswith('.png')]
-    convex_path = [join(outdir, f) for f in listdir(outdir)
-                   if f.endswith('.jpg')]
-    for i, image_name in enumerate(image_names):
-        dim = calculate_dimensions(image_name)
-        img = get_image(image_name)
-        f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15,6), sharey=True)
-        ax1.imshow(img, zorder=0, extent=[0, dim[0], 0, dim[1]])
-        ax2.imshow(img, zorder=0, extent=[0, dim[0], 0, dim[1]])
-        boolean_map = np.asarray(Image.open(boolean_path[i]))
-        convex_map = np.asarray(Image.open(convex_path[i]))
-        ax1.matshow(boolean_map, zorder=1, alpha=1, cmap=trans_black,
-                                                extent=[0, dim[0], 0, dim[1]])
-        ax2.matshow(convex_map, zorder=1, alpha=1, cmap=trans_black,
-                                                      extent=[0, dim[0], 0, dim[1]])
-        plt.show()
-    pass
 
 def main():
     #create_maps()

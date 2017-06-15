@@ -1,8 +1,8 @@
 import os
 import zipfile
 import shutil
+import yaml
 
-# We still need anp json file.
 
 def make_dir(indir):
     writepath = os.path.join(indir, 'wrangled_data')
@@ -13,6 +13,11 @@ def make_dir(indir):
         if not os.path.exists(os.path.join(writepath, dir)):
             os.mkdir(os.path.join(writepath, dir))
 
+def __include_json(datazip, indir, writepath):
+    anplistpath = [f for f in datazip.namelist() if f.endswith('.json')][0]
+    targetpath = os.path.join(writepath)
+    shutil.copy2(os.path.join(indir, anplistpath), targetpath)
+
 def wrangle_dataset(indir):
     datapath = os.path.join(indir, 'eye_tracking_data.zip')
     writepath = os.path.join(indir, 'wrangled_data')
@@ -20,6 +25,8 @@ def wrangle_dataset(indir):
         # get directories / names
         participant_dir = [x.split(os.sep)[1] for x in datazip.namelist() if x.endswith(
             '/') & (len(x.split(os.sep)) == 3)]
+        # include json containing classes
+        __include_json(datazip, indir, writepath)
         for f in datazip.namelist():
             if f.endswith('.txt') & (len(f.split(os.sep)) == 3):
                 if (len(f.split(os.sep)[2]) <= 13):
@@ -35,6 +42,13 @@ def wrangle_dataset(indir):
                         index = 'p' + str(participant_dir.index(parts[1]))
                         targetpath = os.path.join(writepath, index, 'answer.txt')
                         shutil.copy2(os.path.join(indir, f), targetpath)
+    zipIt(indir, writepath)
+    pass
+
+
+def zipIt(indir, writepath):
+    shutil.make_archive(writepath, 'zip', indir, 'wrangled_data')
+    pass
 
 def main():
     import argparse

@@ -23,6 +23,14 @@ SaliencyExperiment = namedtuple(
     'SaliencyExperiment',
     ('locations', 'map')
 )
+ANP460Data = namedtuple(
+    'ANP460Data',
+    ('sample', 'groundtruth', 'filename', 'anp', 'type')
+)
+ANP460Experiment = namedtuple(
+    'ANP460Experiment',
+    ('locations', 'map', 'answer')
+)
 
 
 def convert_classification(item):

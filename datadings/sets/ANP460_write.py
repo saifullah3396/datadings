@@ -2,7 +2,7 @@
 Create ANP460 data set files.
 """
 from __future__ import print_function, division
-
+#-B -m cProfile -o output.prof
 import os
 import os.path as pt
 import zipfile
@@ -17,10 +17,6 @@ from datadings.sets import ANP460Experiment
 import csv
 import yaml
 
-
-with open('/Users/magnus/Downloads/ANP400/image_anp_list.json') as json_data:
-    anp_list = yaml.safe_load(json_data)
-    anp_list['455.jpg'][0] = 'rough_road'
 
 def __iter_fixpoints(datazip, txt_files, stimuluspath):
     stimulus = stimuluspath.split(os.sep)[1]
@@ -37,6 +33,12 @@ def __get_answer(datazip, txt_files, stimuluspath):
         data = datazip.read(exp).split('\r\n')[img].split(',')[1:]
         answer.append(data)
     return answer
+
+def __get_anp_list(datazip):
+    json_data = datazip.read('wrangled_data/image_anp_list.json')
+    anp_list = yaml.safe_load(json_data)
+    anp_list['455.jpg'][0] = 'rough_road'
+    return anp_list
 
 def write_image(imagezip, datazip, txt_files, stimuluspath, writer):
     stimulusdata = imagezip.read(stimuluspath)
@@ -73,13 +75,14 @@ def __find_all_experiments(datazip):
             mapping[parts[2]].append(csv)
     return mapping
 
-
 def write_sets(indir, outdir, shuffle=True):
     imagepath = pt.join(indir, 'images_original.zip')
     datapath = pt.join(indir, 'wrangled_data.zip')
     printer = FrequencyPrinter()
     with zipfile.ZipFile(imagepath) as imagezip:
         with zipfile.ZipFile(datapath) as datazip:
+            global anp_list
+            anp_list = __get_anp_list(datazip)
             experiments = __find_all_experiments(datazip)
             with FileWriter(pt.join(outdir, 'ANP460.msgpack')) as writer:
                 names = [f for f in imagezip.namelist() if f.endswith('.jpg')]
