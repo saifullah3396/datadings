@@ -13,11 +13,9 @@ from ANP460_Preprocessing import *
 from os.path import isfile, join
 from os import listdir
 '''
-Create fixation (saliency) maps, boolean maps from fixations maps and use DBSCAN 
-clustering to create boolean maps.
+Create fixation (saliency) maps, boolean maps from fixations maps for the 
+'wrangled_data.zip'.
 For every image one "ground truth" was created.
-For each image the participant was asked if the ANP is visible? 
-Dependent if the image was a test or control/opposite image the  
 '''
 
 indir = '/Users/magnus/master/DFKI/data/fixation_data'
@@ -107,11 +105,8 @@ def create_maps(first_n_fixations = 6, percentage_salient = 80):
         fixation_points = np.concatenate(fixation_points, axis=0)
         draw_saliency_map(image_name, fixation_points, percentage_salient)
 
-
 def main():
-    #create_maps()
-    view_convex_bool_map()
-    #view_gaussians()
+    create_maps()
 
 if __name__ == '__main__':
     main()

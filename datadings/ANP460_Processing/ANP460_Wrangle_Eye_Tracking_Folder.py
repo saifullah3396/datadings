@@ -1,8 +1,6 @@
 import os
 import zipfile
 import shutil
-import yaml
-
 
 def make_dir(indir):
     writepath = os.path.join(indir, 'wrangled_data')
@@ -14,9 +12,12 @@ def make_dir(indir):
             os.mkdir(os.path.join(writepath, dir))
 
 def __include_json(datazip, indir, writepath):
-    anplistpath = [f for f in datazip.namelist() if f.endswith('.json')][0]
-    targetpath = os.path.join(writepath)
-    shutil.copy2(os.path.join(indir, anplistpath), targetpath)
+    jsonpath = [f for f in datazip.namelist() if f.endswith('.json')]
+    if len(jsonpath) == 1:
+        targetpath = os.path.join(writepath)
+        shutil.copy2(os.path.join(indir, jsonpath[0]), targetpath)
+    else:
+        print 'Copy image_anp_list.json into the eye_tracking_analysis folder.'
 
 def wrangle_dataset(indir):
     datapath = os.path.join(indir, 'eye_tracking_data.zip')
@@ -44,7 +45,6 @@ def wrangle_dataset(indir):
                         shutil.copy2(os.path.join(indir, f), targetpath)
     zipIt(indir, writepath)
     pass
-
 
 def zipIt(indir, writepath):
     shutil.make_archive(writepath, 'zip', indir, 'wrangled_data')

@@ -1,4 +1,4 @@
-from ANP460_Postprocessing import *
+from ANP460_Processing import *
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -83,7 +83,7 @@ def draw_convex_hull(image_name, fixation_points):
     path = os.path.join(outdir_convex, image_name[0:3] + '.png')
     cv2.imwrite(path, convex_map)
 
-def draw_gaussian_boolean_map_from_cluster(image_name, fixation_points):
+def draw_gaussian_from_cluster(image_name, fixation_points):
     dim = calculate_dimensions(image_name)
     fix_normalized = StandardScaler().fit_transform(fixation_points)
     db = DBSCAN(eps=0.27, min_samples=5).fit(fix_normalized)
@@ -151,7 +151,24 @@ def view_gaussians():
         plt.show()
     pass
 
+def create_maps(first_n_fixations = 6, percentage_salient = 80):
+    for image_name in image_names:
+        fixation_points = []
+        for participant in participants:
+            fixpath = os.path.join(indir, participant[0:3], image_name[0:3] + '.npy')
+            answerpath = os.path.join(indir, participant[0:3], 'answers.npy')
+
+            if test_or_control(image_name) == 'test':
+                if np.load(answerpath)[int(image_name[0:3])] == 'Y':
+                    fixation_points.append(np.load(fixpath)[0:first_n_fixations])
+            else:
+                if np.load(answerpath)[int(image_name[0:3])] == 'N':
+                    fixation_points.append(np.load(fixpath)[0:first_n_fixations])
+        fixation_points = np.concatenate(fixation_points, axis=0)
+        draw_convex_hull(image_name, fixation_points, percentage_salient)
+        draw_gaussian_from_cluster(image_name, fixation_points, percentage_salient)
+
+
 
 if __name__ == '__main__':
-    draw_convex_hull()
-    draw_gaussian_boolean_map_from_cluster()
+    create_maps()

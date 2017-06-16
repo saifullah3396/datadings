@@ -2,7 +2,6 @@
 Create ANP460 data set files.
 """
 from __future__ import print_function, division
-#-B -m cProfile -o output.prof
 import os
 import os.path as pt
 import zipfile
@@ -16,7 +15,6 @@ from datadings.sets import ANP460Data
 from datadings.sets import ANP460Experiment
 import csv
 import yaml
-
 
 def __iter_fixpoints(datazip, txt_files, stimuluspath):
     stimulus = stimuluspath.split(os.sep)[1]
@@ -92,7 +90,6 @@ def write_sets(indir, outdir, shuffle=True):
                     write_image(imagezip, datazip, experiments, path, writer)
                     printer.update()
     printer.print_total_updates()
-
 
 def main():
     import argparse
