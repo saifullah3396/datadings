@@ -13,9 +13,17 @@ from ANP460_Preprocessing import *
 from os.path import isfile, join
 from os import listdir
 '''
-Create fixation (saliency) maps, boolean maps from fixations maps for the 
-'wrangled_data.zip'.
-For every image one "ground truth" was created.
+Create fixation (saliency) maps from 'wrangled_data.zip'. (This needs to be extended 
+to handle .msgpack files.)
+
+For every image a boolean and a saliency map is created. Dependent from the image type 
+('test' or 'control') and the participants answer ('yes' or 'no') the fixation points 
+of the participants are grouped together. 
+Participants that saw a test image and answered with 'yes' were considered and 
+grouped together. From these fixation points a saliency map was created. For 
+control images the opposite happened. Participants that answered with 'no' were 
+recognized.. 
+
 '''
 
 indir = '/Users/magnus/master/DFKI/data/fixation_data'
