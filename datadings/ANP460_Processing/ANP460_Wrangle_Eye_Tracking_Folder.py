@@ -1,60 +1,36 @@
 from __future__ import print_function, division
 
 import os
+import os.path as pt
 import zipfile
-import shutil
 
 
-def make_dir(indir):
-    writepath = os.path.join(indir, 'wrangled_data')
-    if not os.path.exists(writepath):
-        os.mkdir(writepath)
-    anonym = ['p'+str(i) for i in range(60)]
-    for d in anonym:
-        if not os.path.exists(os.path.join(writepath, d)):
-            os.mkdir(os.path.join(writepath, d))
-
-
-def __include_json(datazip, indir, writepath):
-    jsonpath = [f for f in datazip.namelist() if f.endswith('.json')]
-    if len(jsonpath) == 1:
-        targetpath = os.path.join(writepath)
-        shutil.copy2(os.path.join(indir, jsonpath[0]), targetpath)
-    else:
-        print('Copy image_anp_list.json into the eye_tracking_analysis folder.')
-
-
-def wrangle_dataset(indir):
+def wrangle_dataset(indir, outdir):
     datapath = os.path.join(indir, 'eye_tracking_data.zip')
-    writepath = os.path.join(indir, 'wrangled_data')
+    targetpath = os.path.join(outdir, 'ANP460_data.zip')
     with zipfile.ZipFile(datapath) as datazip:
         # get directories / names
-        participant_dir = [x.split(os.sep)[1] for x in datazip.namelist() if x.endswith(
+        participant_dirs = [x.split(os.sep)[1] for x in datazip.namelist() if x.endswith(
             '/') & (len(x.split(os.sep)) == 3)]
+        participant_dirs.sort()
         # include json containing classes
-        __include_json(datazip, indir, writepath)
-        for f in datazip.namelist():
-            if f.endswith('.txt') & (len(f.split(os.sep)) == 3):
-                if len(f.split(os.sep)[2]) <= 13:
-                    if f.split(os.sep)[2][0:6] == 'sample':
-                        parts = f.split(os.sep)
-                        num = str(int(filter(str.isdigit, parts[2])) - 1).zfill(
-                            3) + '.txt'
-                        index = 'p' + str(participant_dir.index(parts[1]))
-                        targetpath = os.path.join(writepath, index, num)
-                        shutil.copy2(os.path.join(indir, f), targetpath)
-                    if f.split(os.sep)[2][0:6] == 'answer':
-                        parts = f.split(os.sep)
-                        index = 'p' + str(participant_dir.index(parts[1]))
-                        targetpath = os.path.join(writepath, index, 'answer.txt')
-                        shutil.copy2(os.path.join(indir, f), targetpath)
-    zip_dir(indir, writepath)
-    pass
-
-
-def zip_dir(indir, writepath):
-    shutil.make_archive(writepath, 'zip', indir, 'wrangled_data')
-    pass
+        with zipfile.ZipFile(targetpath, 'w', compression=zipfile.ZIP_DEFLATED) as targetzip:
+            targetzip.write(pt.join(indir, 'image_anp_list.json'), 'image_anp_list.json')
+            for p, participant_dir in enumerate(participant_dirs):
+                print('participant', p+1)
+                answer = datazip.read(pt.join(
+                    'eye_tracking_data',
+                    participant_dir,
+                    'answer.txt'
+                ))
+                targetzip.writestr(pt.join('p%02d' % p, 'answers.txt'), answer)
+                for i in range(460):
+                    sample = datazip.read(pt.join(
+                        'eye_tracking_data',
+                        participant_dir,
+                        'sample%d.txt' % (i+1)
+                    ))
+                    targetzip.writestr(pt.join('p%02d' % p, '%03d.txt' % i), sample)
 
 
 def main():
@@ -76,8 +52,7 @@ def main():
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    make_dir(outdir)
-    wrangle_dataset(outdir)
+    wrangle_dataset(args.indir, outdir)
 
 
 if __name__ == '__main__':
