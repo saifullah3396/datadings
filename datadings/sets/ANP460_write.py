@@ -14,7 +14,8 @@ from datadings.tools import FrequencyPrinter
 from datadings.sets import ANP460Data
 from datadings.sets import ANP460Experiment
 import csv
-import yaml
+import json
+
 
 def __iter_fixpoints(datazip, txt_files, stimuluspath):
     stimulus = stimuluspath.split(os.sep)[1]
@@ -24,6 +25,7 @@ def __iter_fixpoints(datazip, txt_files, stimuluspath):
         points = [np.asarray(map(float, point[0:3])) for point in csv_list]
         yield points
 
+
 def __get_answer(datazip, txt_files, stimuluspath):
     img = int(stimuluspath.split(os.sep)[1][0:3])
     answer = []
@@ -32,19 +34,20 @@ def __get_answer(datazip, txt_files, stimuluspath):
         answer.append(data)
     return answer
 
+
 def __get_anp_list(datazip):
     json_data = datazip.read('wrangled_data/image_anp_list.json')
-    anp_list = yaml.safe_load(json_data)
-    anp_list['455.jpg'][0] = 'rough_road'
+    anp_list = json.loads(json_data)
     return anp_list
 
-def write_image(imagezip, datazip, txt_files, stimuluspath, writer):
+
+def write_image(imagezip, datazip, anp_list, txt_files, stimuluspath, writer):
     stimulusdata = imagezip.read(stimuluspath)
     answer = __get_answer(datazip, txt_files, stimuluspath)
     anp, stimulustype = anp_list[stimuluspath.split(os.sep)[1]]
     experiments = [
         ANP460Experiment(exp, None, answer[i])
-        for i,exp in enumerate(__iter_fixpoints(datazip, txt_files, stimuluspath))
+        for i, exp in enumerate(__iter_fixpoints(datazip, txt_files, stimuluspath))
     ]
     filename = os.sep.join(stimuluspath.split(os.sep)[-2:])
     item = ANP460Data(
@@ -56,6 +59,7 @@ def write_image(imagezip, datazip, txt_files, stimuluspath, writer):
     )
     writer.write(item)
 
+
 def __find_all_experiments(datazip):
     csvfiles = []
     for f in datazip.namelist():
@@ -65,13 +69,14 @@ def __find_all_experiments(datazip):
             if f.endswith('answer.txt'):
                 csvfiles.append(f)
     mapping = defaultdict(lambda: [])
-    for csv in csvfiles:
-        parts = csv.split(os.sep)
+    for f in csvfiles:
+        parts = f.split(os.sep)
         if (len(parts) == 3) & parts[2][0:3].isdigit():
-            mapping[parts[2].split('.')[0] + '.jpg'].append(csv)
+            mapping[parts[2].split('.')[0] + '.jpg'].append(f)
         if parts[2] == 'answer.txt':
-            mapping[parts[2]].append(csv)
+            mapping[parts[2]].append(f)
     return mapping
+
 
 def write_sets(indir, outdir, shuffle=True):
     imagepath = pt.join(indir, 'images_original.zip')
@@ -79,7 +84,6 @@ def write_sets(indir, outdir, shuffle=True):
     printer = FrequencyPrinter()
     with zipfile.ZipFile(imagepath) as imagezip:
         with zipfile.ZipFile(datapath) as datazip:
-            global anp_list
             anp_list = __get_anp_list(datazip)
             experiments = __find_all_experiments(datazip)
             with FileWriter(pt.join(outdir, 'ANP460.msgpack')) as writer:
@@ -87,9 +91,10 @@ def write_sets(indir, outdir, shuffle=True):
                 if shuffle:
                     random.shuffle(names)
                 for path in names:
-                    write_image(imagezip, datazip, experiments, path, writer)
+                    write_image(imagezip, datazip, anp_list, experiments, path, writer)
                     printer.update()
     printer.print_total_updates()
+
 
 def main():
     import argparse
