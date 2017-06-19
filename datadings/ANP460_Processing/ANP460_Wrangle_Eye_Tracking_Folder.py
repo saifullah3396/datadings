@@ -1,15 +1,19 @@
+from __future__ import print_function, division
+
 import os
 import zipfile
 import shutil
+
 
 def make_dir(indir):
     writepath = os.path.join(indir, 'wrangled_data')
     if not os.path.exists(writepath):
         os.mkdir(writepath)
     anonym = ['p'+str(i) for i in range(60)]
-    for dir in anonym:
-        if not os.path.exists(os.path.join(writepath, dir)):
-            os.mkdir(os.path.join(writepath, dir))
+    for d in anonym:
+        if not os.path.exists(os.path.join(writepath, d)):
+            os.mkdir(os.path.join(writepath, d))
+
 
 def __include_json(datazip, indir, writepath):
     jsonpath = [f for f in datazip.namelist() if f.endswith('.json')]
@@ -17,7 +21,8 @@ def __include_json(datazip, indir, writepath):
         targetpath = os.path.join(writepath)
         shutil.copy2(os.path.join(indir, jsonpath[0]), targetpath)
     else:
-        print 'Copy image_anp_list.json into the eye_tracking_analysis folder.'
+        print('Copy image_anp_list.json into the eye_tracking_analysis folder.')
+
 
 def wrangle_dataset(indir):
     datapath = os.path.join(indir, 'eye_tracking_data.zip')
@@ -30,25 +35,27 @@ def wrangle_dataset(indir):
         __include_json(datazip, indir, writepath)
         for f in datazip.namelist():
             if f.endswith('.txt') & (len(f.split(os.sep)) == 3):
-                if (len(f.split(os.sep)[2]) <= 13):
-                    if (f.split(os.sep)[2][0:6] == 'sample'):
+                if len(f.split(os.sep)[2]) <= 13:
+                    if f.split(os.sep)[2][0:6] == 'sample':
                         parts = f.split(os.sep)
                         num = str(int(filter(str.isdigit, parts[2])) - 1).zfill(
                             3) + '.txt'
                         index = 'p' + str(participant_dir.index(parts[1]))
                         targetpath = os.path.join(writepath, index, num)
                         shutil.copy2(os.path.join(indir, f), targetpath)
-                    if (f.split(os.sep)[2][0:6] == 'answer'):
+                    if f.split(os.sep)[2][0:6] == 'answer':
                         parts = f.split(os.sep)
                         index = 'p' + str(participant_dir.index(parts[1]))
                         targetpath = os.path.join(writepath, index, 'answer.txt')
                         shutil.copy2(os.path.join(indir, f), targetpath)
-    zipIt(indir, writepath)
+    zip_dir(indir, writepath)
     pass
 
-def zipIt(indir, writepath):
+
+def zip_dir(indir, writepath):
     shutil.make_archive(writepath, 'zip', indir, 'wrangled_data')
     pass
+
 
 def main():
     import argparse
@@ -71,6 +78,7 @@ def main():
     outdir = args.outdir or args.indir
     make_dir(outdir)
     wrangle_dataset(outdir)
+
 
 if __name__ == '__main__':
     main()
