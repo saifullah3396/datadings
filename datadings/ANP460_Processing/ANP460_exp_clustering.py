@@ -6,6 +6,9 @@ import seaborn as sns
 import sklearn.datasets as data
 import hdbscan
 
+'''
+Take clustered points. Do a gaussian convolution. Then threshold.
+'''
 
 sns.set_context('poster')
 sns.set_style('white')
@@ -37,6 +40,7 @@ def draw_hdbscan(image_name, fixation_points):
     #            extent=[0, dim[0], 0, dim[1]])
     plt.show()
 
+
 def show_maps(first_n_fixations = 6):
     for image_name in image_names:
         fixation_points = []
@@ -55,6 +59,7 @@ def show_maps(first_n_fixations = 6):
 
 # Convex hulls of clusters, gaussian maps from clusters . Use to create "denser" saliency
 # maps.
+
 
 def draw_convex_hull(image_name, fixation_points):
     dim = calculate_dimensions(image_name)
@@ -83,6 +88,7 @@ def draw_convex_hull(image_name, fixation_points):
     path = os.path.join(outdir_convex, image_name[0:3] + '.png')
     cv2.imwrite(path, convex_map)
 
+
 def draw_gaussian_from_cluster(image_name, fixation_points):
     dim = calculate_dimensions(image_name)
     fix_normalized = StandardScaler().fit_transform(fixation_points)
@@ -100,6 +106,7 @@ def draw_gaussian_from_cluster(image_name, fixation_points):
     path = os.path.join(outdir_gaussian_cluster, image_name[0:3] + '.png')
     scipy.misc.imsave(path, saliency_map)
 
+
 # For comparing normal gaussian maps and gaussian maps from clusters, and convex hull
 # vs. 20% most salient boolean maps.
 
@@ -110,6 +117,7 @@ def get_image(image_name):
     dim = (int(dim[0]), int(dim[1]), 3)
     img = sci.imresize(img, dim)
     return img
+
 
 def view_convex_bool_map():
     boolean_path =[join(outdir_bool, f) for f in listdir(outdir_bool)
@@ -131,6 +139,7 @@ def view_convex_bool_map():
         plt.show()
     pass
 
+
 def view_gaussians():
     boolean_path =[join(outdir_gaussian_cluster, f) for f in listdir(outdir_gaussian_cluster)
                    if f.endswith('.png')]
@@ -150,6 +159,7 @@ def view_gaussians():
                                                       extent=[0, dim[0], 0, dim[1]])
         plt.show()
     pass
+
 
 def create_maps(first_n_fixations = 6, percentage_salient = 80):
     for image_name in image_names:
