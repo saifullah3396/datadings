@@ -135,7 +135,7 @@ def download_if_not_found(url, path):
             _snapshots.append((time.time(), rem))
             _snapshots = _snapshots[:-10]
             speed = _estimate_speed(_snapshots)
-            if speed is None:
+            if not speed:
                 return _fmt_first % (s_current, s_total)
             s_rem = format_time(rem / speed)
             s_speed = '%6.1f %s' % find_byte_unit(speed)

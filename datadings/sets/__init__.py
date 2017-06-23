@@ -9,11 +9,7 @@ ClassificationData = namedtuple(
 )
 SegmentationData = namedtuple(
     'SegmentationData',
-    ('sample', 'groundtruth', 'filename')
-)
-SegmentationMap = namedtuple(
-    'SegmentationMap',
-    ('map', 'label')
+    ('sample', 'groundtruth', 'filename', 'classes', 'class_weights')
 )
 SaliencyData = namedtuple(
     'SaliencyData',
@@ -34,7 +30,7 @@ class ClassificationReader(Reader):
 
 
 def convert_segementation(item):
-    return SegmentationData(*item[:4])
+    return SegmentationData(*item[:5])
 
 
 class SegmentationReader(Reader):
