@@ -11,22 +11,7 @@ from datadings.writer import FileWriter
 from datadings.tools import FrequencyPrinter
 from datadings.tools import download_if_not_found
 from datadings.sets import SegmentationData
-
-
-CLASSES = [
-    'Sky',
-    'Building',
-    'Pole',
-    'Road',
-    'Pavement',
-    'Tree',
-    'SignSymbol',
-    'Fence',
-    'Car',
-    'Pedestrian',
-    'Bicyclist',
-    'Unlabelled',
-]
+from datadings.sets.CAMVID import CLASSES
 
 
 def write_image(imagezip, writer, inpath, outpath):
