@@ -80,18 +80,12 @@ class Reader(object):
         """
         self._path = infile
         self._infile = io.FileIO(infile, 'rb')
-        try:
-            key_to_position = _load_index(infile + '.index')
-            e = None
-        except IOError as e:
-            key_to_position = []
+        key_to_position = _load_index(infile + '.index')
         self._keys = [v for v, _ in key_to_position]
         self._positions = [v for _, v in key_to_position]
         self._key_to_index_dict = None
         self._len = len(self._positions)
         self._i = 0
-        if e:
-            raise e
 
     def __enter__(self):
         return self
