@@ -1,5 +1,13 @@
-"""
-https://github.com/alexgkendall/SegNet-Tutorial/archive/fcaf7c4978dd8d091ec67db7cb7fdd225f5051c5.zip
+"""Create CAMVID data set files.
+
+The adaptation of the data set is described here:
+    https://github.com/alexgkendall/SegNet-Tutorial
+
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - CAMVID.zip from:
+        https://github.com/alexgkendall/SegNet-Tutorial/
+        archive/fcaf7c4978dd8d091ec67db7cb7fdd225f5051c5.zip
 """
 from __future__ import print_function, division
 
@@ -39,10 +47,14 @@ def write_sets(indir, outdir, shuffle=True):
     printer = FrequencyPrinter()
     with zipfile.ZipFile(imagepath) as imagezip:
         for split in ('test', 'val', 'train'):
-            with FileWriter(pt.join(outdir, 'CAMVID_%s.msgpack' % split)) as writer:
+            outpath = pt.join(outdir, 'CAMVID_%s.msgpack' % split)
+            with FileWriter(outpath) as writer:
                 pairs_path = pt.join(root_dir, 'CamVid', '%s.txt' % split)
-                pairs = [pair.replace('\n', '').replace('/SegNet', root_dir).split(' ')
-                         for pair in imagezip.open(pairs_path)]
+                pairs = [
+                    pair.replace('\n', '').replace(
+                        '/SegNet', root_dir).split(' ')
+                    for pair in imagezip.open(pairs_path)
+                ]
                 if shuffle:
                     random.shuffle(pairs)
                 for pair in pairs:
