@@ -68,6 +68,7 @@ scripts = [
     'bin/datadings-show',
     'bin/datadings-shuffle',
     'bin/datadings-write',
+    'bin/datadings-split'
 ]
 
 

@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+"""Splits one dataset in several smaller ones
+"""
+from __future__ import print_function, division
+
+import sys
+import os.path as pt
+
+from datadings.reader import IdentityReader
+from datadings.writer import RawWriter
+from datadings.tools import FrequencyPrinter
+
+
+def split(infile, outfiles, splits):
+    printer = FrequencyPrinter()
+    reader = IdentityReader(infile)
+    if splits[len(splits)-1] > len(reader):
+        print('max split = %d greater than %d = len(dataset)'
+              % (splits[len(splits)-1], len(reader)))
+    splits.append(len(reader))
+    iterations = zip(outfiles, splits)
+    with reader:
+        for outfile, split in iterations:
+            with RawWriter(outfile) as writer:
+                for i, (key, raw) in enumerate(reader.rawiter(yield_key=True)):
+                    if i >= split:
+                        break
+                    writer.write(key, raw)
+                    printer.update()
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        'infile',
+        help='file to split',
+    )
+    parser.add_argument(
+        'outfile',
+        nargs = '+',
+        help='output files'
+    )
+    parser.add_argument(
+        '-s', '--splits',
+        type=int,
+        nargs = '+',
+        metavar = 'natural numbers',
+        help='defines split points (len = len(outfiles)-1)',
+    )
+    args, unknown = parser.parse_known_args()
+    infile = pt.abspath(args.infile)
+    splits = args.splits
+    splits.sort()
+    outfiles = [pt.abspath(f) for f in args.outfiles]
+    if infile in outfiles:
+        parser.print_usage()
+        print('Cannot write to input files.')
+        sys.exit(1)
+    if len(splits) != len(outfiles)-1:
+        parser.print_usage()
+        print('Splits must be len(outfiles)-1')
+        sys.exit(1)
+    if splits[0] < 0:
+        parser.print_usage()
+        print('Splits must be positives')
+        sys.exit(1)
+    split(infile, outfiles, splits)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print()
