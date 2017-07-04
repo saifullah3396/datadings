@@ -20,13 +20,18 @@ def split(infile, outfiles, splits):
     splits.append(len(reader))
     iterations = zip(outfiles, splits)
     with reader:
-        for outfile, split in iterations:
-            with RawWriter(outfile) as writer:
-                for i, (key, raw) in enumerate(reader.rawiter(yield_key=True)):
-                    if i >= split:
-                        break
-                    writer.write(key, raw)
-                    printer.update()
+        outfile, split = iterations.pop(0)
+        writer = RawWriter(outfile)
+        try:
+            for i, (key, raw) in enumerate(reader.rawiter(yield_key=True)):
+                if i >= split:
+                    outfile, split = iterations.pop(0)
+                    writer.close()
+                    writer = RawWriter(outfile)
+                writer.write(key, raw)
+                printer.update()
+        finally:
+            writer.close()
 
 
 def main():
@@ -48,7 +53,7 @@ def main():
         '-s', '--splits',
         type=int,
         nargs = '+',
-        metavar = 'natural numbers',
+        metavar = 'natural number',
         help='defines split points (len = len(outfiles)-1)',
     )
     args, unknown = parser.parse_known_args()
