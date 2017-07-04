@@ -45,15 +45,15 @@ def main():
         help='file to split',
     )
     parser.add_argument(
-        'outfile',
+        'outfiles',
         nargs = '+',
         help='output files'
     )
     parser.add_argument(
         '-s', '--splits',
         type=int,
-        nargs = '+',
-        metavar = 'natural number',
+        nargs='+',
+        metavar='natural number',
         help='defines split points (len = len(outfiles)-1)',
     )
     args, unknown = parser.parse_known_args()
