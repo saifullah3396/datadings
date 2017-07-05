@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-from datadings.reader import Reader
+from datadings.reader import MsgpackReader
 
 
 iSUNData = namedtuple(
@@ -20,5 +20,5 @@ def convert_isun(item):
     return item
 
 
-class ISUNReader(Reader):
+class ISUNReader(MsgpackReader):
     _convert = staticmethod(convert_isun)

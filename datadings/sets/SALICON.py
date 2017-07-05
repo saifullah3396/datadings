@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-from datadings.reader import Reader
+from datadings.reader import MsgpackReader
 
 
 SALICONData = namedtuple(
@@ -20,5 +20,5 @@ def convert_salicon(item):
     return image
 
 
-class SALICONReader(Reader):
+class SALICONReader(MsgpackReader):
     _convert = staticmethod(convert_salicon)

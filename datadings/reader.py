@@ -56,20 +56,119 @@ def load_md5file(path):
 
 class Reader(object):
     """
-    Simple, iterable and seekable reader for dataset files.
-    Needs dataset and index file.
-    Optionally md5 file to verify integrity of dataset and index.
+    Abstract base class for dataset readers.
 
-    This is an abstract class.
-    It cannot be instantiated.
-    Reader subclasses have to implement the _convert method.
+    Subclasses must implement iteration and seeking methods.
 
-    Readers can be used as a context manager in "with"
-    statements:
+    Readers can be used as a context manager:
 
         with Reader('dataset.msgpack') as reader:
             for sample in reader:
                 [do dataset things]
+    """
+    __metaclass__ = ABCMeta
+
+    def __enter__(self):
+        return self
+
+    @abstractmethod
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    def iter(self, yield_key=False):
+        """
+        :param yield_key: if True, yields (key, sample) pairs
+        """
+        if yield_key:
+            while 1:
+                yield self.get_key(), self.next()
+        else:
+            while 1:
+                yield self.next()
+
+    __iter__ = iter
+
+    @abstractmethod
+    def __len__(self):
+        pass
+
+    @abstractmethod
+    def __next__(self):
+        pass
+
+    @abstractmethod
+    def next(self):
+        pass
+
+    @abstractmethod
+    def rawnext(self):
+        """
+        Return the next sample as raw bytes.
+        :return:
+        """
+        pass
+
+    def rawiter(self, yield_key=False):
+        """
+        Like iter, but yields raw bytes.
+
+        :param yield_key: if True, yields (key, sample) pairs
+        """
+        if yield_key:
+            while 1:
+                yield self.get_key(), self.rawnext()
+        else:
+            while 1:
+                yield self.rawnext()
+
+    @abstractmethod
+    def seek_index(self, index):
+        """
+        Seek to the given index.
+        """
+        pass
+
+    @abstractmethod
+    def seek(self, index):
+        """
+        Seek to the given index.
+        """
+        pass
+
+    @abstractmethod
+    def seek_key(self, key):
+        """
+        Seek to the sample with the given key.
+        """
+        pass
+
+    @abstractmethod
+    def get_key(self, index=None):
+        """
+        Get the key of a sample.
+        Uses current index if none is given.
+        """
+        pass
+
+    @abstractmethod
+    def _convert(self, item):
+        """
+        Implement this method to convert samples to proper
+        data types before they are returned.
+        """
+        pass
+
+
+class MsgpackReader(Reader):
+    """
+    Simple, iterable and seekable reader for messagepack dataset files.
+    Needs dataset and index file.
+    Can Optionally verify the integrity of dataset and index files
+    if md5 file is present.
+
+    This is an abstract class.
+    It cannot be instantiated.
+    MsgpackReader subclasses have to implement the _convert method.
     """
     __metaclass__ = ABCMeta
 
@@ -87,24 +186,8 @@ class Reader(object):
         self._len = len(self._positions)
         self._i = 0
 
-    def __enter__(self):
-        return self
-
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._infile.close()
-
-    def iter(self, yield_key=False):
-        """
-        :param yield_key: if True, yields (key, sample) pairs
-        """
-        if yield_key:
-            while 1:
-                yield self.get_key(), self.next()
-        else:
-            while 1:
-                yield self.next()
-
-    __iter__ = iter
 
     def __len__(self):
         return self._len
@@ -130,19 +213,6 @@ class Reader(object):
             if not raw:
                 raise StopIteration()
             return raw
-
-    def rawiter(self, yield_key=False):
-        """
-        Like iter, but yields raw bytes.
-
-        :param yield_key: if True, yields (key, sample) pairs
-        """
-        if yield_key:
-            while 1:
-                yield self.get_key(), self.rawnext()
-        else:
-            while 1:
-                yield self.rawnext()
 
     def seek_index(self, index):
         """
@@ -195,16 +265,8 @@ class Reader(object):
         indexname = pt.basename(self._path) + '.index'
         return hashes[indexname] == hash_md5hex(self._path + '.index', read_size)
 
-    @abstractmethod
-    def _convert(self, item):
-        """
-        Implement this method to convert samples to proper
-        data types they are returned.
-        """
-        pass
 
-
-class IdentityReader(Reader):
+class IdentityReader(MsgpackReader):
     """
     Simple reader that does no conversion.
     Use this if you don't know the dataset type.
