@@ -35,7 +35,7 @@ def find_version(*file_paths):
 
 
 # Use the README as the long description
-with open(pt.join(PACKAGE_DIR, 'README.md'), encoding='utf-8') as f:
+with open(pt.join(PACKAGE_DIR, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 
@@ -57,21 +57,18 @@ package_data = {
 }
 
 
-dependencies = [
-    'six',
-    'numpy',
-    'scipy',
-    'pillow',
-    'msgpack-python >= 0.4.8',
-    'wget',
-    'matplotlib',
-]
+with open(pt.join(PACKAGE_DIR, 'requirements.txt')) as f:
+    dependencies = [l.strip(' \n') for l in f]
 
 
 scripts = [
+    'bin/datadings-bench',
+    'bin/datadings-merge',
+    'bin/datadings-sample',
     'bin/datadings-show',
     'bin/datadings-shuffle',
     'bin/datadings-write',
+    'bin/datadings-split'
 ]
 
 

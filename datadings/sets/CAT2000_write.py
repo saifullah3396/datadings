@@ -21,7 +21,7 @@ import numpy as np
 from PIL import Image
 from PIL import ImageChops
 
-from datadings.writer import ImageWriter
+from datadings.writer import FileWriter
 from datadings.tools import FrequencyPrinter
 from datadings.tools import download_if_not_found
 from datadings.sets import SaliencyData
@@ -42,7 +42,7 @@ def __transform_image(im, bbox, size=1024):
     r = size / d
     return r, cropped.resize(
         (int(round(w*r)), int(round(h*r))),
-        Image.BICUBIC,
+        Image.ANTIALIAS,
     )
 
 
@@ -111,7 +111,7 @@ def write_sets(indir, outdir, shuffle=True):
         imagepath = pt.join(indir, name + 'Set.zip')
         download_if_not_found(url_prefix + '%sSet.zip' % name, imagepath)
         with zipfile.ZipFile(imagepath) as imagezip:
-            with ImageWriter(pt.join(outdir, name + '.msgpack')) as writer:
+            with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
                 names = [f for f in imagezip.namelist() if __is_stimulus(f)]
                 if shuffle:
                     random.shuffle(names)

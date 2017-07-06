@@ -13,7 +13,7 @@ import os.path as pt
 import zipfile
 import random
 
-from datadings.writer import ImageWriter
+from datadings.writer import FileWriter
 from datadings.tools import FrequencyPrinter
 from datadings.tools import download_if_not_found
 from datadings.sets import SaliencyData
@@ -41,7 +41,7 @@ def write_sets(indir, outdir, shuffle=True):
     )
     printer = FrequencyPrinter()
     with zipfile.ZipFile(imagepath) as imagezip:
-        with ImageWriter(pt.join(outdir, 'MIT300.msgpack')) as writer:
+        with FileWriter(pt.join(outdir, 'MIT300.msgpack')) as writer:
             names = [f for f in imagezip.namelist() if _isimage(f)]
             if shuffle:
                 random.shuffle(names)

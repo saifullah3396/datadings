@@ -23,7 +23,7 @@ except ImportError:
     sys.exit(1)
 import numpy as np
 
-from datadings.writer import ImageWriter
+from datadings.writer import FileWriter
 from datadings.tools import FrequencyPrinter
 from datadings.tools import print_over
 from datadings.sets import SaliencyData
@@ -174,7 +174,7 @@ def write_sets(indir, outdir, shuffle=False):
     printer = FrequencyPrinter()
     mat = loadmat(pt.join(indir, 'coutrot_database1.mat'))
     clip_data = __parse_mat(mat['Coutrot_Database1'])
-    with ImageWriter(pt.join(outdir, 'Coutrot1.msgpack')) as writer:
+    with FileWriter(pt.join(outdir, 'Coutrot1.msgpack')) as writer:
         for path in os.listdir(pt.join(indir, 'ERB3_Stimuli')):
             path = pt.join(indir, 'ERB3_Stimuli', path)
             # TODO shuffle if possible

@@ -8,25 +8,30 @@ import os.path as pt
 import wget
 
 
-def _pad(s, width):
-    return s + ' ' * max(0, (width - len(s)))
-
-
 def print_over(*args, **kwargs):
+    """ Wrapper around print that replaces the current line.
+        It prints from the start of the line and clears remaining
+        characters.
+        Accepts the same kwargs as the print function.
+
+        @param flush: if True, flush after printing
+    """
     end = kwargs.pop('end', '\n')
     kwargs['end'] = ''
     flush = kwargs.pop('flush', False)
     stream = kwargs.pop('file', sys.stdout)
-    print(*args, **kwargs)
+    # return cursor to front and print
+    print('\r', *args, **kwargs)
+    # clear rest of the line
     print('\033[K', end=end)
     if flush:
         stream.flush()
 
 
 class FrequencyPrinter(object):
-    """ Convenient printer for framerates.
-        Call update every time a new frame is shown
-        to regularly print the current framerate.
+    """ Convenient printer for frequencies.
+        Call update every time something happens
+        to regularly print the current frequency.
     """
     def __init__(self,
                  interval=2,
@@ -40,7 +45,7 @@ class FrequencyPrinter(object):
         """
         self.interval = interval
         if not printlines:
-            formatstring = '\r'+formatstring
+            formatstring = formatstring
         self.formatstring = formatstring
         self.end = None if printlines else ''
         self.new_updates = 0
@@ -130,7 +135,7 @@ def download_if_not_found(url, path):
             _snapshots.append((time.time(), rem))
             _snapshots = _snapshots[:-10]
             speed = _estimate_speed(_snapshots)
-            if speed is None:
+            if not speed:
                 return _fmt_first % (s_current, s_total)
             s_rem = format_time(rem / speed)
             s_speed = '%6.1f %s' % find_byte_unit(speed)

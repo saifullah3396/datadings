@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+"""Run a read benchmark on a given dataset file.
+"""
+from __future__ import print_function
+
+import time
+
+from datadings.reader import IdentityReader
+from datadings.tools import FrequencyPrinter
+from datadings.tools import print_over
+
+
+def bench(infile):
+    r = IdentityReader(infile)
+    printer = FrequencyPrinter()
+    a = time.time()
+    for _ in r:
+        printer.update()
+    d = time.time() - a
+    n = printer.total_updates
+    s = n / d
+    print_over('%s samples read in %.2f seconds, %.2f samples/s'
+               % (n, d, s), end='')
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        'infile',
+        help='file to benchmark',
+    )
+    args, unknown = parser.parse_known_args()
+    bench(args.infile)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print()

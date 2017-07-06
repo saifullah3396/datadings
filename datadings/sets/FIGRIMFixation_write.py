@@ -20,7 +20,7 @@ import numpy as np
 import scipy.io
 from six import text_type
 
-from datadings.writer import ImageWriter
+from datadings.writer import FileWriter
 from datadings.sets import SaliencyData
 from datadings.sets import SaliencyExperiment
 from datadings.tools import FrequencyPrinter
@@ -85,7 +85,7 @@ def write_sets(indir, outdir, shuffle=True):
         download_if_not_found(mat_url, datapath)
         locations = __load_mat_file(datapath)
         with zipfile.ZipFile(imagepath) as imagezip:
-            with ImageWriter(outpath) as writer:
+            with FileWriter(outpath) as writer:
                 write_images(imagezip, locations, writer, shuffle)
 
 

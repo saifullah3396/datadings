@@ -1,18 +1,13 @@
 #!/usr/bin/env python
-
+"""Shuffle an existing dataset file.
+"""
 import sys
 import os.path as pt
 
 from datadings.reader import IdentityReader
 from datadings.reader import Shuffler
-from datadings.writer import Writer
+from datadings.writer import RawWriter
 from datadings.tools import FrequencyPrinter
-
-
-class RawWriter(Writer):
-    def write(self, key, data):
-        self._indices[key] = self._outfile.tell()
-        self._write_data(data)
 
 
 def shuffle(infile, outfile):
@@ -33,9 +28,11 @@ def main():
     )
     parser.add_argument(
         'infile',
+        help='file to shuffle',
     )
     parser.add_argument(
         'outfile',
+        help='output file; cannot be same as infile',
     )
     args, unknown = parser.parse_known_args()
     infile = pt.abspath(args.infile)

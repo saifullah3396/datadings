@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+"""Extract samples from a larger
+"""
+from __future__ import print_function, division
+
+import sys
+import os.path as pt
+
+from datadings.reader import IdentityReader
+from datadings.reader import Shuffler
+from datadings.writer import RawWriter
+from datadings.tools import FrequencyPrinter
+
+
+def sample(infile, outfile, number, strategy):
+    printer = FrequencyPrinter()
+    reader = IdentityReader(infile)
+    if number > len(reader):
+        print('number = %d greater than %d = len(dataset)'
+              % (number, len(reader)))
+    if strategy == 'random':
+        reader = Shuffler(reader)
+    with RawWriter(outfile) as writer:
+        with reader:
+            for i, (key, raw) in enumerate(reader.rawiter(yield_key=True)):
+                if i >= number:
+                    break
+                writer.write(key, raw)
+                printer.update()
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        'infile',
+        help='files to merge',
+    )
+    parser.add_argument(
+        'outfile',
+        help='output file'
+    )
+    parser.add_argument(
+        '-n', '--number',
+        type=int,
+        default=10,
+        help='number of samples to extract',
+    )
+    parser.add_argument(
+        '-s', '--strategy',
+        default='random',
+        choices=('sequential', 'random'),
+        help='merging strategy to use',
+    )
+    args, unknown = parser.parse_known_args()
+    infile = pt.abspath(args.infile)
+    outfile = pt.abspath(args.outfile)
+    if outfile == infile:
+        parser.print_usage()
+        print('Cannot write to input files.')
+        sys.exit(1)
+    sample(infile, outfile, args.number, args.strategy)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print()
