@@ -77,7 +77,7 @@ def _find_member_image(members, start_image):
 
 
 def _find_member_index(members, rejected, start_index):
-    z = members[0].split(os.sep)[0]
+    z = members[0].filename.split(os.sep)[0]
     rejected = sorted(rejected[z])
     i = bisect.bisect_left(rejected, start_index)
     return start_index + i
@@ -114,10 +114,10 @@ def yield_from_zips(
             elif start_image:
                 start_index = _find_member_image(members, start_image)
             r = rejected[z]
-            for i in range(start_index, len(members)):
+            for i, m in enumerate(members[start_index:], start_index):
                 if i in r:
                     continue
-                f = members[start_index].filename
+                f = m.filename
                 yield validate(imagezip.read(f)), f, z, i
             start_index = 0
             start_image = ''
@@ -219,15 +219,15 @@ def main():
         '/ds2/YFCC100m/image_packs/', validate_images=True
     )
     reader.seek(29230)
-    # n = 10
+    n = 0
     for key, data in reader.iter(yield_key=True):
-        # print(key)
+        print(key)
         if data.sample is None:
             print(key)
         printer.update()
-        # n -= 1
-        # if not n:
-        #     break
+        n -= 1
+        if not n:
+            break
     print_over(printer.total_updates)
 
 
