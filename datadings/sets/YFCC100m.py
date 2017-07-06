@@ -77,9 +77,9 @@ def _skip_members(members, rejected, start_image, start_index):
     if start_image:
         for i, m in enumerate(members):
             if m.filename.split(os.sep)[1] == start_image:
-                return members[i:]
+                return filtered[i:]
     else:
-        return members[start_index:]
+        return filtered[start_index:]
 
 
 def yield_from_zips(
@@ -158,16 +158,22 @@ class YFCC100mReader(Reader):
             self._error_file.close()
 
     def __len__(self):
-        return FILES_TOTAL
+        return FILES_TOTAL - sum(len(r) for r in self._rejected.values())
+
+    def _get_next_sample(self):
+        while self._next_sample is None:
+            next_sample = next(self._gen)
+            sample, key, z, i = next_sample
+            if sample is None:
+                if i not in self._rejected[z]:
+                    self._rejected[z].add(i)
+                    self._error_file.write('%s %d\n' % (z, i))
+            else:
+                self._next_sample = sample, key
+        return self._next_sample
 
     def next(self):
-        if self._next_sample is None:
-            self._next_sample = next(self._gen)
-        sample, key, z, i = self._next_sample
-        if sample is None and i not in self._rejected[z]:
-            self._rejected[z].add(i)
-            self._error_file.write('%s %d\n' % (z, i))
-        sample = self._convert((sample, key))
+        sample = self._convert(self._get_next_sample())
         self._next_sample = None
         return sample
 
@@ -193,9 +199,7 @@ class YFCC100mReader(Reader):
         )
 
     def get_key(self, index=None):
-        if self._next_sample is None:
-            self._next_sample = next(self._gen)
-        return self._next_sample[1]
+        return self._get_next_sample()[1]
 
     def _convert(self, item):
         return YFCC100mData(*item)
@@ -208,16 +212,16 @@ def main():
     reader = YFCC100mReader(
         '/ds2/YFCC100m/image_packs/', validate_images=True
     )
-    reader.seek(29999)
-    #n = 10
+    reader.seek(29230)
+    # n = 10
     for key, data in reader.iter(yield_key=True):
-        #print(key)
-        #if data.sample is None:
-        #    print(key)
+        # print(key)
+        if data.sample is None:
+            print(key)
         printer.update()
-        #n -= 1
-        #if not n:
-        #    break
+        # n -= 1
+        # if not n:
+        #     break
     print_over(printer.total_updates)
 
 
