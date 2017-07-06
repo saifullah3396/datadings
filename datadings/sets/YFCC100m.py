@@ -7,6 +7,7 @@ from collections import defaultdict
 import numpy as np
 import cv2
 import msgpack
+import bisect
 
 from datadings.reader import Reader
 from datadings.sets import UnsupervisedData as YFCC100mData
@@ -67,19 +68,19 @@ def _filter_zipinfo(infos):
     return [info for info in infos if p.search(info.filename)]
 
 
-def _skip_members(members, rejected, start_image, start_index):
-    if not (start_image or start_index):
+def _find_member_image(members, start_image):
+    if not start_image:
         return members
-    z = members[0].filename.split(os.sep)[0]
-    rejected = rejected[z]
-    filtered = [m for i, m in enumerate(members)
-                if i not in rejected]
-    if start_image:
-        for i, m in enumerate(members):
-            if m.filename.split(os.sep)[1] == start_image:
-                return filtered[i:]
-    else:
-        return filtered[start_index:]
+    for i, m in enumerate(members):
+        if m.filename.split(os.sep)[1] == start_image:
+            return i
+
+
+def _find_member_index(members, rejected, start_index):
+    z = members[0].split(os.sep)[0]
+    rejected = sorted(rejected[z])
+    i = bisect.bisect_left(rejected, start_index)
+    return start_index + i
 
 
 def yield_from_zips(
@@ -108,13 +109,18 @@ def yield_from_zips(
         with zipfile.ZipFile(pt.join(path, z) + '.zip') as imagezip:
             # filter out non-image members
             members = _filter_zipinfo(imagezip.infolist())
-            members = _skip_members(
-                members, rejected, start_image, start_index)
-            start_image = ''
-            start_index = 0
-            for i, info in enumerate(members):
-                f = info.filename
+            if start_index:
+                start_index = _find_member_index(members, rejected, start_index)
+            elif start_image:
+                start_index = _find_member_image(members, start_image)
+            r = rejected[z]
+            for i in range(start_index, len(members)):
+                if i in r:
+                    continue
+                f = members[start_index].filename
                 yield validate(imagezip.read(f)), f, z, i
+            start_index = 0
+            start_image = ''
 
 
 def _parse_rejected(f):
