@@ -7,7 +7,6 @@ from collections import defaultdict
 import numpy as np
 import cv2
 import msgpack
-import bisect
 
 from datadings.reader import Reader
 from datadings.sets import UnsupervisedData as YFCC100mData
