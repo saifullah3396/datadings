@@ -107,8 +107,6 @@ def yield_from_zips(
         zip_index, start_image = _find_zip_key(zips, start_key)
     zips = zips[zip_index:]
 
-    print('firstzip', zips[0])
-
     for z in zips:
         with zipfile.ZipFile(pt.join(path, z) + '.zip') as imagezip:
             # filter out non-image members
