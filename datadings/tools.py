@@ -68,7 +68,7 @@ class FrequencyPrinter(object):
             seconds = now - self.start
             print_over(self.formatstring % (
                 self.total_updates, self.new_updates / seconds
-            ), end='', flush=True)
+            ), end=self.end, flush=True)
             self.last_print = now
             self.start = now
             self.new_updates = 0
@@ -127,7 +127,7 @@ class MovingAveragePrinter(object):
                 num=self.total_updates,
                 freq=self.new_updates / seconds,
                 value=self.value,
-            ), end='', flush=True)
+            ), end=self.end, flush=True)
             self.last_print = now
             self.start = now
             self.new_updates = 0
