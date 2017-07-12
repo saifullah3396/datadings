@@ -11,6 +11,10 @@ SegmentationData = namedtuple(
     'SegmentationData',
     ('sample', 'groundtruth', 'filename', 'classes', 'class_weights')
 )
+MaskedSegmentationData = namedtuple(
+    'MaskedSegmentationData',
+    ('sample', 'groundtruth', 'mask', 'filename', 'classes', 'class_weights')
+)
 SaliencyData = namedtuple(
     'SaliencyData',
     ('sample', 'groundtruth', 'filename')
