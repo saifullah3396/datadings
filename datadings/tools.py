@@ -113,9 +113,10 @@ class MovingAveragePrinter(object):
         """ Call update every time a new frame is shown
             to regularly print the current framerate.
         """
-        if value is None:
+        if self.value is None:
             self.value = value
-        self.value = self.alpha*self.value + (1-self.alpha)*value
+        if value is not None:
+            self.value = self.alpha*self.value + (1-self.alpha)*value
         self.new_updates += 1
         self.total_updates += 1
         now = time.time()
