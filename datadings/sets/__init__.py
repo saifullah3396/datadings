@@ -45,6 +45,15 @@ class SegmentationReader(MsgpackReader):
     _convert = staticmethod(convert_segementation)
 
 
+def convert_masked_segementation(item):
+    return MaskedSegmentationData(*item[:6])
+
+
+class MaskedSegmentationReader(MsgpackReader):
+    _convert = staticmethod(convert_masked_segementation)
+
+
+
 def convert_saliency(item):
     return SaliencyData(
             item[0],
