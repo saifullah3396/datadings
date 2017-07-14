@@ -54,9 +54,10 @@ class FrequencyPrinter(object):
         self.start = 0
         self._maxlen = 0
 
-    def update(self):
+    def update(self, info=[]):
         """ Call update every time a new frame is shown
             to regularly print the current framerate.
+            @param info: [str] additional information to be printed as suffix
         """
         self.new_updates += 1
         self.total_updates += 1
@@ -66,9 +67,12 @@ class FrequencyPrinter(object):
             self.last_print = now
         if now - self.last_print > self.interval:
             seconds = now - self.start
-            print_over(self.formatstring % (
-                self.total_updates, self.new_updates / seconds
-            ), end='', flush=True)
+            print_over(
+                " | ".join(
+                    [self.formatstring % (self.total_updates, self.new_updates / seconds)]
+                    + [str(i) for i in info]
+                )
+            , end='', flush=True)
             self.last_print = now
             self.start = now
             self.new_updates = 0
@@ -144,3 +148,4 @@ def download_if_not_found(url, path):
         print('downloading', filename, '-->', path)
         wget.download(url, path, bar=_progress)
         print()
+
