@@ -22,6 +22,10 @@ from datadings.matlab import loadmat
 from itertools import product
 
 
+def pack_array(arr):
+    return arr.dtype.char, arr.shape, arr.tobytes()
+
+
 def split_array(img, h_pixels, v_pixels):
     i_ = np.arange(img.shape[1]) // v_pixels
     j_ = np.arange(img.shape[2]) // h_pixels
@@ -32,9 +36,9 @@ def split_array(img, h_pixels, v_pixels):
 def write(outpath, img, labels, mask, filename=""):
     with FileWriter(outpath) as writer:
         item = MaskedSegmentationData(
-            img,
-            labels,
-            mask,
+            pack_array(img),
+            pack_array(labels),
+            pack_array(mask),
             filename,
             CLASSES,
             [1] * len(CLASSES),
@@ -52,10 +56,10 @@ def write_sets(indir, outdir, crop_size=(224, 224)):
     dataset = loadmat(imagepath)
 
     # Training-Split -> give whole image
-    train_labels = dataset['train_labels']
+    train_labels = dataset['train_labels'].astype(np.int64)
     train_data = dataset['train_data']
-    train_mask = train_data[-1]
-    train_img = train_data[:6]
+    train_mask = train_data[-1].astype(np.uint8)
+    train_img = train_data[:6].astype(np.uint16)
 
     write(pt.join(outdir, 'RIT18_train.msgpack'),
           train_img, train_labels, train_mask)
