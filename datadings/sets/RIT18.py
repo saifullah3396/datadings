@@ -1,6 +1,7 @@
 from datadings.sets import convert_segementation as convert_RIT18
 from datadings.sets import SegmentationReader as RIT18Reader
 
+NUM_INPUT_CHANNELS = 6
 CROP_SIZE = 384
 
 CLASSES = [

@@ -72,14 +72,14 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
         if split == "val":
             labels = dataset['val_labels']
         else:
-            labels = np.zeros(np.array(data).shape)
+            labels = np.zeros(data.shape)
 
         labels = np.expand_dims(labels, axis=0)
         for sub_data, sub_label in zip(split_array(data, *crop_size),
                                        split_array(labels, *crop_size)):
-            sub_label = sub_label[0] # squeeze again!
-            sub_mask = sub_data[-1]
-            sub_img = sub_data[:6]
+            sub_label = sub_label[0].astype(np.int64)  # squeeze again!
+            sub_mask = sub_data[-1].astype(np.uint8)
+            sub_img = sub_data[:6].astype(np.uint16)
             write(pt.join(outdir, 'RIT18_%s.msgpack' %(split)),
                   sub_img, sub_label, sub_mask)
             printer.update()
