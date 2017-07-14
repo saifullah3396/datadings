@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-from datadings.reader import Reader
+from datadings.reader import MsgpackReader
 
 
 ClassificationData = namedtuple(
@@ -11,6 +11,10 @@ SegmentationData = namedtuple(
     'SegmentationData',
     ('sample', 'groundtruth', 'filename', 'classes', 'class_weights')
 )
+MaskedSegmentationData = namedtuple(
+    'MaskedSegmentationData',
+    ('sample', 'groundtruth', 'mask', 'filename', 'classes', 'class_weights')
+)
 SaliencyData = namedtuple(
     'SaliencyData',
     ('sample', 'groundtruth', 'filename')
@@ -19,13 +23,17 @@ SaliencyExperiment = namedtuple(
     'SaliencyExperiment',
     ('locations', 'map')
 )
+UnsupervisedData = namedtuple(
+    'UnsupervisedData',
+    ('sample', 'filename')
+)
 
 
 def convert_classification(item):
         return ClassificationData(*item[:4])
 
 
-class ClassificationReader(Reader):
+class ClassificationReader(MsgpackReader):
     _convert = staticmethod(convert_classification)
 
 
@@ -33,8 +41,17 @@ def convert_segementation(item):
     return SegmentationData(*item[:5])
 
 
-class SegmentationReader(Reader):
+class SegmentationReader(MsgpackReader):
     _convert = staticmethod(convert_segementation)
+
+
+def convert_masked_segementation(item):
+    return MaskedSegmentationData(*item[:6])
+
+
+class MaskedSegmentationReader(MsgpackReader):
+    _convert = staticmethod(convert_masked_segementation)
+
 
 
 def convert_saliency(item):
@@ -45,5 +62,5 @@ def convert_saliency(item):
     )
 
 
-class SaliencyReader(Reader):
+class SaliencyReader(MsgpackReader):
     _convert = staticmethod(convert_saliency)

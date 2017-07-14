@@ -135,6 +135,7 @@ def write_video(name_prefix, frame_gen, experiments, writer, printer,
                 min_fixpoints=30, write_delta=10, max_fixpoint_age=60):
     tracker = LucasKanade()
     last_written = 0
+    jpeg_options = int(cv2.IMWRITE_JPEG_QUALITY), 95
     for key, frame in frame_gen:
         for s, experiment in enumerate(experiments):
             try:
@@ -155,10 +156,10 @@ def write_video(name_prefix, frame_gen, experiments, writer, printer,
         ]
         if not tracked_experiments:
             continue
-        success, data = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
+        success, arr = cv2.imencode('.jpg', frame, jpeg_options)
         if not success:
             continue
-        jpegdata = data.tostring()
+        jpegdata = arr.tostring()
         item = SaliencyData(
             jpegdata,
             tracked_experiments,

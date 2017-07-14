@@ -72,7 +72,68 @@ class FrequencyPrinter(object):
                     [self.formatstring % (self.total_updates, self.new_updates / seconds)]
                     + [str(i) for i in info]
                 )
-            , end='', flush=True)
+            , end=self.end, flush=True)
+            self.last_print = now
+            self.start = now
+            self.new_updates = 0
+
+    def print_total_updates(self):
+        print_over('\r%d samples written' % self.total_updates)
+
+
+class MovingAveragePrinter(object):
+    # TODO cleanup + remove redundant code
+    """ Convenient printer for moving averages.
+        Call update every time something happens
+        to regularly print the current frequency.
+    """
+    def __init__(
+            self,
+            interval=2,
+            formatstring='{num:12d} updates, {freq:.2f} updates/s, avg {value}',
+            printlines=False,
+            alpha=0.9
+    ):
+        """ @param interval: Interval in seconds between print output
+            @param formatstring: String format used to print;
+                                 must have exactly one float placeholder
+            @param printlines: if True, print new results on new line;
+                               if False, current line is reused
+        """
+        self.interval = interval
+        if not printlines:
+            formatstring = formatstring
+        self.formatstring = formatstring
+        self.end = None if printlines else ''
+        self.new_updates = 0
+        self.total_updates = 0
+        self.last_print = 0
+        self.start = 0
+        self._maxlen = 0
+        self.alpha = alpha
+        self.value = None
+
+    def update(self, value=None):
+        """ Call update every time a new frame is shown
+            to regularly print the current framerate.
+        """
+        if self.value is None:
+            self.value = value
+        if value is not None:
+            self.value = self.alpha*self.value + (1-self.alpha)*value
+        self.new_updates += 1
+        self.total_updates += 1
+        now = time.time()
+        if self.start is None:
+            self.start = now
+            self.last_print = now
+        if now - self.last_print > self.interval:
+            seconds = now - self.start
+            print_over(self.formatstring.format(
+                num=self.total_updates,
+                freq=self.new_updates / seconds,
+                value=self.value,
+            ), end=self.end, flush=True)
             self.last_print = now
             self.start = now
             self.new_updates = 0
