@@ -1,6 +1,7 @@
 from datadings.sets import convert_segementation as convert_RIT18
 from datadings.sets import SegmentationReader as RIT18Reader
 
+CROP_SIZE = 384
 
 CLASSES = [
     '0. Other Class/Image Border',

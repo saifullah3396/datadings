@@ -18,6 +18,7 @@ from datadings.tools import FrequencyPrinter
 from datadings.tools import download_if_not_found
 from datadings.sets import MaskedSegmentationData
 from datadings.sets.RIT18 import CLASSES
+from datadings.sets.RIT18 import CROP_SIZE
 from datadings.matlab import loadmat
 from itertools import product
 
@@ -46,7 +47,7 @@ def write(outpath, img, labels, mask, filename=""):
         writer.write(item)
 
 
-def write_sets(indir, outdir, crop_size=(224, 224)):
+def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
     imagepath = pt.join(indir, 'rit18_data.mat')
     download_if_not_found(
         'http://www.cis.rit.edu/~rmk6217/rit18_data.mat',
