@@ -6,6 +6,9 @@ import os
 import os.path as pt
 
 import wget
+import numpy as np
+
+from itertools import product
 
 
 def print_over(*args, **kwargs):
@@ -209,4 +212,15 @@ def download_if_not_found(url, path):
         print('downloading', filename, '-->', path)
         wget.download(url, path, bar=_progress)
         print()
+
+
+def pack_array(arr):
+    return arr.dtype.char, arr.shape, arr.tobytes()
+
+
+def split_array(img, h_pixels, v_pixels, indices=(1, 2)):
+    i_ = np.arange(img.shape[indices[0]]) // v_pixels
+    j_ = np.arange(img.shape[indices[1]]) // h_pixels
+    for i, j in product(np.unique(i_), np.unique(j_)):
+        yield img[:, i_ == i][:, :, j_ == j]
 
