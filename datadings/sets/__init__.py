@@ -11,6 +11,10 @@ SegmentationData = namedtuple(
     'SegmentationData',
     ('sample', 'groundtruth', 'filename', 'classes', 'class_weights')
 )
+MaskedSegmentationData = namedtuple(
+    'MaskedSegmentationData',
+    ('sample', 'groundtruth', 'mask', 'filename', 'classes', 'class_weights')
+)
 SaliencyData = namedtuple(
     'SaliencyData',
     ('sample', 'groundtruth', 'filename')
@@ -39,6 +43,15 @@ def convert_segementation(item):
 
 class SegmentationReader(MsgpackReader):
     _convert = staticmethod(convert_segementation)
+
+
+def convert_masked_segementation(item):
+    return MaskedSegmentationData(*item[:6])
+
+
+class MaskedSegmentationReader(MsgpackReader):
+    _convert = staticmethod(convert_masked_segementation)
+
 
 
 def convert_saliency(item):

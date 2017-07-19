@@ -6,6 +6,9 @@ import os
 import os.path as pt
 
 import wget
+import numpy as np
+
+from itertools import product
 
 
 def print_over(*args, **kwargs):
@@ -54,9 +57,10 @@ class FrequencyPrinter(object):
         self.start = 0
         self._maxlen = 0
 
-    def update(self):
+    def update(self, info=[]):
         """ Call update every time a new frame is shown
             to regularly print the current framerate.
+            @param info: [str] additional information to be printed as suffix
         """
         self.new_updates += 1
         self.total_updates += 1
@@ -66,9 +70,12 @@ class FrequencyPrinter(object):
             self.last_print = now
         if now - self.last_print > self.interval:
             seconds = now - self.start
-            print_over(self.formatstring % (
-                self.total_updates, self.new_updates / seconds
-            ), end=self.end, flush=True)
+            print_over(
+                " | ".join(
+                    [self.formatstring % (self.total_updates, self.new_updates / seconds)]
+                    + [str(i) for i in info]
+                )
+            , end=self.end, flush=True)
             self.last_print = now
             self.start = now
             self.new_updates = 0
@@ -205,3 +212,15 @@ def download_if_not_found(url, path):
         print('downloading', filename, '-->', path)
         wget.download(url, path, bar=_progress)
         print()
+
+
+def pack_array(arr):
+    return arr.dtype.char, arr.shape, arr.tobytes()
+
+
+def split_array(img, h_pixels, v_pixels, indices=(1, 2)):
+    i_ = np.arange(img.shape[indices[0]]) // v_pixels
+    j_ = np.arange(img.shape[indices[1]]) // h_pixels
+    for i, j in product(np.unique(i_), np.unique(j_)):
+        yield img[:, i_ == i][:, :, j_ == j]
+
