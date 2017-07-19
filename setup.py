@@ -50,6 +50,7 @@ package_data = {
         '*.json',
         '*.html',
         '*.txt',
+        '*.gz',
         pt.join('assets', '*'),
         pt.join('data', '*')
     ]
