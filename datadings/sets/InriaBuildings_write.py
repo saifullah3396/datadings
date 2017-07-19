@@ -89,7 +89,7 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
         for fn, train_img, labels in images_and_labels_iter(train_img_dir,
                                                             train_gt_dir,
                                                             train_locations,
-                                                            range(6)):
+                                                            range(1,6)):
             train_labels = np.expand_dims(labels, axis=0)
             for idx, (sub_img, sub_label) in \
                     enumerate(zip(  split_array(train_img, *crop_size),
@@ -108,7 +108,7 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
         for fn, train_img, labels in images_and_labels_iter(test_img_dir,
                                                             None,
                                                             test_locations,
-                                                            range(37)):
+                                                            range(1,37)):
             for idx, sub_img in enumerate(split_array(train_img, *crop_size)):
                 sub_img = np.array(sub_img).astype(np.uint8)
                 sub_label = np.array([])
