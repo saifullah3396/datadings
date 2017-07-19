@@ -22,7 +22,7 @@ def noop(data):
     return data
 
 
-def test_image(data):
+def validate_image(data):
     if len(data) < 2600 or len(data) == 9218:
         return None
     try:
@@ -95,7 +95,7 @@ def yield_from_zips(
         rejected,
         start_key=os.sep,
         start_index=0,
-        validate=test_image,
+        validator=noop,
 ):
     if start_index and start_key != os.sep:
         raise ValueError('cannot set both start_key and start_index')
@@ -123,7 +123,7 @@ def yield_from_zips(
                 if i in r:
                     continue
                 f = m.filename
-                yield validate(imagezip.read(f)), f, z, i
+                yield validator(imagezip.read(f)), f, z, i
             start_index = 0
             start_image = ''
 
@@ -152,7 +152,7 @@ class YFCC100mReader(Reader):
     def __init__(
             self,
             image_packs_dir,
-            validate_images=False,
+            validator=noop,
             reject_file_paths=(
                     pt.join(ROOT, 'YFCC100m_rejected_images.txt.gz'),
             ),
@@ -160,10 +160,10 @@ class YFCC100mReader(Reader):
             error_file_mode='a',
     ):
         self._path = image_packs_dir
-        if validate_images:
-            self._validator = test_image
-        else:
-            self._validator = noop
+        if not callable(validator):
+            raise ValueError('validator must be callable, not %r'
+                             % validator)
+        self._validator = validator
         self._next_sample = None
         self._rejected = None
         try:
@@ -183,7 +183,7 @@ class YFCC100mReader(Reader):
             self._error_file = open(error_file, error_file_mode)
         self._gen = yield_from_zips(
             image_packs_dir, self._rejected,
-            validate=self._validator,
+            validator=self._validator,
         )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -222,7 +222,7 @@ class YFCC100mReader(Reader):
         self._gen = yield_from_zips(
             self._path, self._rejected,
             start_index=index,
-            validate=self._validator,
+            validator=self._validator,
         )
 
     seek = seek_index
@@ -231,7 +231,7 @@ class YFCC100mReader(Reader):
         self._gen = yield_from_zips(
             self._path, self._rejected,
             start_key=key,
-            validate=self._validator,
+            validator=self._validator,
         )
 
     def get_key(self, index=None):
@@ -246,7 +246,7 @@ def main():
     from datadings.tools import print_over
     printer = FrequencyPrinter(0.5)
     reader = YFCC100mReader(
-        '/ds2/YFCC100m/image_packs/', validate_images=True
+        '/ds2/YFCC100m/image_packs/', validator=validate_image
     )
     # reader.seek(29232)
     n = 0
