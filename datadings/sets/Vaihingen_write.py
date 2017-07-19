@@ -21,6 +21,7 @@ from datadings.sets.Vaihingen import CROP_SIZE
 from datadings.sets.Vaihingen import COLOR_TO_CLASS_MAP
 from datadings.tools import pack_array
 from datadings.tools import split_array
+from datadings.tools import tiff_to_nd_array
 
 
 def write(writer, img, labels, mask, filename=""):
@@ -43,63 +44,51 @@ def map_color_values_to_class_indices(img):
     return arr_2d
 
 
-def tiff_to_nd_array(file_path, type=np.int8):
-    from osgeo import gdal
-    dataset = gdal.Open(file_path, gdal.GA_ReadOnly)
-    return np.array([dataset.GetRasterBand(idx+1).ReadAsArray()
-                        for idx in range(dataset.RasterCount)]).astype(type)
-
-
-
-def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
-    # FIXME: add download_if_not_found, not easily accessable?
+def images_label_dsm_iter(indir, image_ids):
     dataset_dir = pt.join(indir, 'ISPRS_semantic_labeling_Vaihingen')
     img_dir = pt.join(dataset_dir, 'top')
     dsm_dir = pt.join(dataset_dir, 'dsm')
     label_dir = pt.join(dataset_dir, 'gts_for_participants')
 
+    for id in image_ids:
+        fn = "top_mosaic_09cm_area%s.tif" % (id)
+        img_path = pt.join(img_dir, fn)
+        label_path = pt.join(label_dir, fn)
+        dsm_path = pt.join(dsm_dir, fn.replace("top_", "dsm_"))
+
+        img = tiff_to_nd_array(img_path)
+        train_img = img.astype(np.uint8)
+
+        labels = tiff_to_nd_array(label_path, type=np.uint8)
+        labels = labels.transpose(1, 2, 0)
+        train_labels = map_color_values_to_class_indices(labels) \
+            .astype(np.int64)
+
+        dsm = tiff_to_nd_array(dsm_path, type=np.int32)
+        train_dsm = dsm[0]
+        yield fn, train_img, train_labels, train_dsm
+
+
+def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
     printer = FrequencyPrinter()
 
     # Training-Split -> give whole image
     train_file = pt.join(outdir, 'Vaihingen_train.msgpack')
     with FileWriter(train_file) as writer:
-        for id in [1, 3, 5, 7, 13, 17, 21, 23, 26, 32, 37]:
-            img_path = pt.join(img_dir, "top_mosaic_09cm_area%s.tif" %(id))
-            label_path = pt.join(label_dir, "top_mosaic_09cm_area%s.tif" % (id))
-            dsm_path = pt.join(dsm_dir, "dsm_09cm_matching_area%s.tif" % (id))
+        image_ids = [1, 3, 5, 7, 13, 17, 21, 23, 26, 32, 37]
+        for fn, train_img, train_labels, train_dsm in \
+                                    images_label_dsm_iter(indir, image_ids):
 
-            img = tiff_to_nd_array(img_path)
-            train_img = img.astype(np.uint8)
-
-            labels = tiff_to_nd_array(label_path, type=np.uint8)
-            labels = labels.transpose(1, 2, 0)
-            train_labels = map_color_values_to_class_indices(labels)\
-                .astype(np.int64)
-
-            dsm = tiff_to_nd_array(dsm_path, type=np.int32)
-            train_dsm = dsm[0]
-
-            write(writer, train_img, train_labels, train_dsm, "train_%s"%(id))
+            write(writer, train_img, train_labels, train_dsm, fn)
             printer.update()
+    printer.print_total_updates()
 
 
     # Validation-Split -> give splitted images
     val_file = pt.join(outdir, 'Vaihingen_val.msgpack')
     with FileWriter(val_file) as writer:
-        for id in [11, 15, 28, 30, 34]:
-            img_path = pt.join(img_dir, "top_mosaic_09cm_area%s.tif" %(id))
-            label_path = pt.join(label_dir, "top_mosaic_09cm_area%s.tif" % (id))
-            dsm_path = pt.join(dsm_dir, "dsm_09cm_matching_area%s.tif" % (id))
-
-            img = tiff_to_nd_array(img_path)
-            train_img = img #transpose after splitting!
-
-            labels = tiff_to_nd_array(label_path, type=np.uint8)
-            labels = labels.transpose(1, 2, 0)
-            train_labels = map_color_values_to_class_indices(labels)
-
-            dsm = tiff_to_nd_array(dsm_path, type=np.int32)
-            train_dsm = dsm[0]
+        for fn, train_img, train_labels, train_dsm in \
+                            images_label_dsm_iter(indir, [11, 15, 28, 30, 34]):
 
             train_labels = np.expand_dims(train_labels, axis=0)
             train_dsm = np.expand_dims(train_dsm, axis=0)
@@ -111,8 +100,9 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
                 sub_img = np.array(sub_img).astype(np.uint8)
                 sub_label = np.array(sub_label[0]).astype(np.int64)
                 sub_dsm = np.array(sub_dsm[0])
-                write(writer, sub_img, sub_label, sub_dsm, "val_%s_%s"%(id, idx))
+                write(writer, sub_img, sub_label, sub_dsm, "%s_%s"%(fn, idx))
                 printer.update()
+    printer.print_total_updates()
 
 
 
