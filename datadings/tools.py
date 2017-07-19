@@ -224,3 +224,10 @@ def split_array(img, h_pixels, v_pixels, indices=(1, 2)):
     for i, j in product(np.unique(i_), np.unique(j_)):
         yield img[:, i_ == i][:, :, j_ == j]
 
+
+def tiff_to_nd_array(file_path, type=np.int8):
+    from osgeo import gdal
+    dataset = gdal.Open(file_path, gdal.GA_ReadOnly)
+    return np.array([dataset.GetRasterBand(idx+1).ReadAsArray()
+                        for idx in range(dataset.RasterCount)]).astype(type)
+
