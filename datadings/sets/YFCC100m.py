@@ -3,6 +3,7 @@ import os.path as pt
 import zipfile
 import re
 from collections import defaultdict
+import gzip
 
 import numpy as np
 import cv2
@@ -12,6 +13,9 @@ from datadings.reader import Reader
 from datadings.sets import UnsupervisedData as YFCC100mData
 from datadings.sets.YFCC100m_counts import FILE_COUNTS
 from datadings.sets.YFCC100m_counts import FILES_TOTAL
+
+
+ROOT = pt.abspath(pt.dirname(__file__))
 
 
 def noop(data):
@@ -124,20 +128,36 @@ def yield_from_zips(
             start_image = ''
 
 
-def _parse_rejected(f):
-    rejected = defaultdict(lambda: set())
+def _parse_rejected(f, rejected=None):
+    if rejected is None:
+        rejected = defaultdict(lambda: set())
     for l in f:
         z, i = l.split()
         rejected[z].add(int(i))
     return rejected
 
 
+class DevNull(object):
+    def read(self, *_):
+        pass
+
+    def write(self, *_):
+        pass
+
+    def close(self):
+        pass
+
+
 class YFCC100mReader(Reader):
     def __init__(
             self,
             image_packs_dir,
-            reject_file_path='YFCC100m_rejected_images.txt',
-            validate_images=True
+            validate_images=False,
+            reject_file_paths=(
+                    pt.join(ROOT, 'YFCC100m_rejected_images.txt.gz'),
+            ),
+            error_file=None,
+            error_file_mode='a',
     ):
         self._path = image_packs_dir
         if validate_images:
@@ -145,13 +165,22 @@ class YFCC100mReader(Reader):
         else:
             self._validator = noop
         self._next_sample = None
-        self._rejected = {}
+        self._rejected = None
         try:
-            with open(reject_file_path) as f:
-                self._rejected = _parse_rejected(f)
+            for path in reject_file_paths:
+                if path is None:
+                    continue
+                ofunc = open
+                if path.endswith('.gz'):
+                    ofunc = gzip.open
+                with ofunc(path) as f:
+                    self._rejected = _parse_rejected(f, self._rejected)
         except IOError:
             pass
-        self._error_file = open(reject_file_path, 'a')
+        if error_file is None:
+            self._error_file = DevNull()
+        else:
+            self._error_file = open(error_file, error_file_mode)
         self._gen = yield_from_zips(
             image_packs_dir, self._rejected,
             validate=self._validator,
