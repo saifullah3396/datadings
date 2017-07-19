@@ -3,6 +3,7 @@ import os.path as pt
 import zipfile
 import re
 from collections import defaultdict
+import gzip
 
 import numpy as np
 import cv2
@@ -14,11 +15,14 @@ from datadings.sets.YFCC100m_counts import FILE_COUNTS
 from datadings.sets.YFCC100m_counts import FILES_TOTAL
 
 
+ROOT = pt.abspath(pt.dirname(__file__))
+
+
 def noop(data):
     return data
 
 
-def test_image(data):
+def validate_image(data):
     if len(data) < 2600 or len(data) == 9218:
         return None
     try:
@@ -91,7 +95,7 @@ def yield_from_zips(
         rejected,
         start_key=os.sep,
         start_index=0,
-        validate=test_image,
+        validator=noop,
 ):
     if start_index and start_key != os.sep:
         raise ValueError('cannot set both start_key and start_index')
@@ -119,42 +123,67 @@ def yield_from_zips(
                 if i in r:
                     continue
                 f = m.filename
-                yield validate(imagezip.read(f)), f, z, i
+                yield validator(imagezip.read(f)), f, z, i
             start_index = 0
             start_image = ''
 
 
-def _parse_rejected(f):
-    rejected = defaultdict(lambda: set())
+def _parse_rejected(f, rejected=None):
+    if rejected is None:
+        rejected = defaultdict(lambda: set())
     for l in f:
         z, i = l.split()
         rejected[z].add(int(i))
     return rejected
 
 
+class DevNull(object):
+    def read(self, *_):
+        pass
+
+    def write(self, *_):
+        pass
+
+    def close(self):
+        pass
+
+
 class YFCC100mReader(Reader):
     def __init__(
             self,
             image_packs_dir,
-            reject_file_path='YFCC100m_rejected_images.txt',
-            validate_images=True
+            validator=noop,
+            reject_file_paths=(
+                    pt.join(ROOT, 'YFCC100m_rejected_images.txt.gz'),
+            ),
+            error_file=None,
+            error_file_mode='a',
     ):
         self._path = image_packs_dir
-        if validate_images:
-            self._validator = test_image
-        else:
-            self._validator = noop
+        if not callable(validator):
+            raise ValueError('validator must be callable, not %r'
+                             % validator)
+        self._validator = validator
         self._next_sample = None
-        self._rejected = {}
+        self._rejected = None
         try:
-            with open(reject_file_path) as f:
-                self._rejected = _parse_rejected(f)
+            for path in reject_file_paths:
+                if path is None:
+                    continue
+                ofunc = open
+                if path.endswith('.gz'):
+                    ofunc = gzip.open
+                with ofunc(path) as f:
+                    self._rejected = _parse_rejected(f, self._rejected)
         except IOError:
             pass
-        self._error_file = open(reject_file_path, 'a')
+        if error_file is None:
+            self._error_file = DevNull()
+        else:
+            self._error_file = open(error_file, error_file_mode)
         self._gen = yield_from_zips(
             image_packs_dir, self._rejected,
-            validate=self._validator,
+            validator=self._validator,
         )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -193,7 +222,7 @@ class YFCC100mReader(Reader):
         self._gen = yield_from_zips(
             self._path, self._rejected,
             start_index=index,
-            validate=self._validator,
+            validator=self._validator,
         )
 
     seek = seek_index
@@ -202,7 +231,7 @@ class YFCC100mReader(Reader):
         self._gen = yield_from_zips(
             self._path, self._rejected,
             start_key=key,
-            validate=self._validator,
+            validator=self._validator,
         )
 
     def get_key(self, index=None):
@@ -217,7 +246,7 @@ def main():
     from datadings.tools import print_over
     printer = FrequencyPrinter(0.5)
     reader = YFCC100mReader(
-        '/ds2/YFCC100m/image_packs/', validate_images=True
+        '/ds2/YFCC100m/image_packs/', validator=validate_image
     )
     # reader.seek(29232)
     n = 0
