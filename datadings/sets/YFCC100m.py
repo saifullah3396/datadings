@@ -165,7 +165,7 @@ class YFCC100mReader(Reader):
                              % validator)
         self._validator = validator
         self._next_sample = None
-        self._rejected = None
+        self._rejected = {}
         try:
             for path in reject_file_paths:
                 if path is None:
