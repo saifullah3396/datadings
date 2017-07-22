@@ -112,6 +112,8 @@ def yield_from_zips(
 
     for z in zips:
         with zipfile.ZipFile(pt.join(path, z) + '.zip') as imagezip:
+            # z must be bytes so the set of rejected images is found in py3
+            z = bytes(z, 'utf-8')
             # filter out non-image members
             members = _filter_zipinfo(imagezip.infolist())
             if start_index:
@@ -128,9 +130,7 @@ def yield_from_zips(
             start_image = ''
 
 
-def _parse_rejected(f, rejected=None):
-    if rejected is None:
-        rejected = defaultdict(lambda: set())
+def _parse_rejected(f, rejected):
     for l in f:
         z, i = l.split()
         rejected[z].add(int(i))
