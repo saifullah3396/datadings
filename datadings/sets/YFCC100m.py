@@ -200,12 +200,12 @@ class YFCC100mReader(Reader):
         while self._next_sample is None:
             next_sample = next(self._gen)
             sample, key, z, i = next_sample
-            if sample is None:
-                if i not in self._rejected[z]:
+            if i not in self._rejected[z]:
+                if sample is None:
                     self._rejected[z].add(i)
                     self._error_file.write('%s %d\n' % (z, i))
-            else:
-                self._next_sample = sample, key
+                else:
+                    self._next_sample = sample, key
         return self._next_sample
 
     def next(self):
