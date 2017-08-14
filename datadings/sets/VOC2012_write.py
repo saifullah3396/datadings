@@ -122,36 +122,59 @@ def write_sets(indir, outdir, shuffle=True):
             printer.print_total_updates()
 
 
-def calculate_weights(indir):
+def class_counts(gen):
+    counts = defaultdict(lambda: 0)
+    printer = FrequencyPrinter()
+    for segmap in gen:
+        cs = np.bincount(segmap.flatten())
+        for c in np.nonzero(cs)[0]:
+            counts[c] += cs[c] / segmap.size
+        printer.update()
+    print_over('%d samples analyzed' % printer.total_updates)
+    return counts
+
+
+def median_frequency_weights(counts):
+    total = sum(counts.values())
+    freq = {c: n/total for c, n in counts.items()}
+    median_freq = np.median(list(freq.values()))
+    # cannot serialize numpy scalars,
+    # classes & weights must be Python numbers!
+    return {int(c): float(median_freq/f) for c, f in freq.items()}
+
+
+def print_values(prefix, values):
+    print('%s = [' % prefix)
+    for v in values:
+        print('    {},'.format(v))
+    print(']')
+
+
+def sorted_values(d):
+    return [d[k] for k in sorted(d)]
+
+
+def _segmap(tar, seg_dir, name):
+    return map_color_image(
+        imagedata_to_array(
+            extract(tar, pt.join(seg_dir, name) + '.png')
+        )
+    )
+
+
+def calculate_set_weights(indir):
     datapath, sets_dir, _, seg_dir = _prepare_indir(indir)
     with tarfile.TarFile(datapath) as tar:
         for split in ('train', 'val'):
             print(split, 'weights')
-            printer = FrequencyPrinter()
-            weights = defaultdict(lambda: 0)
             sets_path = pt.join(sets_dir, '%s.txt' % split)
             images = get_imageset(tar, sets_path)
-            for name in images:
-                seg = extract(tar, pt.join(seg_dir, name) + '.png')
-                segim = imagedata_to_array(seg)
-                segmap = map_color_image(segim)
-                counts = np.bincount(segmap.flatten())
-                for c in np.nonzero(counts)[0]:
-                    weights[c] += counts[c]
-                printer.update()
-            print_over('%d samples analyzed' % printer.total_updates)
-            total = sum(weights.values())
-            freq = {c: n / total for c, n in weights.items()}
-            median_freq = np.median(list(freq.values()))
-            # cannot serialize numpy scalars,
-            # classes & weights must be Python numbers!
-            weights = {int(c): float(median_freq / f)
-                       for c, f in freq.items()}
-            print('WEIGHTS = [')
-            for c in sorted(weights):
-                print('    {},'.format(weights[c]))
-            print(']')
-            print()
+            gen = (_segmap(tar, seg_dir, name) for name in images)
+            counts = class_counts(gen)
+            weights = median_frequency_weights(counts)
+            print_values('INDEXES', sorted(counts))
+            print_values('COUNTS', sorted_values(counts))
+            print_values('WEIGHTS', sorted_values(weights))
 
 
 def main():
@@ -179,7 +202,7 @@ def main():
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     if args.calculate_weights:
-        calculate_weights(args.indir)
+        calculate_set_weights(args.indir)
     else:
         write_sets(args.indir, outdir)
 

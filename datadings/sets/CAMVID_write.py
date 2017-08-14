@@ -14,12 +14,38 @@ from __future__ import print_function, division
 import os.path as pt
 import zipfile
 import random
+import io
+import numpy as np
 
+from PIL import Image
+
+from datadings.sets.VOC2012_write import class_counts
+from datadings.sets.VOC2012_write import sorted_values
+from datadings.sets.VOC2012_write import print_values
+from datadings.sets.VOC2012_write import median_frequency_weights
 from datadings.writer import FileWriter
 from datadings.tools import FrequencyPrinter
 from datadings.tools import download_if_not_found
 from datadings.sets import SegmentationData
 from datadings.sets.CAMVID import CLASSES
+
+
+def imagedata_to_array(data):
+    bio = io.BytesIO(data)
+    im = Image.open(bio)
+    return np.array(im)
+
+
+def _prepare_indir(indir):
+    datapath = pt.join(indir, 'CAMVID.zip')
+    download_if_not_found(
+        'https://github.com/alexgkendall/SegNet-Tutorial/'
+        'archive/fcaf7c4978dd8d091ec67db7cb7fdd225f5051c5.zip',
+        datapath
+    )
+    root_dir = 'SegNet-Tutorial-fcaf7c4978dd8d091ec67db7cb7fdd225f5051c5'
+    pairs_dir = pt.join(root_dir, 'CamVid')
+    return datapath, root_dir, pairs_dir
 
 
 def write_image(imagezip, writer, inpath, outpath):
@@ -36,31 +62,45 @@ def write_image(imagezip, writer, inpath, outpath):
     writer.write(item)
 
 
+def _get_pairs(fp, root_dir):
+    return [pair.rstrip().replace('/SegNet', root_dir).split()
+            for pair in fp]
+
+
 def write_sets(indir, outdir, shuffle=True):
-    imagepath = pt.join(indir, 'CAMVID.zip')
-    download_if_not_found(
-        'https://github.com/alexgkendall/SegNet-Tutorial/'
-        'archive/fcaf7c4978dd8d091ec67db7cb7fdd225f5051c5.zip',
-        imagepath
-    )
-    root_dir = 'SegNet-Tutorial-fcaf7c4978dd8d091ec67db7cb7fdd225f5051c5'
+    datapath, root_dir, pairs_dir = _prepare_indir(indir)
     printer = FrequencyPrinter()
-    with zipfile.ZipFile(imagepath) as imagezip:
+    with zipfile.ZipFile(datapath) as imagezip:
         for split in ('test', 'val', 'train'):
             outpath = pt.join(outdir, 'CAMVID_%s.msgpack' % split)
             with FileWriter(outpath) as writer:
-                pairs_path = pt.join(root_dir, 'CamVid', '%s.txt' % split)
-                pairs = [
-                    pair.replace('\n', '').replace(
-                        '/SegNet', root_dir).split(' ')
-                    for pair in imagezip.open(pairs_path)
-                ]
+                pairs_path = pt.join(pairs_dir, '%s.txt' % split)
+                pairs = _get_pairs(imagezip.open(pairs_path), root_dir)
                 if shuffle:
                     random.shuffle(pairs)
                 for pair in pairs:
                     write_image(imagezip, writer, *pair)
                     printer.update()
     printer.print_total_updates()
+
+
+def _segmap(imagezip, path):
+    return imagedata_to_array(imagezip.read(path))
+
+
+def calculate_weights(indir):
+    datapath, root_dir, pairs_dir = _prepare_indir(indir)
+    with zipfile.ZipFile(datapath) as imagezip:
+        for split in ('test', 'val', 'train'):
+            print(split, 'weights')
+            pairs_path = pt.join(pairs_dir, '%s.txt' % split)
+            pairs = _get_pairs(imagezip.open(pairs_path), root_dir)
+            gen = (_segmap(imagezip, path) for _, path in pairs)
+            counts = class_counts(gen)
+            weights = median_frequency_weights(counts)
+            print_values('INDEXES', sorted(counts))
+            print_values('COUNTS', sorted_values(counts))
+            print_values('WEIGHTS', sorted_values(weights))
 
 
 def main():
@@ -80,9 +120,17 @@ def main():
         metavar='OUTPATH',
         help='output directory; defaults to indir'
     )
+    parser.add_argument(
+        '--calculate-weights',
+        action='store_true',
+        help='calculate median-frequency class weights'
+    )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+    if args.calculate_weights:
+        calculate_weights(args.indir)
+    else:
+        write_sets(args.indir, outdir)
 
 
 if __name__ == '__main__':
