@@ -14,12 +14,11 @@ import csv
 import os
 import os.path as pt
 import tarfile
-import io
 import json
 from collections import defaultdict
+from itertools import chain
 
-import numpy as np
-from PIL import Image
+from six.moves import zip_longest
 
 from datadings.sets import SegmentationData
 from datadings.writer import FileWriter
@@ -29,6 +28,7 @@ from datadings.matlab import loadmat
 from datadings.sets.VOC2012_write import imagedata_to_array
 from datadings.sets.VOC2012_write import class_counts
 from datadings.sets.VOC2012_write import sorted_values
+from datadings.sets.VOC2012_write import print_values
 from datadings.sets.VOC2012_write import extractmember
 from datadings.sets.VOC2012_write import extract
 from datadings.sets.SceneParsing2017 import WEIGHTS
@@ -54,14 +54,6 @@ def find_sets(tarfp):
         if len(parts) == 3:
             sets[parts[1]].append(m)
     return sets
-
-
-def get_classes(path):
-    with open(path) as f:
-        return ['background'] + [
-            l['Name'].split(', ')[0]
-            for l in csv.DictReader(f, dialect='excel-tab')
-        ]
 
 
 def write_set(
@@ -93,8 +85,6 @@ def write_sets(indir, outdir):
     download_if_not_found(IMAGE_URL, imagepath)
     segpath = pt.join(indir, 'sceneparsing.tar')
     download_if_not_found(SEG_URL, segpath)
-    classpath = pt.join(indir, 'objectInfo150.txt')
-    download_if_not_found(CLASS_URL, classpath)
     with tarfile.TarFile(imagepath) as imagetar:
         sets = find_sets(imagetar)
         with tarfile.TarFile(segpath) as segtar:
@@ -108,7 +98,7 @@ def _segmap(segtar, member):
     return imagedata_to_array(extractmember(segtar, member))
 
 
-def calculate_weights(indir, outdir):
+def calculate_counts(indir, outdir):
     segpath = pt.join(indir, 'sceneparsing.tar')
     download_if_not_found(SEG_URL, segpath)
     with tarfile.TarFile(segpath) as segtar:
@@ -131,6 +121,22 @@ def color_map(indir, outdir):
         json.dump([[0, 0, 0]] + colors.tolist(), f)
 
 
+def classes(indir):
+    classpath = pt.join(indir, 'objectInfo150.txt')
+    download_if_not_found(CLASS_URL, classpath)
+    with open(classpath) as f:
+        classes = [
+            l['Name'].split(', ')[0]
+            for l in csv.DictReader(f, dialect='excel-tab')
+        ]
+    classes = zip_longest(*(classes[i::5] for i in range(5)))
+    classes = chain(
+        [repr('background')],
+        [', '.join(map(repr, row)) for row in classes]
+    )
+    print_values('CLASSES', classes)
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(
@@ -141,7 +147,7 @@ def main():
         'indir',
         metavar='INPATH',
         default='.',
-        help='directory that contains Vaihingen Dataset files'
+        help='directory that contains SceneParsing2017 files'
     )
     parser.add_argument(
         '-o', '--outdir',
@@ -149,21 +155,28 @@ def main():
         help='output directory; defaults to indir'
     )
     parser.add_argument(
-        '--calculate-weights',
+        '--calculate-counts',
         action='store_true',
-        help='calculate median-frequency class weights'
+        help='calculate pixel counts per class'
     )
     parser.add_argument(
         '--color-map',
         action='store_true',
-        help='calculate median-frequency class weights'
+        help='create color map'
+    )
+    parser.add_argument(
+        '--classes',
+        action='store_true',
+        help='create class list'
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    if args.calculate_weights:
-        calculate_weights(args.indir, outdir)
+    if args.calculate_counts:
+        calculate_counts(args.indir, outdir)
     elif args.color_map:
         color_map(args.indir, outdir)
+    elif args.classes:
+        classes(args.indir)
     else:
         write_sets(args.indir, outdir)
 
