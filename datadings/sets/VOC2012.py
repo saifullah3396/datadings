@@ -82,29 +82,16 @@ COUNTS = [
 ]
 
 
-WEIGHTS = [
-    0.0144844505732,
-    1.54041264564,
-    3.84615729165,
-    1.31869075952,
-    1.84989737792,
-    1.88279919354,
-    0.641896093873,
-    0.796355373538,
-    0.423533385266,
-    0.989407084873,
-    1.35088844798,
-    0.871406271993,
-    0.673561723738,
-    1.22369240063,
-    1.0,
-    0.237161178679,
-    1.75369016224,
-    1.28225094708,
-    0.786090092348,
-    0.714818999447,
-    1.25912057314,
-]
+def median_frequency_weights(counts):
+    total = sum(counts)
+    freq = [n/total for n in counts]
+    # cannot serialize numpy scalars,
+    # weights must be Python numbers!
+    median_freq = float(np.median(freq))
+    return [median_freq/f for f in freq]
+
+
+WEIGHTS = median_frequency_weights(COUNTS)
 
 
 def bitget(byteval, idx):
@@ -119,7 +106,6 @@ def class_color_map(n=256):
     https://gist.github.com/wllhf/a4533e0adebe57e3ed06d4b50c8419ae
 
     :param n: number of classes
-    :param norm: divide colors by this factor
     :return: numpy array of shape (n, 3)
     """
     cmap = np.zeros((n, 3), dtype=np.uint8)
@@ -135,8 +121,8 @@ def class_color_map(n=256):
     return cmap
 
 
-M = class_color_map(256)[:21]
+COLORS = class_color_map(256)[:21]
 
 
 def index_to_color(array):
-    return M[array]
+    return COLORS[array]

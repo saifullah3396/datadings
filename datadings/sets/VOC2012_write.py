@@ -16,7 +16,6 @@ import tarfile
 import random
 import io
 from PIL import Image
-from collections import defaultdict
 
 import numpy as np
 
@@ -26,7 +25,7 @@ from datadings.tools import download_if_not_found
 from datadings.tools import print_over
 from datadings.sets import SegmentationData
 from datadings.sets.VOC2012 import CLASSES
-from datadings.sets.VOC2012 import M
+from datadings.sets.VOC2012 import COLORS
 
 
 def imagedata_to_array(data):
@@ -51,7 +50,8 @@ def single_value(a):
     np.bitwise_or(b, a[..., 2], out=b)
     return b
 
-MSINGLE = single_value(M)
+
+MSINGLE = single_value(COLORS)
 
 
 def map_color_image(im):
@@ -123,24 +123,19 @@ def write_sets(indir, outdir, shuffle=True):
 
 
 def class_counts(gen):
-    counts = defaultdict(lambda: 0)
+    counts = np.float64([])
     printer = FrequencyPrinter()
     for segmap in gen:
-        cs = np.bincount(segmap.flatten())
-        for c in np.nonzero(cs)[0]:
-            counts[c] += cs[c] / segmap.size
         printer.update()
+        cs = np.bincount(segmap.flatten()).astype(np.float64) / segmap.size
+        if len(cs) <= len(counts):
+            counts[:len(cs)] += cs
+        else:
+            cs[:len(counts)] += counts
+            counts = cs
     print_over('%d samples analyzed' % printer.total_updates)
+    counts = {c: counts[c] for c in np.nonzero(counts)[0]}
     return counts
-
-
-def median_frequency_weights(counts):
-    total = sum(counts.values())
-    freq = {c: n/total for c, n in counts.items()}
-    median_freq = np.median(list(freq.values()))
-    # cannot serialize numpy scalars,
-    # classes & weights must be Python numbers!
-    return {int(c): float(median_freq/f) for c, f in freq.items()}
 
 
 def print_values(prefix, values):
@@ -171,10 +166,8 @@ def calculate_set_weights(indir):
             images = get_imageset(tar, sets_path)
             gen = (_segmap(tar, seg_dir, name) for name in images)
             counts = class_counts(gen)
-            weights = median_frequency_weights(counts)
             print_values('INDEXES', sorted(counts))
             print_values('COUNTS', sorted_values(counts))
-            print_values('WEIGHTS', sorted_values(weights))
 
 
 def main():
