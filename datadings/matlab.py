@@ -10,7 +10,7 @@ def loadmat(mat):
     """
     try:
         return scipy.io.loadmat(mat)
-    except IOError:
+    except (TypeError, IOError):
         buf = io.BytesIO(mat)
         return scipy.io.loadmat(buf)
 
