@@ -56,7 +56,7 @@ def array_to_png16(array):
 
 
 def segmentation_map(im):
-    segmap = np.empty(im.shape[:2], dtype=np.uint16)
+    segmap = np.zeros(im.shape[:2], dtype=np.uint16)
     segmap[...] = im[:, :, 0] // 10
     segmap *= 256
     segmap += im[:, :, 1]
