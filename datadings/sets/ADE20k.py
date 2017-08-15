@@ -14,13 +14,6 @@ from datadings.sets import SegmentationReader as ADE20KReader
 ROOT_DIR = pt.abspath(pt.dirname(__file__))
 
 
-def index_to_color(array):
-    image = np.empty(array.shape + (3,), dtype=np.uint8)
-    image[..., 0] = array[..., 0] // 256 * 10
-    image[..., 1] = array[..., 1] % 256
-    return image
-
-
 def load_statistics(name):
     path = pt.join(ROOT_DIR, name)
     with gzip.open(path, mode='rt') as f:
@@ -30,3 +23,11 @@ def load_statistics(name):
 
 INDEXES, COUNTS = load_statistics('ADE20k_counts.json.gz')
 WEIGHTS = median_frequency_weights(COUNTS)
+
+
+def index_to_color(array, _index_array=np.array(INDEXES, np.uint16)):
+    array = np.take(_index_array, array)
+    image = np.zeros(array.shape + (3,), dtype=np.uint8)
+    image[..., 0] = array // 256 * 10
+    image[..., 1] = array % 256
+    return image
