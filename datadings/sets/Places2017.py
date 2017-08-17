@@ -3,13 +3,13 @@ from __future__ import print_function, division
 import os.path as pt
 import gzip
 import json
+from collections import namedtuple
 
 import numpy as np
 
+from datadings.reader import MsgpackReader
 from datadings.sets.VOC2012 import median_frequency_weights
 from datadings.sets.ADE20k import load_statistics
-from datadings.sets import convert_segementation as convert_SceneParsing2017
-from datadings.sets import SegmentationReader as SceneParsing2017Reader
 
 
 ROOT_DIR = pt.abspath(pt.dirname(__file__))
@@ -48,13 +48,35 @@ CLASSES = [
     'pier', 'crt screen', 'plate', 'monitor', 'bulletin board',
     'shower', 'radiator', 'glass', 'clock', 'flag',
 ]
-INDEXES, COUNTS = load_statistics('SceneParsing2017_counts.json.gz')
+INDEXES, COUNTS = load_statistics('Places2017_counts.json.gz')
 WEIGHTS = median_frequency_weights(COUNTS)
 with gzip.open(
-        pt.join(ROOT_DIR, 'SceneParsing2017_colors.json.gz'), 'rt'
+        pt.join(ROOT_DIR, 'Places2017_colors.json.gz'), 'rt'
 ) as f:
     COLORS = np.array(json.load(f), dtype=np.uint8)
 
 
 def index_to_color(array):
     return COLORS[array]
+
+
+Places2017Data = namedtuple(
+    'Places2017Data',
+    ('sample', 'groundtruth', 'filename', 'classes')
+)
+Places2017Task = namedtuple(
+    'Places2017Task',
+    ('groundtruth', 'class_weights')
+)
+
+
+def convert_places2017(item):
+    return Places2017Data(
+            item[0],
+            [Places2017Task(*task[:2]) for task in item[1]],
+            item[2],
+    )
+
+
+class Places2017Reader(MsgpackReader):
+    _convert = staticmethod(convert_places2017)
