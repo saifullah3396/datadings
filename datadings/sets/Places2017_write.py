@@ -1,7 +1,7 @@
-"""Create Vaihingen data set files.
+"""Create Places2017 data set files.
 
 The data set is described here:
-    https://github.com/CSAILVision/placeschallenge/tree/master/sceneparsing
+    https://github.com/CSAILVision/placeschallenge
 
 This tool will look for the following files in the input directory
 and download them if necessary:
@@ -101,14 +101,10 @@ def extract_instance(instancetar, name):
 def extract_boundary(boundarytar, name):
     data = extract(boundarytar, _gt(name, 'boundary', '.mat'))
     mat = loadmat(data)['gt']['bdry'][0][0]
-    # out = np.zeros(mat[0][0].shape, dtype=np.uint8)
     out = mat[0][0]
     for m in mat[1:]:
         out += m[0]
     out = np.clip(out.toarray(), 0, 1)
-    #import cv2
-    #cv2.imshow('', out*255)
-    #cv2.waitKey(1000)
     return array_to_png(out)
 
 
@@ -166,7 +162,7 @@ def _segmap(segtar, member):
     return imagedata_to_array(extractmember(segtar, member))
 
 
-def calculate_counts(indir, outdir):
+def create_counts(indir, outdir):
     segpath = pt.join(indir, 'sceneparsing.tar')
     download_if_not_found(CLASS_TAR, segpath)
     with tarfile.TarFile(segpath) as segtar:
@@ -180,7 +176,7 @@ def calculate_counts(indir, outdir):
         }, f)
 
 
-def color_map(indir, outdir):
+def create_color_map(indir, outdir):
     colorpath = pt.join(indir, COLORS_FILE)
     download_if_not_found(COLORS_DEF, colorpath)
     colors = loadmat(colorpath)['colors']
@@ -190,20 +186,20 @@ def color_map(indir, outdir):
         json.dump([[0, 0, 0]] + colors.tolist(), f)
 
 
-def classes(indir):
+def print_classes(indir):
     classpath = pt.join(indir, CLASSES_FILE)
     download_if_not_found(CLASSES_DEF, classpath)
     with open(classpath) as f:
-        classes = [
+        cs = [
             l['Name'].split(', ')[0]
             for l in csv.DictReader(f, dialect='excel-tab')
         ]
-    classes = zip_longest(*(classes[i::5] for i in range(5)))
-    classes = chain(
+    cs = zip_longest(*(cs[i::5] for i in range(5)))
+    cs = chain(
         [repr('background')],
-        [', '.join(map(repr, row)) for row in classes]
+        [', '.join(map(repr, row)) for row in cs]
     )
-    print_values('CLASSES', classes)
+    print_values('CLASSES', cs)
 
 
 def main():
@@ -226,26 +222,28 @@ def main():
     parser.add_argument(
         '--calculate-counts',
         action='store_true',
-        help='calculate pixel counts per class'
+        help='count pixels per class; '
+             'creates Places2017_counts.json'
     )
     parser.add_argument(
         '--color-map',
         action='store_true',
-        help='create color map'
+        help='create color map; '
+             'creates Places2017_colors.json'
     )
     parser.add_argument(
         '--classes',
         action='store_true',
-        help='create class list'
+        help='print the class list'
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     if args.calculate_counts:
-        calculate_counts(args.indir, outdir)
+        create_counts(args.indir, outdir)
     elif args.color_map:
-        color_map(args.indir, outdir)
+        create_color_map(args.indir, outdir)
     elif args.classes:
-        classes(args.indir)
+        print_classes(args.indir)
     else:
         write_sets(args.indir, outdir)
 
