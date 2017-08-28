@@ -29,6 +29,7 @@ import random
 from six.moves import zip_longest
 import numpy as np
 from PIL import Image
+import cv2
 
 from datadings.writer import FileWriter
 from datadings.tools import FrequencyPrinter
@@ -101,11 +102,15 @@ def extract_instance(instancetar, name):
 def extract_boundary(boundarytar, name):
     data = extract(boundarytar, _gt(name, 'boundary', '.mat'))
     mat = loadmat(data)['gt']['bdry'][0][0]
-    out = mat[0][0]
-    for m in mat[1:]:
-        out += m[0]
-    out = np.clip(out.toarray(), 0, 1)
-    return array_to_png(out)
+    boundaries = []
+    for m in mat:
+        _, contours, _ = cv2.findContours(
+            m[0].toarray(),
+            cv2.RETR_LIST,
+            cv2.CHAIN_APPROX_TC89_L1
+        )
+        boundaries.append([c.reshape((-1, 2)) for c in contours])
+    return boundaries
 
 
 def write_set(
