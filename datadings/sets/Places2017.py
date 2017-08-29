@@ -10,6 +10,7 @@ import numpy as np
 from datadings.reader import MsgpackReader
 from datadings.sets.VOC2012 import median_frequency_weights
 from datadings.sets.ADE20k import load_statistics
+from datadings.sets.ADE20k import SCENELABELS
 
 
 ROOT_DIR = pt.abspath(pt.dirname(__file__))

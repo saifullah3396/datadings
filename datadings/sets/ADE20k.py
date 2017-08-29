@@ -14,15 +14,24 @@ from datadings.sets import SegmentationReader as ADE20KReader
 ROOT_DIR = pt.abspath(pt.dirname(__file__))
 
 
-def load_statistics(name):
+def _load_gzip_json(name):
     path = pt.join(ROOT_DIR, name)
     with gzip.open(path, mode='rt') as f:
-        d = json.load(f)
+        return json.load(f)
+
+
+def load_statistics(name):
+    d = _load_gzip_json(name)
     return d['INDEXES'], d['COUNTS']
+
+
+def load_scenelabels():
+    return _load_gzip_json('ADE20k_scenelabels.json.gz')
 
 
 INDEXES, COUNTS = load_statistics('ADE20k_counts.json.gz')
 WEIGHTS = median_frequency_weights(COUNTS)
+SCENELABELS = load_scenelabels()
 
 
 def index_to_color(array, _index_array=np.array(INDEXES, np.uint16)):

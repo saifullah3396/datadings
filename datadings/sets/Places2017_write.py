@@ -19,6 +19,7 @@ from __future__ import print_function, division
 import csv
 import os
 import os.path as pt
+import zipfile
 import tarfile
 import json
 from collections import defaultdict
@@ -41,6 +42,10 @@ from datadings.sets.VOC2012_write import sorted_values
 from datadings.sets.VOC2012_write import print_values
 from datadings.sets.VOC2012_write import extractmember
 from datadings.sets.VOC2012_write import extract
+from datadings.sets.ADE20k_write import DATASET_URL as ADE20K_URL
+from datadings.sets.ADE20k_write import DATASET_FILE as ADE20K_FILE
+from datadings.sets.ADE20k_write import load_index
+from datadings.sets.ADE20k import SCENELABELS
 from datadings.sets.Places2017 import Places2017Data
 from datadings.sets.Places2017 import Places2017Task
 from datadings.sets.Places2017 import WEIGHTS
@@ -113,13 +118,23 @@ def extract_boundary(boundarytar, name):
     return boundaries
 
 
+def extract_scene(scenes, name):
+    return scenes[pt.basename(name)]
+
+
+def _reverse(l):
+    return l[::-1]
+
+
 def write_set(
         imagetar, classtar, instancetar, boundarytar,
         outdir, name, members,
-        classes, class_weights
+        classes, class_weights, scenes
 ):
     print(name)
     printer = FrequencyPrinter()
+    scenes_indices = dict(map(_reverse, enumerate(SCENELABELS)))
+    scenes = {f: scenes_indices[s] for f, s in scenes.items()}
     with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
         for m in members:
             writer.write(Places2017Data(
@@ -132,6 +147,8 @@ def write_set(
                     # TODO boundary weights
                     Places2017Task(
                         extract_boundary(boundarytar, m.name), None),
+                    Places2017Task(
+                        extract_scene(scenes, m.name), None),
                 ],
                 pt.basename(m.name),
                 classes,
@@ -140,7 +157,7 @@ def write_set(
     printer.print_total_updates()
 
 
-def write_sets(indir, outdir, shuffle=True):
+def write_sets(indir, ade20kdir, outdir, shuffle=True):
     imagepath = pt.join(indir, 'images.tar')
     download_if_not_found(IMAGE_TAR, imagepath)
     classpath = pt.join(indir, CLASS_FILE)
@@ -149,6 +166,16 @@ def write_sets(indir, outdir, shuffle=True):
     download_if_not_found(INSTANCE_TAR, instancepath)
     boundarypath = pt.join(indir, BOUNDARY_FILE)
     download_if_not_found(BOUNDARY_TAR, boundarypath)
+    ade20kpath = pt.join(ade20kdir, ADE20K_FILE)
+    download_if_not_found(ADE20K_URL, ade20kpath)
+    # get index
+    with zipfile.ZipFile(ade20kpath) as imagezip:
+        index = load_index(imagezip)
+        scenes = dict(zip(
+            np.concatenate(index['filename'][0, 0][0]),
+            np.concatenate(index['scene'][0, 0][0]),
+        ))
+    # write actual data set
     with tarfile.TarFile(imagepath) as imagetar:
         sets = find_sets(imagetar)
         with tarfile.TarFile(classpath) as classtar:
@@ -159,7 +186,7 @@ def write_sets(indir, outdir, shuffle=True):
                             random.shuffle(members)
                         write_set(
                             imagetar, classtar, instancetar, boundarytar,
-                            outdir, name, members, CLASSES, WEIGHTS
+                            outdir, name, members, CLASSES, WEIGHTS, scenes
                         )
 
 
@@ -225,6 +252,11 @@ def main():
         help='output directory; defaults to indir'
     )
     parser.add_argument(
+        '-a', '--ade20k-dir',
+        metavar='PATH',
+        help='path to full ADE20K data set; defaults to indir'
+    )
+    parser.add_argument(
         '--calculate-counts',
         action='store_true',
         help='count pixels per class; '
@@ -242,6 +274,7 @@ def main():
         help='print the class list'
     )
     args = parser.parse_args()
+    ade20kdir = args.ade20k_dir or args.indir
     outdir = args.outdir or args.indir
     if args.calculate_counts:
         create_counts(args.indir, outdir)
@@ -250,7 +283,7 @@ def main():
     elif args.classes:
         print_classes(args.indir)
     else:
-        write_sets(args.indir, outdir)
+        write_sets(args.indir, ade20kdir, outdir)
 
 
 if __name__ == '__main__':

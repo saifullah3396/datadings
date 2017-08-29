@@ -32,6 +32,7 @@ from datadings.sets.ADE20k import WEIGHTS
 
 DATASET_URL = 'http://groups.csail.mit.edu/vision/datasets/' \
               'ADE20K/ADE20K_2016_07_26.zip'
+DATASET_FILE = 'ADE20K_2016_07_26.zip'
 
 
 def load_index(imagezip):
@@ -109,7 +110,7 @@ def write_set(imagezip, outdir, name, classes, class_weights):
 
 
 def write_sets(indir, outdir):
-    datapath = pt.join(indir, 'ADE20K_2016_07_26.zip')
+    datapath = pt.join(indir, DATASET_FILE)
     download_if_not_found(DATASET_URL, datapath)
     with zipfile.ZipFile(datapath) as imagezip:
         index = load_index(imagezip)
@@ -123,7 +124,7 @@ def _segmap(imagezip, path):
 
 
 def calculate_weights(indir, outdir):
-    datapath = pt.join(indir, 'ADE20K_2016_07_26.zip')
+    datapath = pt.join(indir, DATASET_FILE)
     download_if_not_found(DATASET_URL, datapath)
     with zipfile.ZipFile(datapath) as imagezip:
         gen = (
@@ -138,6 +139,16 @@ def calculate_weights(indir, outdir):
             'INDEXES': sorted(counts.keys()),
             'COUNTS': sorted_values(counts)
         }, f)
+
+
+def extract_scenelabels(indir, outdir):
+    datapath = pt.join(indir, DATASET_FILE)
+    download_if_not_found(DATASET_URL, datapath)
+    with zipfile.ZipFile(datapath) as imagezip:
+        index = load_index(imagezip)
+        scenes = sorted(set(np.concatenate(index['scene'][0, 0][0])))
+    with open(pt.join(outdir, 'ADE20k_scenelabels.json'), 'w') as f:
+        json.dump(scenes, f)
 
 
 def main():
@@ -162,10 +173,17 @@ def main():
         action='store_true',
         help='calculate median-frequency class weights'
     )
+    parser.add_argument(
+        '--scenelabels',
+        action='store_true',
+        help='extract list of scene labels'
+    )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     if args.calculate_weights:
         calculate_weights(args.indir, outdir)
+    elif args.scenelabels:
+        extract_scenelabels(args.indir, outdir)
     else:
         write_sets(args.indir, outdir)
 
