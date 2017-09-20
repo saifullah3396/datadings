@@ -1,52 +1,59 @@
 """
 Create ANP460 data set files.
 """
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
+
 import os
 import os.path as pt
 import zipfile
 import random
+import json
 from collections import defaultdict
+
 import numpy as np
 
 from datadings.writer import FileWriter
 from datadings.tools import FrequencyPrinter
-from datadings.sets import ANP460Data
-from datadings.sets import ANP460Experiment
-import csv
-import json
+from datadings.sets.ANP460 import ANP460Data
+from datadings.sets.ANP460 import ANP460Experiment
+
+
+def __lines(s):
+    return s.replace('\r', '').split('\n')
+
+
+def __read(z, p, encoding='utf-8'):
+    return z.read(p).decode(encoding)
 
 
 def __iter_fixpoints(datazip, txt_files, stimuluspath):
-    stimulus = stimuluspath.split(os.sep)[1]
+    stimulus = pt.basename(stimuluspath)
     for exp in txt_files[stimulus]:
-        csv_data = datazip.read(exp)
-        csv_list = list(csv.reader(csv_data.split('\r\n'), delimiter=','))
-        points = [np.asarray(map(float, point[0:3])) for point in csv_list]
-        yield points
+        f = datazip.open(exp)
+        yield np.loadtxt(f, dtype=np.float32, delimiter=',')
 
 
-def __get_answer(datazip, txt_files, stimuluspath):
-    img = int(stimuluspath.split(os.sep)[1][0:3])
-    answer = []
-    for exp in txt_files['answer.txt']:
-        data = datazip.read(exp).split('\r\n')[img].split(',')[1:]
-        answer.append(data)
-    return answer
+def __get_answers(datazip, txt_files, stimuluspath):
+    img = int(pt.basename(stimuluspath).partition(os.extsep)[0])
+    answers = []
+    for exp in txt_files['answers']:
+        _, answer, delay = __lines(__read(datazip, exp))[img].split(',')
+        answers.append((answer, float(delay)))
+    return answers
 
 
 def __get_anp_list(datazip):
-    json_data = datazip.read('wrangled_data/image_anp_list.json')
+    json_data = __read(datazip, 'wrangled_data/image_anp_list.json')
     anp_list = json.loads(json_data)
     return anp_list
 
 
 def write_image(imagezip, datazip, anp_list, txt_files, stimuluspath, writer):
     stimulusdata = imagezip.read(stimuluspath)
-    answer = __get_answer(datazip, txt_files, stimuluspath)
-    anp, stimulustype = anp_list[stimuluspath.split(os.sep)[1]]
+    answer = __get_answers(datazip, txt_files, stimuluspath)
+    anp, stimulustype = anp_list[pt.basename(stimuluspath)]
     experiments = [
-        ANP460Experiment(exp, None, answer[i])
+        ANP460Experiment(exp, None, *answer[i])
         for i, exp in enumerate(__iter_fixpoints(datazip, txt_files, stimuluspath))
     ]
     filename = os.sep.join(stimuluspath.split(os.sep)[-2:])
@@ -61,20 +68,15 @@ def write_image(imagezip, datazip, anp_list, txt_files, stimuluspath, writer):
 
 
 def __find_all_experiments(datazip):
-    csvfiles = []
-    for f in datazip.namelist():
-        if len(f.split(os.sep)) == 3:
-            if f.endswith('.txt') & f.split(os.sep)[2][0:3].isdigit():
-                csvfiles.append(f)
-            if f.endswith('answer.txt'):
-                csvfiles.append(f)
     mapping = defaultdict(lambda: [])
-    for f in csvfiles:
-        parts = f.split(os.sep)
-        if (len(parts) == 3) & parts[2][0:3].isdigit():
-            mapping[parts[2].split('.')[0] + '.jpg'].append(f)
-        if parts[2] == 'answer.txt':
-            mapping[parts[2]].append(f)
+    for f in datazip.namelist():
+        if not f.endswith('.txt'):
+            continue
+        name = pt.basename(f)
+        if name == 'answer.txt':
+            mapping['answers'].append(f)
+        elif name.endswith('.txt'):
+            mapping[name.replace('.txt', '.jpg')].append(f)
     return mapping
 
 
