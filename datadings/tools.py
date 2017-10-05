@@ -116,7 +116,7 @@ class MovingAveragePrinter(object):
         self.alpha = alpha
         self.value = None
 
-    def update(self, value=None):
+    def update(self, value=None, **kwargs):
         """ Call update every time a new frame is shown
             to regularly print the current framerate.
         """
@@ -136,6 +136,7 @@ class MovingAveragePrinter(object):
                 num=self.total_updates,
                 freq=self.new_updates / seconds,
                 value=self.value,
+                **kwargs
             ), end=self.end, flush=True)
             self.last_print = now
             self.start = now
