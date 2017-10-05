@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-from datadings.reader import Reader
+from datadings.reader import MsgpackReader
 
 
 ANP460Data = namedtuple(
@@ -23,5 +23,5 @@ def convert_anp460(item):
     )
 
 
-class ANP460Reader(Reader):
+class ANP460Reader(MsgpackReader):
     _convert = staticmethod(convert_anp460)

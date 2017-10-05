@@ -30,7 +30,7 @@ def __iter_fixpoints(datazip, txt_files, stimuluspath):
     stimulus = pt.basename(stimuluspath)
     for exp in txt_files[stimulus]:
         f = datazip.open(exp)
-        yield np.loadtxt(f, dtype=np.float32, delimiter=',')
+        yield np.loadtxt(f, dtype=np.float32, delimiter=',')[:, 1:3]
 
 
 def __get_answers(datazip, txt_files, stimuluspath):
