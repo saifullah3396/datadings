@@ -15,6 +15,10 @@ MaskedSegmentationData = namedtuple(
     'MaskedSegmentationData',
     ('sample', 'groundtruth', 'mask', 'filename', 'classes', 'class_weights')
 )
+SegmentationDisparityData = namedtuple(
+    'SegmentationDisparityData',
+    ('sample', 'disparity_map', 'groundtruth', 'filename', 'classes', 'class_weights')
+)
 SaliencyData = namedtuple(
     'SaliencyData',
     ('sample', 'groundtruth', 'filename')
@@ -27,6 +31,8 @@ UnsupervisedData = namedtuple(
     'UnsupervisedData',
     ('sample', 'filename')
 )
+
+
 
 
 def convert_classification(item):
@@ -51,6 +57,14 @@ def convert_masked_segementation(item):
 
 class MaskedSegmentationReader(MsgpackReader):
     _convert = staticmethod(convert_masked_segementation)
+
+
+def convert_depth_segementation(item):
+    return SegmentationDisparityData(*item[:6])
+
+
+class DepthSegmentationReader(MsgpackReader):
+    _convert = staticmethod(convert_depth_segementation)
 
 
 
