@@ -13,9 +13,9 @@ import numpy as np
 from datadings.writer import FileWriter
 from datadings.tools import FrequencyPrinter
 from datadings.sets import SegmentationDisparityData
-from datadings.sets.Cityscape import COUNTS
 import os
 import cv2
+import io
 
 
 def write_image(writer, indata, dsm, outdata, filename):
@@ -24,8 +24,8 @@ def write_image(writer, indata, dsm, outdata, filename):
         dsm,
         outdata,
         filename,
-        COUNTS,
-        COUNTS,
+        None,
+        None,
     )
     writer.write(item)
 
@@ -36,8 +36,9 @@ def write_sets(indir, outdir, shuffle=True):
         with FileWriter(outpath) as writer:
             gt_city_dirs = pt.join(indir, 'gtFine', split)
             img_city_dirs = pt.join(indir, 'leftImg8bit', split)
-            dsm_city_dirs = pt.join(indir, 'dsm', split)
+            dsm_city_dirs = pt.join(indir, 'disparity', split)
 
+            idx = 0
             printer = FrequencyPrinter()
             for city_name in os.listdir(gt_city_dirs):
                 gt_city_folder = os.path.join(gt_city_dirs, city_name)
@@ -47,34 +48,31 @@ def write_sets(indir, outdir, shuffle=True):
                 for img_name in os.listdir(gt_city_folder):
                     if img_name.endswith("_labelIds.png"):
                         gt_path = os.path.join(gt_city_folder, img_name)
+                        with io.FileIO(gt_path, "rb") as f:
+                            gt_data = f.read()
+
                         image_id = img_name.split("_")[1]
                         frame_id = img_name.split("_")[2]
 
                         img_name = "%s_%s_%s_leftImg8bit.png" \
                                    %(city_name, image_id, frame_id)
-                        img = os.path.join(img_city_folder, img_name)
-                        #dsm = os.path.join(dsm_city_folder,
-                        #                   img.replace("gtFine", "todofixme"))
+                        img_path = os.path.join(img_city_folder, img_name)
+                        with io.FileIO(img_path, "rb") as f:
+                            img_data = f.read()
 
-                        gt = cv2.imread(gt_path)
-                        gt = cv2.resize(gt, (256, 512), interpolation=0) #FIXME
+                        dsm_name = "%s_%s_%s_disparity.png" \
+                                   % (city_name, image_id, frame_id)
+                        dsm_path = os.path.join(dsm_city_folder, dsm_name)
+                        with io.FileIO(dsm_path, "rb") as f:
+                            dsm_data = f.read()
 
-                        img = cv2.imread(img)
-                        img = cv2.resize(img, (256, 512), interpolation=1) #FIXME
-
-                        write_image(writer, img, img, gt, gt_path)
+                        write_image(writer, img_data, dsm_data, gt_data, gt_path)
                         printer.update()
                         printer.print_total_updates()
-
-
-
-def median_frequency_weights(counts):
-    total = sum(counts)
-    freq = [n/total for n in counts]
-    # cannot serialize numpy scalars,
-    # weights must be Python numbers!
-    median_freq = float(np.median(freq))
-    return [median_freq/f for f in freq]
+                    idx += 1
+                    #if idx == 10:
+                    #    break
+                #break
 
 
 def class_counts(gen):
@@ -111,15 +109,6 @@ def gt_imgs(indir):
 
 def sorted_values(d):
     return [d[k] for k in sorted(d)]
-
-
-def calculate_weights(indir):
-    gen = gt_imgs(indir)
-    counts = class_counts(gen)
-    weights = median_frequency_weights(counts)
-    print_values('INDEXES', sorted(counts))
-    print_values('COUNTS', sorted_values(counts))
-    print_values('WEIGHTS', sorted_values(weights))
 
 
 def main():
