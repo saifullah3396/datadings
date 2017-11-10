@@ -1,39 +1,23 @@
 from datadings.sets import convert_depth_segementation as convert_cityscape
 from datadings.sets import DepthSegmentationReader as CityscapeReader
 
-COUNTS = [
-    0.336146354675,
-    136.376727104,
-    38.7952823639,
-    44.8756933212,
-    39.936103344,
-    8.49662017822,
-    36.0630645752,
-    971.039068699,
-    160.260578632,
-    18.627705574,
-    5.3592748642,
-    601.118144989,
-    17.2612657547,
-    23.1047468185,
-    0.260926246643,
-    8.51639604568,
-    1.60351991653,
-    32.324555397,
-    0.238357543945,
-    5.47270202637,
-    14.5188298225,
-    419.513696671,
-    30.4935150146,
-    105.848143578,
-    32.1037406921,
-    3.55871295929,
-    184.21568203,
-    7.04399490356,
-    6.19425296783,
-    1.18893384933,
-    0.62016248703,
-    6.13401174545,
-    2.5983581543,
-    10.9010853767,
-]
+
+import numpy as np
+
+
+def median_frequency_weights(counts):
+    total = sum(counts)
+    freq = [n/total for n in counts]
+    # cannot serialize numpy scalars,
+    # weights must be Python numbers!
+    median_freq = float(np.median(freq))
+    return [median_freq/f for f in freq]
+
+
+#WEIGHTS = median_frequency_weights(_COUNTS)
+#SCENELABELS = load_scenelabels()
+
+ignored_class_indices = [0, 1, 2, 3, 4, 5, 6, 9, 10, 14, 15, 16, 18,
+                         29, 30, -1]
+used_class_indices = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+                      28, 31, 32, 33]
