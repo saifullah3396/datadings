@@ -189,6 +189,10 @@ class MsgpackReader(Reader):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._infile.close()
 
+    def __del__(self):
+        if not self._infile.closed:
+            self._infile.close()
+
     def __len__(self):
         return self._len
 
