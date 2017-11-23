@@ -8,3 +8,7 @@ CLASSES = [
     '0. Building',
     '1. Background'
 ]
+
+TRAIN_MSG_FILE = 'InriaBuildings_train.msgpack'
+VAL_MSG_FILE = 'InriaBuildings_val.msgpack'
+TEST_MSG_FILE = 'InriaBuildings_test.msgpack'

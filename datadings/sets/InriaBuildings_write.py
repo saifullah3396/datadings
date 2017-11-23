@@ -12,13 +12,15 @@ from __future__ import print_function, division
 
 import numpy as np
 import os.path as pt
-import os
 
 from datadings.writer import FileWriter
 from datadings.tools import FrequencyPrinter
 from datadings.sets import SegmentationData
 from datadings.sets.InriaBuildings import CLASSES
 from datadings.sets.InriaBuildings import CROP_SIZE
+from datadings.sets.InriaBuildings import TRAIN_MSG_FILE
+from datadings.sets.InriaBuildings import VAL_MSG_FILE
+from datadings.sets.InriaBuildings import TEST_MSG_FILE
 from datadings.tools import pack_array
 from datadings.tools import split_array
 from datadings.tools import tiff_to_nd_array
@@ -40,18 +42,15 @@ def images_and_labels_iter(img_dir, label_dir, locations, ids):
         for id in ids:
             filename = "%s%s.tif" % (location, id)
             img_path = pt.join(img_dir, filename)
-
             img = tiff_to_nd_array(img_path)
             train_img = img.astype(np.uint8)
 
             labels = None
             if label_dir is not None:
                 label_path = pt.join(label_dir, filename)
-
                 labels = tiff_to_nd_array(label_path, type=np.int64)
                 labels = labels[0]
                 labels[labels == 255] = 1  # set correct class label
-
             yield filename, train_img, labels
 
 
@@ -70,7 +69,7 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
 
 
     # Training-Split -> give whole image
-    train_file = pt.join(outdir, 'InriaBuildings_train.msgpack')
+    train_file = pt.join(outdir, TRAIN_MSG_FILE)
     with FileWriter(train_file) as writer:
         for fn, train_img, labels in images_and_labels_iter(train_img_dir,
                                                             train_gt_dir,
@@ -84,7 +83,7 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
     # Put first 5 images into the validation set, as in the paper
     # https://hal.inria.fr/hal-01468452/document
     # Validation-Split -> give splitted images
-    val_file = pt.join(outdir, 'InriaBuildings_val.msgpack')
+    val_file = pt.join(outdir, VAL_MSG_FILE)
     with FileWriter(val_file) as writer:
         for fn, train_img, labels in images_and_labels_iter(train_img_dir,
                                                             train_gt_dir,
@@ -97,13 +96,16 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
 
                 sub_img = np.array(sub_img).astype(np.uint8)
                 sub_label = np.array(sub_label[0]).astype(np.int64)
+                _, w, h = sub_img.shape
+                if 8 in [w, h]: # reject very small patches
+                    continue
                 write(writer, sub_img, sub_label, "%s_%s"%(fn, idx))
                 printer.update()
     printer.print_total_updates()
 
 
     # Test-Split -> give splitted images without labels
-    val_file = pt.join(outdir, 'InriaBuildings_test.msgpack')
+    val_file = pt.join(outdir, TEST_MSG_FILE)
     with FileWriter(val_file) as writer:
         for fn, train_img, labels in images_and_labels_iter(test_img_dir,
                                                             None,
@@ -137,7 +139,6 @@ def main():
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    print(args.indir)
     write_sets(args.indir, outdir)
 
 
