@@ -15,6 +15,7 @@ def _default(o):
     Convert numpy arrays to lists.
     Other objects are untouched.
     """
+    # TODO msgpack_numpy?
     if isinstance(o, np.ndarray):
         return o.tolist()
     return o
