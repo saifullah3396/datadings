@@ -343,6 +343,7 @@ def download_if_not_found(url, path):
         print()
 
 
+@deprecated
 def pack_array(arr):
     return arr.dtype.char, arr.shape, arr.tobytes()
 
