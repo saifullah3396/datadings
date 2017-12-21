@@ -8,6 +8,7 @@ from abc import ABCMeta
 from abc import abstractmethod
 
 import msgpack
+from msgpack_numpy import decode
 
 
 def _load_index(path):
@@ -197,9 +198,9 @@ class MsgpackReader(Reader):
         return self._len
 
     def __next__(self):
-        return self._convert(
-            msgpack.unpackb(self.rawnext(), encoding='utf8')
-        )
+        return self._convert(msgpack.unpackb(
+            self.rawnext(), encoding='utf8', object_hook=decode
+        ))
 
     next = __next__
 

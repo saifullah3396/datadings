@@ -21,15 +21,14 @@ from .InriaBuildings import CROP_SIZE
 from .InriaBuildings import TRAIN_MSG_FILE
 from .InriaBuildings import VAL_MSG_FILE
 from .InriaBuildings import TEST_MSG_FILE
-from ..tools import pack_array
 from ..tools import split_array
 from ..tools import tiff_to_nd_array
 
 
 def write(writer, img, labels, filename=""):
     item = ImageSegmentationData(
-        pack_array(img),
-        pack_array(labels),
+        img,
+        labels,
         filename,
         CLASSES,
         [1] * len(CLASSES),

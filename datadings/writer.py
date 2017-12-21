@@ -6,19 +6,8 @@ from collections import OrderedDict
 from abc import ABCMeta
 from abc import abstractmethod
 
-import numpy as np
 import msgpack
-
-
-def _default(o):
-    """
-    Convert numpy arrays to lists.
-    Other objects are untouched.
-    """
-    # TODO msgpack_numpy?
-    if isinstance(o, np.ndarray):
-        return o.tolist()
-    return o
+from msgpack_numpy import encode as encode_array
 
 
 class Writer(object):
@@ -50,6 +39,9 @@ class Writer(object):
         self._indices = OrderedDict()
         self.written = 0
         self._hash = hashlib.md5()
+        self._packer = msgpack.Packer(
+            default=encode_array, use_bin_type=True, encoding='utf8'
+        )
 
     def __enter__(self):
         return self
@@ -79,11 +71,7 @@ class Writer(object):
         self.written += 1
 
     def _write(self, sample):
-        packed = msgpack.packb(
-            sample,
-            default=_default, use_bin_type=True, encoding='utf8'
-        )
-        self._write_data(packed)
+        self._write_data(self._packer.pack(sample))
 
     @abstractmethod
     def write(self, *args):

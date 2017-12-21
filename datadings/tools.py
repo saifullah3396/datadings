@@ -343,11 +343,6 @@ def download_if_not_found(url, path):
         print()
 
 
-@deprecated('if possibly pack images or implement msgpack_numpy')
-def pack_array(arr):
-    return arr.dtype.char, arr.shape, arr.tobytes()
-
-
 def split_array(img, h_pixels, v_pixels, indices=(1, 2)):
     i_ = np.arange(img.shape[indices[0]]) // v_pixels
     j_ = np.arange(img.shape[indices[1]]) // h_pixels

@@ -19,16 +19,15 @@ from . import MaskedImageSegmentationData
 from .Vaihingen import CLASSES
 from .Vaihingen import CROP_SIZE
 from .Vaihingen import COLOR_TO_CLASS_MAP
-from ..tools import pack_array
 from ..tools import split_array
 from ..tools import tiff_to_nd_array
 
 
 def write(writer, img, labels, mask, filename=""):
     item = MaskedImageSegmentationData(
-        pack_array(img),
-        pack_array(labels),
-        pack_array(mask),
+        img,
+        labels,
+        mask,
         filename,
         CLASSES,
         [1] * len(CLASSES),

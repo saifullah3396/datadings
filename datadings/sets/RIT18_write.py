@@ -20,15 +20,14 @@ from . import MaskedImageSegmentationData
 from .RIT18 import CLASSES
 from .RIT18 import CROP_SIZE
 from ..matlab import loadmat
-from ..tools import pack_array
 from ..tools import split_array
 
 
 def write(writer, img, labels, mask, filename=""):
     item = MaskedImageSegmentationData(
-        pack_array(img),
-        pack_array(labels),
-        pack_array(mask),
+        img,
+        labels,
+        mask,
         filename,
         CLASSES,
         [1] * len(CLASSES),
