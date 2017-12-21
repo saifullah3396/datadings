@@ -5,13 +5,14 @@ datadings is a collection of tools to prepare public datasets
 for machine learning, based on simple principles.
 
     Datasets are collections of individual data samples.
-    A sample is a tuple.
+    A sample is a dictionary with descriptive keys.
 
 E.g., for supervised training each sample is a tuple
-``(sample, groundtruth)``.
+``{'image': imagedata, 'label': label)``.
 More values (meta-data) may be added though.
 
-messagepack is used as an efficient binary serialization format.
+messagepack is used as an efficient binary serialization format
+for most included datasets.
 Its specification allows us to simply write data sample
 to a flat file and read them sequentially afterwards.
 It is schema-less, so we don't need to worry about extensions
@@ -20,6 +21,18 @@ if a new dataset does not fit our previous definitions.
 For random access, an index of positions is added.
 
 See http://msgpack.org/ for more information.
+
+
+
+
+
+Sample Types, Keys, and Their Meanings
+--------------------------------------
+
+This section gives an overview of available types of data samples
+and the respective keys they contain.
+
+**WIP**
 
 
 
@@ -54,14 +67,8 @@ Let's consider the *MIT1003* dataset as an example.
 ``MIT1003_write`` is an executable that creates dataset files.
 It can be called directly or through *datadings-write*.
 
-The `MIT1003` module defines the ``convert_mit1003`` function
-and the ``MIT1003Reader`` class.
-
-``convert_mit1003`` converts a sample as unpacked from the dataset
-file and converts it to the type appropriate for the dataset.
-
-A ``MIT1003Reader`` can be used to access the data.
-It is iterable and has methods to seek.
+The `MIT1003` module imports ``datadings.reader.MsgpackReader``
+as ``MIT1003Reader``.
 
 Reading all samples sequentially,
 using the ``Reader`` as a context manager::
@@ -70,13 +77,16 @@ using the ``Reader`` as a context manager::
         for sample in reader:
             [do dataset things]
 
+This standard iterator returns dictionaries.
+Use the ``rawiter()`` method to get samples as messagepack encoded
+bytes instead.
 
 Reading specific samples::
 
     reader.seek_key('i14020903.jpeg')
-    print(reader.next().filename)
+    print(reader.next()['key'])
     reader.seek_index(100)
-    print(reader.next().filename)
+    print(reader.next()['key'])
 
 Reading samples as raw bytes::
 
@@ -96,23 +106,13 @@ Adding new Datasets
 -------------------
 
 To add a dataset called *FOO*,
-you have to add two modules to the `datadings.sets` package:
-``FOO`` and ``FOO_write``.
+add a new ``FOO_write`` module to the `datadings.sets` package.
+Optionally, a ``FOO`` module can define custom sample classes and a
+``FOOReader``.
+A custom sample type should be called ``FOOData`` and must be a
+subclass of dict.
 
-``FOO`` must define, as a minimum,
-a ``convert_foo`` function and a class ``FOOReader``.
-Optionally, you can define your own sample type, ``FOOData``
-(usually a namedtuple).
-
-``convert_foo`` takes an unpacked sample as loaded from file and
-converts it to the appropriate type::
-
-    def convert_foo(sample):
-        return FOOData(sample)
-
-The ``FOOReader`` must be a subclass of ``datadings.reader.Reader``.
-We can reuse ``convert_foo``::
-
-    class FOOReader(Reader):
-        _convert = staticmethod(convert_foo)
-
+For msgpack-based datasets ``MsgpackReader`` usually provides
+all required functionality out of the box.
+If a custom ``FOOReader`` is necessary it must be a subclass of
+``datadings.reader.Reader``.
