@@ -3,14 +3,13 @@ from __future__ import print_function, division
 import os.path as pt
 import gzip
 import json
-from collections import namedtuple
 
 import numpy as np
 
-from datadings.reader import MsgpackReader
-from datadings.sets.VOC2012 import median_frequency_weights
-from datadings.sets.ADE20k import load_statistics
-from datadings.sets.ADE20k import SCENELABELS
+from ..reader import MsgpackReader as Places2017Reader
+from .VOC2012 import median_frequency_weights
+from .ADE20k import load_statistics
+from .ADE20k import SCENELABELS
 
 
 ROOT_DIR = pt.abspath(pt.dirname(__file__))
@@ -61,23 +60,15 @@ def index_to_color(array):
     return COLORS[array]
 
 
-Places2017Data = namedtuple(
-    'Places2017Data',
-    ('sample', 'groundtruth', 'filename', 'classes')
-)
-Places2017Task = namedtuple(
-    'Places2017Task',
-    ('groundtruth', 'class_weights')
-)
+class Places2017Data(dict):
+    def __init__(self, image, tasks, key, classes):
+        super(Places2017Data, self).__init__(
+            image=image, tasks=tasks, key=key, classes=classes,
+        )
 
 
-def convert_places2017(item):
-    return Places2017Data(
-            item[0],
-            [Places2017Task(*task[:2]) for task in item[1]],
-            item[2],
-    )
-
-
-class Places2017Reader(MsgpackReader):
-    _convert = staticmethod(convert_places2017)
+class Places2017Task(dict):
+    def __init__(self, label_image, class_weights):
+        super(Places2017Task, self).__init__(
+            label_image=label_image, class_weights=class_weights,
+        )

@@ -3,78 +3,51 @@ from collections import namedtuple
 from datadings.reader import MsgpackReader
 
 
-ClassificationData = namedtuple(
-    'ClassificationData',
-    ('sample', 'groundtruth', 'filename')
-)
-SegmentationData = namedtuple(
-    'SegmentationData',
-    ('sample', 'groundtruth', 'filename', 'classes', 'class_weights')
-)
-MaskedSegmentationData = namedtuple(
-    'MaskedSegmentationData',
-    ('sample', 'groundtruth', 'mask', 'filename', 'classes', 'class_weights')
-)
-SegmentationDisparityData = namedtuple(
-    'SegmentationDisparityData',
-    ('sample', 'disparity_map', 'groundtruth', 'filename', 'classes', 'class_weights')
-)
-SaliencyData = namedtuple(
-    'SaliencyData',
-    ('sample', 'groundtruth', 'filename')
-)
-SaliencyExperiment = namedtuple(
-    'SaliencyExperiment',
-    ('locations', 'map')
-)
-UnsupervisedData = namedtuple(
-    'UnsupervisedData',
-    ('sample', 'filename')
-)
+class ImageClassificationData(dict):
+    def __init__(self, image, label, key):
+        super(ImageClassificationData, self).__init__(
+            image=image, label=label, key=key
+        )
 
 
+class ImageSegmentationData(dict):
+    def __init__(self, image, label_image, key, classes, class_weights):
+        super(ImageSegmentationData, self).__init__(
+            image=image, label_image=label_image, key=key,
+            classes=classes, class_weights=class_weights
+        )
 
 
-def convert_classification(item):
-        return ClassificationData(*item[:4])
+class MaskedImageSegmentationData(dict):
+    def __init__(self, image, label_image, mask, key, classes, class_weights):
+        super(MaskedImageSegmentationData, self).__init__(
+            image=image, label_image=label_image, mask=mask, key=key,
+            classes=classes, class_weights=class_weights
+        )
 
 
-class ClassificationReader(MsgpackReader):
-    _convert = staticmethod(convert_classification)
+class SegmentationDisparityData(dict):
+    def __init__(self, image, disparity_map, label_image, key, classes, class_weights):
+        super(SegmentationDisparityData, self).__init__(
+            image=image, disparity_map=disparity_map, label_image=label_image, key=key,
+            classes=classes, class_weights=class_weights
+        )
 
 
-def convert_segementation(item):
-    return SegmentationData(*item[:5])
+class SaliencyData(dict):
+    def __init__(self, image, experiments, key):
+        super(SaliencyData, self).__init__(
+            image=image, experiments=experiments, key=key
+        )
 
 
-class SegmentationReader(MsgpackReader):
-    _convert = staticmethod(convert_segementation)
+class SaliencyExperiment(dict):
+    def __init__(self, locations, map):
+        super(SaliencyExperiment, self).__init__(
+            locations=locations, map=map,
+        )
 
 
-def convert_masked_segementation(item):
-    return MaskedSegmentationData(*item[:6])
-
-
-class MaskedSegmentationReader(MsgpackReader):
-    _convert = staticmethod(convert_masked_segementation)
-
-
-def convert_depth_segementation(item):
-    return SegmentationDisparityData(*item[:6])
-
-
-class DepthSegmentationReader(MsgpackReader):
-    _convert = staticmethod(convert_depth_segementation)
-
-
-
-def convert_saliency(item):
-    return SaliencyData(
-            item[0],
-            [SaliencyExperiment(*experiment[:2]) for experiment in item[1]],
-            item[2],
-    )
-
-
-class SaliencyReader(MsgpackReader):
-    _convert = staticmethod(convert_saliency)
+class UnsupervisedImageData(dict):
+    def __init__(self, image, key):
+        super(UnsupervisedImageData, self).__init__(image=image, key=key)

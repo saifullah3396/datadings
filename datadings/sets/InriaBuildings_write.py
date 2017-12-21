@@ -13,21 +13,21 @@ from __future__ import print_function, division
 import numpy as np
 import os.path as pt
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.sets import SegmentationData
-from datadings.sets.InriaBuildings import CLASSES
-from datadings.sets.InriaBuildings import CROP_SIZE
-from datadings.sets.InriaBuildings import TRAIN_MSG_FILE
-from datadings.sets.InriaBuildings import VAL_MSG_FILE
-from datadings.sets.InriaBuildings import TEST_MSG_FILE
-from datadings.tools import pack_array
-from datadings.tools import split_array
-from datadings.tools import tiff_to_nd_array
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from . import ImageSegmentationData
+from .InriaBuildings import CLASSES
+from .InriaBuildings import CROP_SIZE
+from .InriaBuildings import TRAIN_MSG_FILE
+from .InriaBuildings import VAL_MSG_FILE
+from .InriaBuildings import TEST_MSG_FILE
+from ..tools import pack_array
+from ..tools import split_array
+from ..tools import tiff_to_nd_array
 
 
 def write(writer, img, labels, filename=""):
-    item = SegmentationData(
+    item = ImageSegmentationData(
         pack_array(img),
         pack_array(labels),
         filename,

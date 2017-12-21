@@ -1,5 +1,4 @@
-from datadings.sets import convert_depth_segementation as convert_cityscape
-from datadings.sets import DepthSegmentationReader as CityscapeReader
+from ..reader import MsgpackReader as CityscapeReader
 
 
 import numpy as np

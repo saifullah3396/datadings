@@ -1,5 +1,4 @@
-from datadings.sets import convert_segementation as convert_InriaBuildings
-from datadings.sets import SegmentationReader as InriaBuildingsReader
+from ..reader import MsgpackReader as InriaBuildingsReader
 
 NUM_INPUT_CHANNELS = 3
 CROP_SIZE = 384

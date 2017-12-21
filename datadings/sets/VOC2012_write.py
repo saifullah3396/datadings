@@ -19,13 +19,13 @@ from PIL import Image
 
 import numpy as np
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
-from datadings.tools import print_over
-from datadings.sets import SegmentationData
-from datadings.sets.VOC2012 import CLASSES
-from datadings.sets.VOC2012 import COLORS
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
+from ..tools import print_over
+from . import ImageSegmentationData
+from .VOC2012 import CLASSES
+from .VOC2012 import COLORS
 
 
 def imagedata_to_array(data):
@@ -66,7 +66,7 @@ def write_image(writer, filename, im, seg):
     seg = imagedata_to_array(seg)
     seg = map_color_image(seg, )
     seg = array_to_imagedata(seg, 'PNG')
-    item = SegmentationData(
+    item = ImageSegmentationData(
         im,
         seg,
         filename,

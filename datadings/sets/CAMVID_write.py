@@ -19,15 +19,15 @@ import numpy as np
 
 from PIL import Image
 
-from datadings.sets.VOC2012_write import class_counts
-from datadings.sets.VOC2012_write import sorted_values
-from datadings.sets.VOC2012_write import print_values
-from datadings.sets.VOC2012_write import median_frequency_weights
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
-from datadings.sets import SegmentationData
-from datadings.sets.CAMVID import CLASSES
+from .VOC2012_write import class_counts
+from .VOC2012_write import sorted_values
+from .VOC2012_write import print_values
+from .VOC2012 import median_frequency_weights
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
+from . import ImageSegmentationData
+from .CAMVID import CLASSES
 
 
 def imagedata_to_array(data):
@@ -52,7 +52,7 @@ def write_image(imagezip, writer, inpath, outpath):
     indata = imagezip.read(inpath)
     outdata = imagezip.read(outpath)
     filename = pt.basename(inpath)
-    item = SegmentationData(
+    item = ImageSegmentationData(
         indata,
         outdata,
         filename,

@@ -12,10 +12,10 @@ from collections import defaultdict
 
 import numpy as np
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.sets.ANP460 import ANP460Data
-from datadings.sets.ANP460 import ANP460Experiment
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from .ANP460 import ANP460Data
+from .ANP460 import ANP460Experiment
 
 
 def __lines(s):

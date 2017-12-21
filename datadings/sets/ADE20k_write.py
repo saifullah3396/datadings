@@ -18,16 +18,16 @@ import json
 import numpy as np
 from PIL import Image
 
-from datadings.sets import SegmentationData
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
-from datadings.matlab import loadmat
-from datadings.matlab import iter_fields
-from datadings.sets.VOC2012_write import imagedata_to_array
-from datadings.sets.VOC2012_write import class_counts
-from datadings.sets.VOC2012_write import sorted_values
-from datadings.sets.ADE20k import WEIGHTS
+from . import ImageSegmentationData
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
+from ..matlab import loadmat
+from ..matlab import iter_fields
+from .VOC2012_write import imagedata_to_array
+from .VOC2012_write import class_counts
+from .VOC2012_write import sorted_values
+from .ADE20k import WEIGHTS
 
 
 DATASET_URL = 'http://groups.csail.mit.edu/vision/datasets/' \
@@ -98,7 +98,7 @@ def write_set(imagezip, outdir, name, classes, class_weights):
             imdata = imagezip.read(im)
             segdata = imagezip.read(seg)
             # partsdata = [imagezip.read(p) for p in parts]
-            writer.write(SegmentationData(
+            writer.write(ImageSegmentationData(
                 imdata,
                 imagedata_to_segpng(segdata),
                 pt.basename(im),

@@ -23,13 +23,13 @@ except ImportError:
     sys.exit(1)
 import numpy as np
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.tools import print_over
-from datadings.sets import SaliencyData
-from datadings.sets import SaliencyExperiment
-from datadings.matlab import loadmat
-from datadings.matlab import iter_fields
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from ..tools import print_over
+from . import SaliencyData
+from . import SaliencyExperiment
+from ..matlab import loadmat
+from ..matlab import iter_fields
 
 
 THRESHOLD_GOOD = 1.

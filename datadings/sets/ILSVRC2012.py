@@ -1,2 +1,1 @@
-from datadings.sets import convert_classification as convert_ilsvrc2012
-from datadings.sets import ClassificationReader as ILSVRC2012Reader
+from ..reader import MsgpackReader as ILSVRC2012Reader

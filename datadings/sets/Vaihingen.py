@@ -1,5 +1,4 @@
-from datadings.sets import convert_masked_segementation as convert_Vaihingen
-from datadings.sets import MaskedSegmentationReader as VaihingenReader
+from ..reader import MsgpackReader as VaihingenReader
 
 CROP_SIZE = 384
 

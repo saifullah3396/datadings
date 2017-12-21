@@ -20,11 +20,11 @@ import numpy as np
 import scipy.io
 from six import text_type
 
-from datadings.writer import FileWriter
-from datadings.sets import SaliencyData
-from datadings.sets import SaliencyExperiment
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
+from ..writer import FileWriter
+from . import SaliencyData
+from . import SaliencyExperiment
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
 
 
 def __load_mat_file(mat_file):

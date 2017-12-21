@@ -109,8 +109,8 @@ class RawWriter(Writer):
 class FileWriter(Writer):
     """
     Writer for file-based datasets.
-    Requires samples with a "filename" attribute to use as key.
+    Requires sample dicts with a unique "key" value.
     """
-    def write(self, image):
-        self._indices[image.filename] = self._outfile.tell()
-        self._write(image)
+    def write(self, sample):
+        self._indices[sample['key']] = self._outfile.tell()
+        self._write(sample)

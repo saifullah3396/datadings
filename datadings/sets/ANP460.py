@@ -1,27 +1,16 @@
-from collections import namedtuple
-
-from datadings.reader import MsgpackReader
+from ..reader import MsgpackReader as ANP460Reader
 
 
-ANP460Data = namedtuple(
-    'ANP460Data',
-    ('sample', 'groundtruth', 'filename', 'anp', 'type')
-)
-ANP460Experiment = namedtuple(
-    'ANP460Experiment',
-    ('locations', 'map', 'answer', 'duration')
-)
+class ANP460Data(dict):
+    def __init__(self, image, experiments, key, anp, type):
+        super(ANP460Data, self).__init__(
+            image=image, experiments=experiments, key=key,
+            anp=anp, type=type,
+        )
 
 
-def convert_anp460(item):
-    return ANP460Data(
-            item[0],
-            [ANP460Experiment(*experiment[:4]) for experiment in item[1]],
-            item[2],
-            item[3],
-            item[4],
-    )
-
-
-class ANP460Reader(MsgpackReader):
-    _convert = staticmethod(convert_anp460)
+class ANP460Experiment(dict):
+    def __init__(self, locations, map, answer, duration):
+        super(ANP460Experiment, self).__init__(
+            locations=locations, map=map, answer=answer, duration=duration,
+        )

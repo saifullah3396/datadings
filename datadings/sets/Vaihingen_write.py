@@ -13,19 +13,19 @@ from __future__ import print_function, division
 import numpy as np
 import os.path as pt
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.sets import MaskedSegmentationData
-from datadings.sets.Vaihingen import CLASSES
-from datadings.sets.Vaihingen import CROP_SIZE
-from datadings.sets.Vaihingen import COLOR_TO_CLASS_MAP
-from datadings.tools import pack_array
-from datadings.tools import split_array
-from datadings.tools import tiff_to_nd_array
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from . import MaskedImageSegmentationData
+from .Vaihingen import CLASSES
+from .Vaihingen import CROP_SIZE
+from .Vaihingen import COLOR_TO_CLASS_MAP
+from ..tools import pack_array
+from ..tools import split_array
+from ..tools import tiff_to_nd_array
 
 
 def write(writer, img, labels, mask, filename=""):
-    item = MaskedSegmentationData(
+    item = MaskedImageSegmentationData(
         pack_array(img),
         pack_array(labels),
         pack_array(mask),

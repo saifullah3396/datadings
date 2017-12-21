@@ -269,14 +269,16 @@ class MsgpackReader(Reader):
         indexname = pt.basename(self._path) + '.index'
         return hashes[indexname] == hash_md5hex(self._path + '.index', read_size)
 
-
-class IdentityReader(MsgpackReader):
-    """
-    Simple reader that does no conversion.
-    Use this if you don't know the dataset type.
-    """
     def _convert(self, sample):
+        """
+        Overwrite to apply functions to samples before returning.
+        :param sample: sample to convert
+        :return: converted sample
+        """
         return sample
+
+
+IdentityReader = MsgpackReader
 
 
 class _Augment(object):

@@ -1,24 +1,19 @@
 from collections import namedtuple
 
-from datadings.reader import MsgpackReader
+from ..reader import MsgpackReader as ISUNReader
 
 
-iSUNData = namedtuple(
-    'iSUNData',
-    ('image', 'groundtruth', 'filename', 'scenecategory')
-)
-iSUNExperiment = namedtuple(
-    'iSUNExperiment',
-    ('locations', 'map', 'timestamps', 'fixations')
-)
+class iSUNData(dict):
+    def __init__(self, image, experiments, key, scenecategory):
+        super(iSUNData, self).__init__(
+            image=image, experiments=experiments, key=key,
+            scenecategory=scenecategory,
+        )
 
 
-def convert_isun(item):
-    item = iSUNData(*item)
-    for i, experiment in enumerate(item.groundtruth):
-        item.groundtruth[i] = iSUNExperiment(*experiment)
-    return item
-
-
-class ISUNReader(MsgpackReader):
-    _convert = staticmethod(convert_isun)
+class iSUNExperiment(dict):
+    def __init__(self, locations, map, timestamps, fixations):
+        super(iSUNExperiment, self).__init__(
+            locations=locations, map=map,
+            timestamps=timestamps, fixations=fixations,
+        )

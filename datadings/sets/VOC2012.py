@@ -2,8 +2,7 @@ from __future__ import print_function, division
 
 import numpy as np
 
-from datadings.sets import convert_segementation as convert_VOC2012
-from datadings.sets import SegmentationReader as VOC2012Reader
+from ..reader import MsgpackReader as VOC2012Reader
 
 
 CLASSES = [

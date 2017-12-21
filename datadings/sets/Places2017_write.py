@@ -32,24 +32,24 @@ import numpy as np
 from PIL import Image
 import cv2
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
-from datadings.matlab import loadmat
-from datadings.sets.VOC2012_write import imagedata_to_array
-from datadings.sets.VOC2012_write import class_counts
-from datadings.sets.VOC2012_write import sorted_values
-from datadings.sets.VOC2012_write import print_values
-from datadings.sets.VOC2012_write import extractmember
-from datadings.sets.VOC2012_write import extract
-from datadings.sets.ADE20k_write import DATASET_URL as ADE20K_URL
-from datadings.sets.ADE20k_write import DATASET_FILE as ADE20K_FILE
-from datadings.sets.ADE20k_write import load_index
-from datadings.sets.ADE20k import SCENELABELS
-from datadings.sets.Places2017 import Places2017Data
-from datadings.sets.Places2017 import Places2017Task
-from datadings.sets.Places2017 import WEIGHTS
-from datadings.sets.Places2017 import CLASSES
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
+from ..matlab import loadmat
+from .VOC2012_write import imagedata_to_array
+from .VOC2012_write import class_counts
+from .VOC2012_write import sorted_values
+from .VOC2012_write import print_values
+from .VOC2012_write import extractmember
+from .VOC2012_write import extract
+from .ADE20k_write import DATASET_URL as ADE20K_URL
+from .ADE20k_write import DATASET_FILE as ADE20K_FILE
+from .ADE20k_write import load_index
+from .ADE20k import SCENELABELS
+from .Places2017 import Places2017Data
+from .Places2017 import Places2017Task
+from .Places2017 import WEIGHTS
+from .Places2017 import CLASSES
 
 
 TAR_PREFIX = 'http://placeschallenge.csail.mit.edu/data/ChallengeData2017/'

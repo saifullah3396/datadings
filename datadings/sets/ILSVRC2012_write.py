@@ -20,9 +20,9 @@ from multiprocessing import cpu_count
 
 from PIL import Image
 
-from datadings.writer import FileWriter
-from datadings.sets import ClassificationData
-from datadings.tools import FrequencyPrinter
+from ..writer import FileWriter
+from . import ImageClassificationData
+from ..tools import FrequencyPrinter
 
 
 def __yield_ilsvrc2012_metadata(txtpath, shuffle):
@@ -59,7 +59,7 @@ def write_sets(indir, outdir, shuffle=True):
                 with io.FileIO(path) as f:
                     data = f.read()
                     __verify_image(data)
-                    image = ClassificationData(
+                    image = ImageClassificationData(
                         data,
                         int(label),
                         filename,

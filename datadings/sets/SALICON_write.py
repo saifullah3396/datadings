@@ -19,11 +19,11 @@ import numpy as np
 import scipy.io
 from six import text_type
 
-from datadings.writer import FileWriter
-from datadings.sets.SALICON import SALICONData
-from datadings.sets.SALICON import SALICONExperiment
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
+from ..writer import FileWriter
+from .SALICON import SALICONData
+from .SALICON import SALICONExperiment
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
 
 
 def __convert_item(entry):

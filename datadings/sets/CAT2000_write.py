@@ -21,11 +21,11 @@ import numpy as np
 from PIL import Image
 from PIL import ImageChops
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
-from datadings.sets import SaliencyData
-from datadings.sets import SaliencyExperiment
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
+from . import SaliencyData
+from . import SaliencyExperiment
 
 
 def __find_bbox(im):

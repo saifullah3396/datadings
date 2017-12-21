@@ -13,10 +13,10 @@ import os.path as pt
 import zipfile
 import random
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
-from datadings.sets import SaliencyData
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
+from . import SaliencyData
 
 
 def write_image(imagezip, stimuluspath, writer):

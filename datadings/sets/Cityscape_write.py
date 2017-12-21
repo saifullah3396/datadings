@@ -10,9 +10,9 @@ from __future__ import print_function, division
 import os.path as pt
 import numpy as np
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.sets import SegmentationDisparityData
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from . import SegmentationDisparityData
 import os
 import cv2
 import io

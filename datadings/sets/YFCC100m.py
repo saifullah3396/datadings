@@ -9,10 +9,10 @@ import numpy as np
 import cv2
 import msgpack
 
-from datadings.reader import Reader
-from datadings.sets import UnsupervisedData as YFCC100mData
-from datadings.sets.YFCC100m_counts import FILE_COUNTS
-from datadings.sets.YFCC100m_counts import FILES_TOTAL
+from ..reader import Reader
+from . import UnsupervisedImageData as YFCC100mData
+from .YFCC100m_counts import FILE_COUNTS
+from .YFCC100m_counts import FILES_TOTAL
 
 
 ROOT = pt.abspath(pt.dirname(__file__))

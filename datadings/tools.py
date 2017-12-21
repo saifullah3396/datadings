@@ -343,7 +343,7 @@ def download_if_not_found(url, path):
         print()
 
 
-@deprecated
+@deprecated('if possibly pack images or implement msgpack_numpy')
 def pack_array(arr):
     return arr.dtype.char, arr.shape, arr.tobytes()
 

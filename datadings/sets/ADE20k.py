@@ -6,9 +6,8 @@ import json
 
 import numpy as np
 
-from datadings.sets.VOC2012 import median_frequency_weights
-from datadings.sets import convert_segementation as convert_ADE20K
-from datadings.sets import SegmentationReader as ADE20KReader
+from .VOC2012 import median_frequency_weights
+from ..reader import MsgpackReader as ADE20KReader
 
 
 ROOT_DIR = pt.abspath(pt.dirname(__file__))

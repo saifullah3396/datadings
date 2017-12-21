@@ -13,19 +13,19 @@ from __future__ import print_function, division
 import os.path as pt
 import numpy as np
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
-from datadings.sets import MaskedSegmentationData
-from datadings.sets.RIT18 import CLASSES
-from datadings.sets.RIT18 import CROP_SIZE
-from datadings.matlab import loadmat
-from datadings.tools import pack_array
-from datadings.tools import split_array
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
+from . import MaskedImageSegmentationData
+from .RIT18 import CLASSES
+from .RIT18 import CROP_SIZE
+from ..matlab import loadmat
+from ..tools import pack_array
+from ..tools import split_array
 
 
 def write(writer, img, labels, mask, filename=""):
-    item = MaskedSegmentationData(
+    item = MaskedImageSegmentationData(
         pack_array(img),
         pack_array(labels),
         pack_array(mask),

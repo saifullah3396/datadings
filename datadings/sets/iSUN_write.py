@@ -19,11 +19,11 @@ import random
 import numpy as np
 from six import text_type
 
-from datadings.writer import FileWriter
-from datadings.sets.iSUN import iSUNData
-from datadings.sets.iSUN import iSUNExperiment
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
+from ..writer import FileWriter
+from .iSUN import iSUNData
+from .iSUN import iSUNExperiment
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
 
 
 def __convert_item(entry):

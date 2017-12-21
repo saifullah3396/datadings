@@ -1,5 +1,4 @@
-from datadings.sets import convert_masked_segementation as convert_RIT18
-from datadings.sets import MaskedSegmentationReader as RIT18Reader
+from ..reader import MsgpackReader as RIT18Reader
 
 NUM_INPUT_CHANNELS = 6
 CROP_SIZE = 384

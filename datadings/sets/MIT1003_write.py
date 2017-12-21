@@ -20,11 +20,11 @@ from collections import defaultdict
 import scipy.io
 import numpy as np
 
-from datadings.writer import FileWriter
-from datadings.tools import FrequencyPrinter
-from datadings.tools import download_if_not_found
-from datadings.sets import SaliencyData
-from datadings.sets import SaliencyExperiment
+from ..writer import FileWriter
+from ..tools import FrequencyPrinter
+from ..tools import download_if_not_found
+from . import SaliencyData
+from . import SaliencyExperiment
 
 
 def __iter_fixpoints(datazip, mat_files, stimuluspath):
