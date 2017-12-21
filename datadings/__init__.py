@@ -1,2 +1,2 @@
-__version__ = '1.4.0'
+__version__ = '2.0.0-dev'
 __version_info__ = __version__.split('.')
