@@ -7,7 +7,7 @@ for machine learning, based on simple principles.
     Datasets are collections of individual data samples.
     A sample is a dictionary with descriptive keys.
 
-E.g., for supervised training each sample is a tuple
+E.g., for supervised training each sample is a dictionary
 ``{'image': imagedata, 'label': label)``.
 More values (meta-data) may be added though.
 
