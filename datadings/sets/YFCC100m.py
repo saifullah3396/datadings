@@ -185,6 +185,9 @@ class YFCC100mReader(Reader):
             image_packs_dir, self._rejected,
             validator=self._validator,
         )
+        self._packer = msgpack.Packer(
+            use_bin_type=True, encoding='utf8'
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__del__()
@@ -216,7 +219,7 @@ class YFCC100mReader(Reader):
     __next__ = next
 
     def rawnext(self):
-        return msgpack.packb(self.next(), encoding='utf8')
+        return self._packer.pack(self.next())
 
     def seek_index(self, index):
         self._gen = yield_from_zips(
