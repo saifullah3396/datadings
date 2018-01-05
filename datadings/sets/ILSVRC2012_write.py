@@ -22,7 +22,7 @@ from PIL import Image
 
 from ..writer import FileWriter
 from . import ImageClassificationData
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 
 
 def __yield_ilsvrc2012_metadata(txtpath, shuffle):
@@ -45,7 +45,7 @@ def __verify_image(data):
 def write_sets(indir, outdir, shuffle=True):
     for name in ('train', 'val'):
         print(name)
-        printer = FrequencyPrinter()
+        printer = IntervalPrinter()
         datadir = pt.join(indir, name)
         gen = __yield_ilsvrc2012_metadata(
             pt.join(indir, name + '.txt'),

@@ -20,7 +20,7 @@ from PIL import Image
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from ..tools import print_over
 from . import ImageSegmentationData
@@ -107,7 +107,7 @@ def write_sets(indir, outdir, shuffle=True):
     with tarfile.TarFile(datapath) as tar:
         for split in ('train', 'val'):
             print(split)
-            printer = FrequencyPrinter()
+            printer = IntervalPrinter()
             outpath = pt.join(outdir, 'VOC2012_%s.msgpack' % split)
             with FileWriter(outpath) as writer:
                 sets_path = pt.join(sets_dir, '%s.txt' % split)
@@ -124,7 +124,7 @@ def write_sets(indir, outdir, shuffle=True):
 
 def class_counts(gen):
     counts = np.float64([])
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     for segmap in gen:
         printer.update()
         cs = np.bincount(segmap.flatten()).astype(np.float64) / segmap.size

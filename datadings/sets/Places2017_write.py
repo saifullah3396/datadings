@@ -33,7 +33,7 @@ from PIL import Image
 import cv2
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from ..matlab import loadmat
 from .VOC2012_write import imagedata_to_array
@@ -132,7 +132,7 @@ def write_set(
         classes, class_weights, scenes
 ):
     print(name)
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     scenes_indices = dict(map(_reverse, enumerate(SCENELABELS)))
     scenes = {f: scenes_indices[s] for f, s in scenes.items()}
     with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:

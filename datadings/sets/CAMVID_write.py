@@ -24,7 +24,7 @@ from .VOC2012_write import sorted_values
 from .VOC2012_write import print_values
 from .VOC2012 import median_frequency_weights
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from . import ImageSegmentationData
 from .CAMVID import CLASSES
@@ -69,7 +69,7 @@ def _get_pairs(fp, root_dir):
 
 def write_sets(indir, outdir, shuffle=True):
     datapath, root_dir, pairs_dir = _prepare_indir(indir)
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     with zipfile.ZipFile(datapath) as imagezip:
         for split in ('test', 'val', 'train'):
             outpath = pt.join(outdir, 'CAMVID_%s.msgpack' % split)

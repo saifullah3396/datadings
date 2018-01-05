@@ -11,7 +11,7 @@ import os.path as pt
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from . import SegmentationDisparityData
 import os
 import cv2
@@ -39,7 +39,7 @@ def write_sets(indir, outdir, shuffle=True):
             dsm_city_dirs = pt.join(indir, 'disparity', split)
 
             idx = 0
-            printer = FrequencyPrinter()
+            printer = IntervalPrinter()
             for city_name in os.listdir(gt_city_dirs):
                 gt_city_folder = os.path.join(gt_city_dirs, city_name)
                 img_city_folder = os.path.join(img_city_dirs, city_name)
@@ -77,7 +77,7 @@ def write_sets(indir, outdir, shuffle=True):
 
 def class_counts(gen):
     counts = np.float64([])
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     for segmap in gen:
         printer.update()
         cs = np.bincount(segmap.flatten()).astype(np.float64) / segmap.size

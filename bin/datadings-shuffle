@@ -7,13 +7,13 @@ import os.path as pt
 from datadings.reader import IdentityReader
 from datadings.reader import Shuffler
 from datadings.writer import RawWriter
-from datadings.tools import FrequencyPrinter
+from datadings.tools import IntervalPrinter
 
 
 def shuffle(infile, outfile):
     r = IdentityReader(infile)
     shuffler = Shuffler(r)
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     with RawWriter(outfile) as writer:
         for key, raw in shuffler.rawiter(yield_key=True):
             writer.write(key, raw)

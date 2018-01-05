@@ -1,48 +1,38 @@
-class ImageClassificationData(dict):
-    def __init__(self, image, label, key):
-        super(ImageClassificationData, self).__init__(
-            image=image, label=label, key=key
-        )
+def datatype(name, *keys):
+    args = ', '.join(keys)
+    kwargs = ', '.join('{0[0]}={0[0]}'.format((v,)) for v in keys)
+    code = 'def __init__(self, {args}): dict.__init__(self, {kwargs})'\
+        .format(name=name, args=args, kwargs=kwargs)
+    ns = {}
+    exec(code, {}, ns)
+    return type(name, (dict,), ns)
 
 
-class ImageSegmentationData(dict):
-    def __init__(self, image, label_image, key, classes, class_weights):
-        super(ImageSegmentationData, self).__init__(
-            image=image, label_image=label_image, key=key,
-            classes=classes, class_weights=class_weights
-        )
-
-
-class MaskedImageSegmentationData(dict):
-    def __init__(self, image, label_image, mask, key, classes, class_weights):
-        super(MaskedImageSegmentationData, self).__init__(
-            image=image, label_image=label_image, mask=mask, key=key,
-            classes=classes, class_weights=class_weights
-        )
-
-
-class SegmentationDisparityData(dict):
-    def __init__(self, image, disparity_map, label_image, key, classes, class_weights):
-        super(SegmentationDisparityData, self).__init__(
-            image=image, disparity_map=disparity_map, label_image=label_image, key=key,
-            classes=classes, class_weights=class_weights
-        )
-
-
-class SaliencyData(dict):
-    def __init__(self, image, experiments, key):
-        super(SaliencyData, self).__init__(
-            image=image, experiments=experiments, key=key
-        )
-
-
-class SaliencyExperiment(dict):
-    def __init__(self, locations, map):
-        super(SaliencyExperiment, self).__init__(
-            locations=locations, map=map,
-        )
-
-
-class UnsupervisedImageData(dict):
-    def __init__(self, image, key):
-        super(UnsupervisedImageData, self).__init__(image=image, key=key)
+ImageClassificationData = datatype(
+    'ImageClassificationData',
+    'image', 'label', 'key',
+)
+ImageSegmentationData = datatype(
+    'ImageSegmentationData',
+    'image', 'target_image', 'key', 'classes', 'class_weights',
+)
+MaskedImageSegmentationData = datatype(
+    'MaskedImageSegmentationData',
+    'image', 'label_image', 'mask', 'key', 'classes', 'class_weights',
+)
+SegmentationDisparityData = datatype(
+    'SegmentationDisparityData',
+    'image', 'disparity_map', 'label_image', 'key', 'classes', 'class_weights',
+)
+SaliencyData = datatype(
+    'SaliencyData',
+    'image', 'experiments', 'key',
+)
+SaliencyExperiment = datatype(
+    'SaliencyExperiment',
+    'locations', 'map',
+)
+UnsupervisedImageData = datatype(
+    'UnsupervisedImageData',
+    'image', 'key',
+)

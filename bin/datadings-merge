@@ -15,11 +15,11 @@ import random
 from datadings.reader import IdentityReader
 from datadings.reader import Shuffler
 from datadings.writer import RawWriter
-from datadings.tools import FrequencyPrinter
+from datadings.tools import IntervalPrinter
 
 
 def merge_concat(infiles, outfile, shuffle=False):
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     with RawWriter(outfile) as writer:
         for infile in infiles:
             reader = IdentityReader(infile)
@@ -53,7 +53,7 @@ def select_set(ranges):
 
 
 def merge_random(infiles, outfile, shuffle=False):
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     readers = [IdentityReader(f) for f in infiles]
     if shuffle:
         readers = [Shuffler(r) for r in readers]

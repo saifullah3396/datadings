@@ -23,7 +23,7 @@ from six import text_type
 from ..writer import FileWriter
 from . import SaliencyData
 from . import SaliencyExperiment
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 
 
@@ -52,7 +52,7 @@ def __get_experiments(subjects):
 
 
 def write_images(imagezip, locations, writer, shuffle):
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     names = [f for f in imagezip.namelist() if f.endswith('.jpg')]
     if shuffle:
         random.shuffle(names)

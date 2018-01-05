@@ -24,7 +24,7 @@ except ImportError:
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from ..tools import print_over
 from . import SaliencyData
 from . import SaliencyExperiment
@@ -171,7 +171,7 @@ def write_video(name_prefix, frame_gen, experiments, writer, printer,
 
 
 def write_sets(indir, outdir, shuffle=False):
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     mat = loadmat(pt.join(indir, 'coutrot_database1.mat'))
     clip_data = __parse_mat(mat['Coutrot_Database1'])
     with FileWriter(pt.join(outdir, 'Coutrot1.msgpack')) as writer:

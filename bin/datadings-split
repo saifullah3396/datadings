@@ -8,11 +8,11 @@ import os.path as pt
 
 from datadings.reader import IdentityReader
 from datadings.writer import RawWriter
-from datadings.tools import FrequencyPrinter
+from datadings.tools import IntervalPrinter
 
 
 def split(infile, outfiles, splits):
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     reader = IdentityReader(infile)
     if splits[len(splits)-1] > len(reader):
         print('max split = %d greater than %d = len(dataset)'

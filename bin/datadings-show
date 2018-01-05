@@ -15,15 +15,20 @@ except ImportError:
     import sys
     sys.exit(1)
 
-from datadings.sets import SaliencyReader
+from datadings.reader import MsgpackReader
+
+
+def _decode(data):
+    tmp = np.frombuffer(data, dtype=np.uint8)
+    return cv2.imdecode(tmp, cv2.IMREAD_COLOR)
 
 
 def show_saliency(path, delay):
     delay = int(delay*1000)
-    reader = SaliencyReader(path)
+    reader = MsgpackReader(path)
     for sample in reader:
-        im = cv2.imdecode(np.frombuffer(sample.sample, dtype=np.uint8), cv2.IMREAD_COLOR)
-        for x, y in sample.groundtruth[0].locations:
+        im = _decode(sample['image'])
+        for x, y in sample['experiments'][0]['locations']:
             cv2.circle(im, (int(x), int(y)), 3, (0, 0, 255), -1)
         cv2.imshow('Press Q to exit', im)
         if cv2.waitKey(delay) == ord('q'):

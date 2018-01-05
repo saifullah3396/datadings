@@ -6,6 +6,7 @@ import json
 
 import numpy as np
 
+from . import datatype
 from .VOC2012 import median_frequency_weights
 from .ADE20k import load_statistics
 from .ADE20k import SCENELABELS
@@ -59,15 +60,11 @@ def index_to_color(array):
     return COLORS[array]
 
 
-class Places2017Data(dict):
-    def __init__(self, image, tasks, key, classes):
-        super(Places2017Data, self).__init__(
-            image=image, tasks=tasks, key=key, classes=classes,
-        )
-
-
-class Places2017Task(dict):
-    def __init__(self, label_image, class_weights):
-        super(Places2017Task, self).__init__(
-            label_image=label_image, class_weights=class_weights,
-        )
+Places2017Data = datatype(
+    'Places2017Data',
+    'image', 'tasks', 'key', 'classes',
+)
+Places2017Task = datatype(
+    'Places2017Task',
+    'label_image', 'class_weights',
+)

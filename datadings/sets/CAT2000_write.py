@@ -22,7 +22,7 @@ from PIL import Image
 from PIL import ImageChops
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from . import SaliencyData
 from . import SaliencyExperiment
@@ -107,7 +107,7 @@ def write_sets(indir, outdir, shuffle=True):
     url_prefix = 'http://saliency.mit.edu/'
     for name in ('train', 'test'):
         print(name)
-        printer = FrequencyPrinter()
+        printer = IntervalPrinter()
         imagepath = pt.join(indir, name + 'Set.zip')
         download_if_not_found(url_prefix + '%sSet.zip' % name, imagepath)
         with zipfile.ZipFile(imagepath) as imagezip:

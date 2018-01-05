@@ -1,13 +1,11 @@
-class ANP460Data(dict):
-    def __init__(self, image, experiments, key, anp, type):
-        super(ANP460Data, self).__init__(
-            image=image, experiments=experiments, key=key,
-            anp=anp, type=type,
-        )
+from . import datatype
 
 
-class ANP460Experiment(dict):
-    def __init__(self, locations, map, answer, duration):
-        super(ANP460Experiment, self).__init__(
-            locations=locations, map=map, answer=answer, duration=duration,
-        )
+ANP460Data = datatype(
+    'ANP460Data',
+    'image', 'experiments', 'key', 'anp', 'type',
+)
+ANP460Experiment = datatype(
+    'ANP460Experiment',
+    'locations', 'map', 'answer', 'duration',
+)

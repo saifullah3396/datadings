@@ -14,7 +14,7 @@ import os.path as pt
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from . import MaskedImageSegmentationData
 from .RIT18 import CLASSES
@@ -41,7 +41,7 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
         'http://www.cis.rit.edu/~rmk6217/rit18_data.mat',
         imagepath
     )
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     dataset = loadmat(imagepath)
 
     # Training-Split -> give whole image

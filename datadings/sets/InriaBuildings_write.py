@@ -14,7 +14,7 @@ import numpy as np
 import os.path as pt
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from . import ImageSegmentationData
 from .InriaBuildings import CLASSES
 from .InriaBuildings import CROP_SIZE
@@ -64,7 +64,7 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
     train_locations = ["vienna", "kitsap", "tyrol-w", "chicago", "austin"]
     test_locations = ["bellingham", "bloomington", "innsbruck",
                       "sfo", "tyrol-e"]
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
 
 
     # Training-Split -> give whole image

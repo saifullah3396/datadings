@@ -13,7 +13,7 @@ from collections import defaultdict
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from .ANP460 import ANP460Data
 from .ANP460 import ANP460Experiment
 
@@ -83,7 +83,7 @@ def __find_all_experiments(datazip):
 def write_sets(indir, outdir, shuffle=True):
     imagepath = pt.join(indir, 'images_original.zip')
     datapath = pt.join(indir, 'wrangled_data.zip')
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     with zipfile.ZipFile(imagepath) as imagezip:
         with zipfile.ZipFile(datapath) as datazip:
             anp_list = __get_anp_list(datazip)

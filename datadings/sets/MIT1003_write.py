@@ -21,7 +21,7 @@ import scipy.io
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from . import SaliencyData
 from . import SaliencyExperiment
@@ -78,7 +78,7 @@ def write_sets(indir, outdir, shuffle=True):
         'http://people.csail.mit.edu/tjudd/WherePeopleLook/DATA.zip',
         datapath
     )
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     with zipfile.ZipFile(imagepath) as imagezip:
         with zipfile.ZipFile(datapath) as datazip:
             experiments = __find_all_experiments(datazip)

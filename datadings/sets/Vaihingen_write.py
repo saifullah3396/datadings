@@ -14,7 +14,7 @@ import numpy as np
 import os.path as pt
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from . import MaskedImageSegmentationData
 from .Vaihingen import CLASSES
 from .Vaihingen import CROP_SIZE
@@ -69,7 +69,7 @@ def images_label_dsm_iter(indir, image_ids):
 
 
 def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
 
     # Training-Split -> give whole image
     train_file = pt.join(outdir, 'Vaihingen_train.msgpack')

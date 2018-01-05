@@ -14,7 +14,7 @@ import zipfile
 import random
 
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from . import SaliencyData
 
@@ -39,7 +39,7 @@ def write_sets(indir, outdir, shuffle=True):
         'http://saliency.mit.edu/BenchmarkIMAGES.zip',
         imagepath
     )
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     with zipfile.ZipFile(imagepath) as imagezip:
         with FileWriter(pt.join(outdir, 'MIT300.msgpack')) as writer:
             names = [f for f in imagezip.namelist() if _isimage(f)]

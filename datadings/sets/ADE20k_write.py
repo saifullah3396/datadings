@@ -20,7 +20,7 @@ from PIL import Image
 
 from . import ImageSegmentationData
 from ..writer import FileWriter
-from ..tools import FrequencyPrinter
+from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from ..matlab import loadmat
 from ..matlab import iter_fields
@@ -90,7 +90,7 @@ def yield_images(names):
 
 def write_set(imagezip, outdir, name, classes, class_weights):
     print(name)
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
         for im, seg, parts in yield_images(imagezip.namelist()):
             if name not in im:

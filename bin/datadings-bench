@@ -6,13 +6,13 @@ from __future__ import print_function
 import time
 
 from datadings.reader import IdentityReader
-from datadings.tools import FrequencyPrinter
+from datadings.tools import IntervalPrinter
 from datadings.tools import print_over
 
 
 def bench(infile):
     r = IdentityReader(infile)
-    printer = FrequencyPrinter()
+    printer = IntervalPrinter()
     a = time.time()
     for _ in r:
         printer.update()
