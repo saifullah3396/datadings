@@ -1,6 +1,3 @@
-from ..reader import MsgpackReader as CityscapeReader
-
-
 import numpy as np
 
 

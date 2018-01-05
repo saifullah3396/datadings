@@ -66,14 +66,16 @@ Let's consider the *MIT1003* dataset as an example.
 
 ``MIT1003_write`` is an executable that creates dataset files.
 It can be called directly or through *datadings-write*.
+Three files will be written:
 
-The `MIT1003` module imports ``datadings.reader.MsgpackReader``
-as ``MIT1003Reader``.
+* ``MIT1003.msgpack`` contains sample data
+* ``MIT1003.msgpack.index`` contains offsets for random access
+* ``MIT1003.msgpack.md5`` contains MD5 hashes of both files
 
 Reading all samples sequentially,
-using the ``Reader`` as a context manager::
+using a ``MsgpackReader`` as a context manager::
 
-    with MIT1003Reader('MIT1003.msgpack') as reader:
+    with MsgpackReader('MIT1003.msgpack') as reader:
         for sample in reader:
             [do dataset things]
 
@@ -107,8 +109,9 @@ Adding new Datasets
 
 To add a dataset called *FOO*,
 add a new ``FOO_write`` module to the `datadings.sets` package.
-Optionally, a ``FOO`` module can define custom sample classes and a
-``FOOReader``.
+Optionally, a ``FOO`` module can define custom sample classes
+and a ``FOOReader``.
+
 A custom sample type should be called ``FOOData`` and must be a
 subclass of dict.
 

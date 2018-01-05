@@ -1,8 +1,3 @@
-from collections import namedtuple
-
-from datadings.reader import MsgpackReader
-
-
 class ImageClassificationData(dict):
     def __init__(self, image, label, key):
         super(ImageClassificationData, self).__init__(

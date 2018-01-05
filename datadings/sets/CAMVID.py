@@ -1,7 +1,5 @@
 import numpy as np
 
-from ..reader import MsgpackReader as CAMVIDReader
-
 
 CLASSES = [
     'Sky',

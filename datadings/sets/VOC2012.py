@@ -2,8 +2,6 @@ from __future__ import print_function, division
 
 import numpy as np
 
-from ..reader import MsgpackReader as VOC2012Reader
-
 
 CLASSES = [
     'background',

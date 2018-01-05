@@ -1,5 +1,3 @@
-from ..reader import MsgpackReader as InriaBuildingsReader
-
 NUM_INPUT_CHANNELS = 3
 CROP_SIZE = 384
 

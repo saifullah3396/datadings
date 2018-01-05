@@ -1,6 +1,3 @@
-from ..reader import MsgpackReader as ANP460Reader
-
-
 class ANP460Data(dict):
     def __init__(self, image, experiments, key, anp, type):
         super(ANP460Data, self).__init__(

@@ -1,5 +1,3 @@
-from ..reader import MsgpackReader as VaihingenReader
-
 CROP_SIZE = 384
 
 CLASSES = [ 'Impervious surfaces',

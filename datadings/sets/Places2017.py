@@ -6,7 +6,6 @@ import json
 
 import numpy as np
 
-from ..reader import MsgpackReader as Places2017Reader
 from .VOC2012 import median_frequency_weights
 from .ADE20k import load_statistics
 from .ADE20k import SCENELABELS

@@ -1,8 +1,3 @@
-from collections import namedtuple
-
-from ..reader import MsgpackReader as ISUNReader
-
-
 class iSUNData(dict):
     def __init__(self, image, experiments, key, scenecategory):
         super(iSUNData, self).__init__(
