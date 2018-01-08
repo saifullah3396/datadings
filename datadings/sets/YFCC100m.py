@@ -256,7 +256,7 @@ def main():
     for key, data in reader.iter(yield_key=True):
         if n > 0:
             print(key)
-        if data.sample is None:
+        if data['image'] is None:
             print(key)
         printer.update()
         n -= 1
