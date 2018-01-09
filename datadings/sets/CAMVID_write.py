@@ -9,7 +9,7 @@ and download them if necessary:
         https://github.com/alexgkendall/SegNet-Tutorial/
         archive/fcaf7c4978dd8d091ec67db7cb7fdd225f5051c5.zip
 """
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
 
 import os.path as pt
 import zipfile
@@ -63,8 +63,10 @@ def write_image(imagezip, writer, inpath, outpath):
 
 
 def _get_pairs(fp, root_dir):
-    return [pair.rstrip().replace('/SegNet', root_dir).split()
-            for pair in fp]
+    return [
+        pair.decode('utf-8').rstrip().replace('/SegNet', root_dir).split()
+        for pair in fp
+    ]
 
 
 def write_sets(indir, outdir, shuffle=True):
