@@ -45,7 +45,7 @@ Command Line Tools
 Already Included Datasets
 -------------------------
 
-For an up-to-date list of datasets look into the `datasets/sets </tree/master/datadings/sets>`_ folder!
+For an up-to-date list of datasets look into the `datadings/sets <datadings/sets>`_ folder!
 
 ================  ============================
 Dataset           Short Description           
