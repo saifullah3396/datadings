@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+
 def datatype(name, *keys):
     args = ', '.join(keys)
     kwargs = ', '.join('{0[0]}={0[0]}'.format((v,)) for v in keys)
