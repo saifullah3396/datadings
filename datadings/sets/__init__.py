@@ -12,30 +12,30 @@ def datatype(name, *keys):
 
 
 ImageClassificationData = datatype(
-    'ImageClassificationData',
+    b'ImageClassificationData',
     'image', 'label', 'key',
 )
 ImageSegmentationData = datatype(
-    'ImageSegmentationData',
+    b'ImageSegmentationData',
     'image', 'target_image', 'key', 'classes', 'class_weights',
 )
 MaskedImageSegmentationData = datatype(
-    'MaskedImageSegmentationData',
+    b'MaskedImageSegmentationData',
     'image', 'label_image', 'mask', 'key', 'classes', 'class_weights',
 )
 SegmentationDisparityData = datatype(
-    'SegmentationDisparityData',
+    b'SegmentationDisparityData',
     'image', 'disparity_map', 'label_image', 'key', 'classes', 'class_weights',
 )
 SaliencyData = datatype(
-    'SaliencyData',
+    b'SaliencyData',
     'image', 'experiments', 'key',
 )
 SaliencyExperiment = datatype(
-    'SaliencyExperiment',
+    b'SaliencyExperiment',
     'locations', 'map',
 )
 UnsupervisedImageData = datatype(
-    'UnsupervisedImageData',
+    b'UnsupervisedImageData',
     'image', 'key',
 )
