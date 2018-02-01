@@ -1,11 +1,13 @@
-from . import datatype
+from __future__ import unicode_literals
+
+from . import make_typefun
 
 
-iSUNData = datatype(
-    'iSUNData',
+make_typefun(
+    b'iSUNData',
     'image', 'experiments', 'key', 'scenecategory',
 )
-iSUNExperiment = datatype(
-    'iSUNExperiment',
+make_typefun(
+    b'iSUNExperiment',
     'locations', 'map', 'timestamps', 'fixations',
 )

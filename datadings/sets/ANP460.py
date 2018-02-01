@@ -1,11 +1,13 @@
-from . import datatype
+from __future__ import unicode_literals
+
+from . import make_typefun
 
 
-ANP460Data = datatype(
-    'ANP460Data',
+make_typefun(
+    b'ANP460Data',
     'image', 'experiments', 'key', 'anp', 'type',
 )
-ANP460Experiment = datatype(
-    'ANP460Experiment',
+make_typefun(
+    b'ANP460Experiment',
     'locations', 'map', 'answer', 'duration',
 )

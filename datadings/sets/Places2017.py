@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+from __future__ import print_function, division, unicode_literals
 
 import os.path as pt
 import gzip
@@ -6,7 +6,7 @@ import json
 
 import numpy as np
 
-from . import datatype
+from . import make_typefun
 from .VOC2012 import median_frequency_weights
 from .ADE20k import load_statistics
 from .ADE20k import SCENELABELS
@@ -60,11 +60,11 @@ def index_to_color(array):
     return COLORS[array]
 
 
-Places2017Data = datatype(
-    'Places2017Data',
+make_typefun(
+    b'Places2017Data',
     'image', 'tasks', 'key', 'classes',
 )
-Places2017Task = datatype(
-    'Places2017Task',
+make_typefun(
+    b'Places2017Task',
     'label_image', 'class_weights',
 )

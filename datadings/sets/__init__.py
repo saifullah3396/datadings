@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 
-def datatype(name, *keys):
+def make_typefun(name, *keys):
     args = ', '.join(keys)
     values = ', '.join('u"{0[0]}":{0[0]}'.format((v,)) for v in keys)
     code = 'def {name}({args}): return {{ {values} }}'\
@@ -9,31 +9,31 @@ def datatype(name, *keys):
     exec(code, {}, globals())
 
 
-datatype(
+make_typefun(
     b'ImageClassificationData',
     'image', 'label', 'key',
 )
-datatype(
+make_typefun(
     b'ImageSegmentationData',
     'image', 'target_image', 'key', 'classes', 'class_weights',
 )
-datatype(
+make_typefun(
     b'MaskedImageSegmentationData',
     'image', 'label_image', 'mask', 'key', 'classes', 'class_weights',
 )
-datatype(
+make_typefun(
     b'SegmentationDisparityData',
     'image', 'disparity_map', 'label_image', 'key', 'classes', 'class_weights',
 )
-datatype(
+make_typefun(
     b'SaliencyData',
     'image', 'experiments', 'key',
 )
-datatype(
+make_typefun(
     b'SaliencyExperiment',
     'locations', 'map',
 )
-datatype(
+make_typefun(
     b'UnsupervisedImageData',
     'image', 'key',
 )
