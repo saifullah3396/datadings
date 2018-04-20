@@ -110,7 +110,7 @@ def extract_boundary(boundarytar, name):
     boundaries = []
     for m in mat:
         _, contours, _ = cv2.findContours(
-            m[0].toarray(),
+            m[0].toarray('C'),
             cv2.RETR_LIST,
             cv2.CHAIN_APPROX_TC89_L1
         )
@@ -144,7 +144,6 @@ def write_set(
                         extract_class(classtar, m.name), class_weights),
                     Places2017Task(
                         extract_instance(instancetar, m.name), class_weights),
-                    # TODO boundary weights
                     Places2017Task(
                         extract_boundary(boundarytar, m.name), None),
                     Places2017Task(
