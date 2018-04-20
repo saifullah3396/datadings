@@ -55,6 +55,54 @@ Command Line Tools
 
 
 
+Already Included Datasets
+-------------------------
+
+For an up-to-date list of datasets look into the `datadings/sets <datadings/sets>`_ folder!
+
+================  ============================
+Dataset           Short Description           
+================  ============================
+ADE20k_           Scene Parsing, Segmentation
+ANP460_           own Eye-Tracking dataset (Jalpa)
+CAMVID_           Motion-based Segmentation
+CAT2000_          MIT Saliency
+Cityscape_        Segmentation, Semantic understanding of urban street scenes
+Coutrot1_         Eye-Tracking, Saliency
+FIGRIMFixation_   Eye-Tracking, Saliency
+ILSVRC2012_       Imagenet Large Scale Visual Recognition Challenge
+InriaBuildings_   Inria Areal Image Labeling Dataset (Buildings), Segmentation, Remote Sensing
+MIT1003_          Eye-Tracking, Saliency, Learning to predict where humans look
+MIT300_           Eye-Tracking, Saliency
+Places2017_       MIT Places, Scene Recognition
+RIT18_            High-Res Multispectral Semantic Segmentation, Remote Sensing
+SALICON_          Saliency in Context, Eye-Tracking
+VOC2012_          Pascal Visual Object Classes Challenge
+Vaihingen_        Remote Sensing, Semantic Object Classification, Segmentation
+YFCC100m_         Yahoo Flickr Creative Commons 100 M pics
+iSUN_             Large-Scale Scene Understanding, Saliency
+================  ============================
+
+
+.. _ADE20k: http://groups.csail.mit.edu/vision/datasets/ADE20K/
+.. _ANP460: 
+.. _CAMVID: http://mi.eng.cam.ac.uk/research/projects/VideoRec/CamVid/
+.. _CAT2000: http://saliency.mit.edu/results_cat2000.html
+.. _Cityscape: https://www.cityscapes-dataset.com/
+.. _Coutrot1: http://antoinecoutrot.magix.net/public/databases.html
+.. _FIGRIMFixation: http://figrim.mit.edu/index_eyetracking.html
+.. _ILSVRC2012: http://www.image-net.org/challenges/LSVRC/2012/
+.. _InriaBuildings: https://project.inria.fr/aerialimagelabeling/
+.. _MIT1003: http://people.csail.mit.edu/tjudd/WherePeopleLook/index.html
+.. _MIT300: http://saliency.mit.edu/results_mit300.html
+.. _Places2017: http://places.csail.mit.edu/
+.. _RIT18: https://github.com/rmkemker/RIT-18
+.. _SALICON: http://salicon.net/
+.. _VOC2012: http://host.robots.ox.ac.uk/pascal/VOC/voc2012/
+.. _Vaihingen: http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html
+.. _YFCC100m: http://yfcc100m.appspot.com/about
+.. _iSUN: http://lsun.cs.princeton.edu/2017/
+
 
 
 Usage
