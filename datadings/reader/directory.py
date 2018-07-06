@@ -8,8 +8,8 @@ import io
 import glob2
 from glob2.fnmatch import fnmatch
 
-from . import ListReader
-from . import pack
+from datadings.reader.listreader import ListReader
+from datadings.reader.reader import pack
 from ..sets import ImageClassificationData
 
 

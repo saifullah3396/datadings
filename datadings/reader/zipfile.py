@@ -5,8 +5,8 @@ import os.path as pt
 import itertools as it
 import zipfile
 
-from . import ListReader
-from . import pack
+from .reader import pack
+from .listreader import ListReader
 from .directory import match
 from .directory import check_included
 from .directory import yield_file
