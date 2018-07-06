@@ -3,18 +3,42 @@ from __future__ import print_function, division, unicode_literals
 import os
 import os.path as pt
 import itertools as it
-import zipfile
+import io
+
+import glob2
+from glob2.fnmatch import fnmatch
 
 from . import ListReader
 from . import pack
-from .directory import match
-from .directory import check_included
-from .directory import yield_file
-from .directory import get_labels
-from .directory import convert_ImageClassificationData
+from ..sets import ImageClassificationData
 
 
-def glob_pattern(infos, pattern):
+def match(f, p):
+    return fnmatch(f, p, case_sensitive=False)
+
+
+def check_included(filename, include, exclude):
+    return (not include or any(match(filename, i) for i in include)) \
+        and not any(match(filename, e) for e in exclude)
+
+
+def yield_file(infile, separator):
+    with open(infile) as f:
+        for line in f:
+            path, label = line.strip('\n').split(separator)
+            try:
+                label = int(label)
+            except ValueError:
+                pass
+            yield path, label
+
+
+def load_binary(path):
+    with io.FileIO(path, 'rb') as f:
+        return f.read()
+
+
+def glob_pattern(pattern):
     parts = pattern.split(os.sep)
     label_index = None
     try:
@@ -22,45 +46,53 @@ def glob_pattern(infos, pattern):
         pattern = pattern.replace('{LABEL}', '*', 1)
     except ValueError:
         pass
-    for i in infos:
-        if i.is_dir():
-            continue
-        if match(i.filename, pattern):
+    for p in glob2.iglob(pattern):
+        if pt.isfile(p):
             if label_index is not None:
-                label = i.filename.split(os.sep)[label_index]
+                label = p.split(os.sep)[label_index]
             else:
                 label = None
-            yield i.filename, label
+            yield p, label
 
 
-def yield_zipfile(zipfile, patterns, separator):
-    infos = None
+def yield_directory(patterns, separator):
     gens = []
     for pattern in patterns:
         if pt.isfile(pattern):
             # pattern is csv-like (path, label) file
             gens.append(yield_file(pattern, separator))
         else:
-            if infos is None:
-                infos = zipfile.infolist()
             # pattern is glob-pattern
-            gens.append(glob_pattern(infos, pattern))
+            gens.append(glob_pattern(pattern))
     return it.chain(*gens)
 
 
-class ZipFileReader(ListReader):
+def get_labels(samples):
+    labels = set(s['label'] for s in samples)
+    if None in labels:
+        labels.remove(None)
+    return labels
+
+
+def convert_ImageClassificationData(sample):
+    return ImageClassificationData(
+        sample['data'],
+        sample['label'],
+        sample['key']
+    )
+
+
+class DirectoryReader(ListReader):
     def __init__(
             self,
-            path,
-            patterns=('{LABEL}/**',),
+            patterns,
             separator='\t',
             convertfun=convert_ImageClassificationData,
             include=(),
             exclude=(),
     ):
-        self._zipfile = zipfile.ZipFile(path)
         self._convertfun = convertfun
-        samples = list(yield_zipfile(self._zipfile, patterns, separator))
+        samples = list(yield_directory(patterns, separator))
         samples = [{'key': s, 'label': l} for s, l in samples
                    if check_included(s, include, exclude)]
         labels = sorted(get_labels(samples))
@@ -71,7 +103,7 @@ class ZipFileReader(ListReader):
         try:
             s = dict(self._samples[self._i])
             self._i += 1
-            s['data'] = self._zipfile.read(s['key'])
+            s['data'] = load_binary(s['key'])
             if s['label'] is None:
                 s.pop('label')
             else:
