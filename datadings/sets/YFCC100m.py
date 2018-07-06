@@ -245,8 +245,8 @@ class YFCC100mReader(Reader):
 
 
 def main():
-    from datadings.tools import IntervalPrinter
-    from datadings.tools import print_over
+    from ..tools import IntervalPrinter
+    from ..tools import print_over
     printer = IntervalPrinter(0.5)
     reader = YFCC100mReader(
         '/ds2/YFCC100m/image_packs/', validator=validate_image
