@@ -1,3 +1,5 @@
+from __future__ import print_function, division, unicode_literals
+
 import io
 import codecs
 import hashlib
@@ -7,8 +9,11 @@ from collections import OrderedDict
 from abc import ABCMeta
 from abc import abstractmethod
 
-import msgpack
-from msgpack_numpy import decode
+from msgpack import packb as _packb
+from msgpack import unpackb as _unpackb
+from msgpack import unpackb as _unpack
+from msgpack_numpy import encode as _encode
+from msgpack_numpy import decode as _decode
 
 
 def _load_index(path):
@@ -20,8 +25,7 @@ def _load_index(path):
     """
     try:
         with io.FileIO(path, 'rb') as f:
-            return msgpack.unpack(f, encoding='utf8',
-                                  object_pairs_hook=list)
+            return _unpack(f, encoding='utf8', object_pairs_hook=list)
     except IOError:
         return OrderedDict()
 
@@ -151,13 +155,97 @@ class Reader(object):
         """
         pass
 
-    @abstractmethod
-    def _convert(self, item):
-        """
-        Implement this method to convert samples to proper
-        data types before they are returned.
-        """
+
+class ListReader(Reader):
+    """
+    Abstract base class for dataset readers.
+
+    Subclasses must implement iteration and seeking methods.
+
+    Readers can be used as a context manager:
+
+        with Reader('dataset.msgpack') as reader:
+            for sample in reader:
+                [do dataset things]
+    """
+    def __init__(self, samples):
+        self._samples = samples
+        self._index = {s.get('key', 1): i for i, s in enumerate(samples)}
+        self._keys = {i: s.get('key', i) for i, s in enumerate(samples)}
+        self._i = 0
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         pass
+
+    def iter(self, yield_key=False):
+        """
+        :param yield_key: if True, yields (key, sample) pairs
+        """
+        if yield_key:
+            while 1:
+                yield self.get_key(), self.next()
+        else:
+            while 1:
+                yield self.next()
+
+    __iter__ = iter
+
+    def __len__(self):
+        return len(self._samples)
+
+    def __next__(self):
+        return self._samples[self._i]
+
+    next = __next__
+
+    def rawnext(self):
+        """
+        Return the next sample as raw bytes.
+        :return:
+        """
+        return pack(self.next())
+
+    def rawiter(self, yield_key=False):
+        """
+        Like iter, but yields raw bytes.
+
+        :param yield_key: if True, yields (key, sample) pairs
+        """
+        if yield_key:
+            while 1:
+                yield self.get_key(), self.rawnext()
+        else:
+            while 1:
+                yield self.rawnext()
+
+    def seek_index(self, index):
+        """
+        Seek to the given index.
+        """
+        self._i = index
+
+    seek = seek_index
+
+    def seek_key(self, key):
+        self._i = self._index.get(key, None) or self._i
+
+    def get_key(self, index=None):
+        """
+        Get the key of a sample.
+        Uses current index if none is given.
+        """
+        return self._keys.get(index or self._i, self._i)
+
+
+def pack(b):
+    return _packb(b, encoding='utf8', use_bin_type=True, default=_encode)
+
+
+def unpack(b):
+    return _unpackb(b, encoding='utf8', object_hook=_decode)
 
 
 class MsgpackReader(Reader):
@@ -166,13 +254,7 @@ class MsgpackReader(Reader):
     Needs dataset and index file.
     Can Optionally verify the integrity of dataset and index files
     if md5 file is present.
-
-    This is an abstract class.
-    It cannot be instantiated.
-    MsgpackReader subclasses have to implement the _convert method.
     """
-    __metaclass__ = ABCMeta
-
     def __init__(self, infile):
         """
         :param infile: dataset file to load
@@ -198,9 +280,7 @@ class MsgpackReader(Reader):
         return self._len
 
     def __next__(self):
-        return self._convert(msgpack.unpackb(
-            self.rawnext(), encoding='utf8', object_hook=decode
-        ))
+        return unpack(self.rawnext())
 
     next = __next__
 
@@ -270,21 +350,13 @@ class MsgpackReader(Reader):
         indexname = pt.basename(self._path) + '.index'
         return hashes[indexname] == hash_md5hex(self._path + '.index', read_size)
 
-    def _convert(self, sample):
-        """
-        Overwrite to apply functions to samples before returning.
-        :param sample: sample to convert
-        :return: converted sample
-        """
-        return sample
-
 
 IdentityReader = MsgpackReader
 
 
 class _Augment(object):
     """
-    Augment a the iteration order of reader.
+    Augment the iteration order of reader.
     Not thread safe!
     """
     __metaclass__ = ABCMeta
