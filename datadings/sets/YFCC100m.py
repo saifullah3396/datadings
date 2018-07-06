@@ -201,8 +201,7 @@ class YFCC100mReader(Reader):
 
     def _get_next_sample(self):
         while self._next_sample is None:
-            next_sample = next(self._gen)
-            sample, key, z, i = next_sample
+            sample, key, z, i = next(self._gen)
             if i not in self._rejected[z]:
                 if sample is None:
                     self._rejected[z].add(i)
@@ -212,7 +211,7 @@ class YFCC100mReader(Reader):
         return self._next_sample
 
     def next(self):
-        sample = self._convert(self._get_next_sample())
+        sample = YFCC100mData(*self._get_next_sample())
         self._next_sample = None
         return sample
 
@@ -239,9 +238,6 @@ class YFCC100mReader(Reader):
 
     def get_key(self, index=None):
         return self._get_next_sample()[1]
-
-    def _convert(self, item):
-        return YFCC100mData(*item)
 
 
 def main():
