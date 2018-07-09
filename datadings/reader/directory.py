@@ -25,7 +25,7 @@ def check_included(filename, include, exclude):
 def yield_file(infile, separator):
     with open(infile) as f:
         for line in f:
-            path, label = line.strip('\n').split(separator)
+            path, label = line.strip('\n').split(separator)[:2]
             try:
                 label = int(label)
             except ValueError:
