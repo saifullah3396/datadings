@@ -4,7 +4,7 @@ import random
 from abc import ABCMeta, abstractmethod
 
 
-class _Augment(object):
+class Augment(object):
     """
     Augment the iteration order of reader.
     Not thread safe!
@@ -38,12 +38,17 @@ class _Augment(object):
     def rawiter(self, yield_key=False):
         pass
 
+    @abstractmethod
+    def seek(self, index):
+        pass
 
-class Shuffler(_Augment):
+
+class Shuffler(Augment):
     """
     Iterate over the contents of a Reader in random order.
     Not thread safe!
     """
+
     def iter(self, yield_key=False):
         """
         Iterate over the wrapper Reader in random order.
@@ -55,11 +60,11 @@ class Shuffler(_Augment):
         random.shuffle(order)
         if yield_key:
             for i in order:
-                self._reader.seek_index(i)
+                self._reader.seek(i)
                 yield self._reader.get_key(), self._reader.next()
         else:
             for i in order:
-                self._reader.seek_index(i)
+                self._reader.seek(i)
                 yield self._reader.next()
 
     __iter__ = iter
@@ -83,8 +88,11 @@ class Shuffler(_Augment):
                 self._reader.seek_index(i)
                 yield self._reader.rawnext()
 
+    def seek(self, index):
+        self._reader.seek(index)
 
-class Cycler(_Augment):
+
+class Cycler(Augment):
     """
     Cycle over the contents of a Reader or Shuffler.
     Not thread safe!
@@ -98,7 +106,7 @@ class Cycler(_Augment):
         while 1:
             for sample in self._reader.iter(yield_key):
                 yield sample
-            self._reader.seek_index(0)
+            self._reader.seek(0)
 
     __iter__ = iter
 
@@ -112,4 +120,7 @@ class Cycler(_Augment):
         while 1:
             for sample in self._reader.rawiter(yield_key):
                 yield sample
-            self._reader.seek_index(0)
+            self._reader.seek(0)
+
+    def seek(self, index):
+        self._reader.seek(index)

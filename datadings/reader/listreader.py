@@ -31,12 +31,16 @@ class ListReader(Reader):
         """
         :param yield_key: if True, yields (key, sample) pairs
         """
-        if yield_key:
-            while 1:
-                yield self.get_key(), self.next()
-        else:
-            while 1:
-                yield self.next()
+        try:
+            if yield_key:
+                while 1:
+                    yield self.get_key(), self.next()
+            else:
+                while 1:
+                    yield self.next()
+        except StopIteration:
+            self._i = 0
+            raise
 
     __iter__ = iter
 
@@ -61,12 +65,16 @@ class ListReader(Reader):
 
         :param yield_key: if True, yields (key, sample) pairs
         """
-        if yield_key:
-            while 1:
-                yield self.get_key(), self.rawnext()
-        else:
-            while 1:
-                yield self.rawnext()
+        try:
+            if yield_key:
+                while 1:
+                    yield self.get_key(), self.rawnext()
+            else:
+                while 1:
+                    yield self.rawnext()
+        except StopIteration:
+            self._i = 0
+            raise
 
     def seek_index(self, index):
         """
