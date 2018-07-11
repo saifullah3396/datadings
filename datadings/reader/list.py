@@ -1,24 +1,66 @@
 from __future__ import print_function, division, unicode_literals
 
+import os.path as pt
+
 from .reader import Reader, pack
+from ..sets import ImageClassificationData
+
+
+def load_lines(path):
+    with open(path) as f:
+        return [l.strip('\n ') for l in f.readlines()]
+
+
+def get_labels(samples):
+    labels = set(s.get('label') for s in samples)
+    if None in labels:
+        labels.remove(None)
+    return labels
+
+
+def convert_ImageClassificationData(sample):
+    return ImageClassificationData(
+        sample['data'],
+        sample['label'],
+        sample['key']
+    )
+
+
+def noop(sample):
+    return sample.get('data')
 
 
 class ListReader(Reader):
     """
-    Abstract base class for dataset readers.
-
-    Subclasses must implement iteration and seeking methods.
-
-    Readers can be used as a context manager:
-
-        with Reader('dataset.msgpack') as reader:
-            for sample in reader:
-                [do dataset things]
+    A simple Reader that holds a list of samples.
     """
-    def __init__(self, samples):
+    def __init__(
+            self,
+            samples,
+            labels=None,
+            convertfun=convert_ImageClassificationData,
+            loadfun=noop,
+    ):
+        """
+
+        :param samples: list of samples
+        :param labels: list of labels in correct order;
+                       if None, extract labels from samples and sort;
+                       if
+        :param convertfun:
+        :param loadfun:
+        """
+        self._convertfun = convertfun
+        self._loadfun = loadfun
         self._samples = samples
         self._index = {s.get('key', 1): i for i, s in enumerate(samples)}
         self._keys = {i: s.get('key', i) for i, s in enumerate(samples)}
+        labels = labels or sorted(get_labels(samples))
+        try:
+            labels = load_lines(labels)
+        except (TypeError, FileNotFoundError, IOError):
+            pass
+        self._labels = {l: i for i, l in enumerate(labels)}
         self._i = 0
 
     def __enter__(self):
@@ -48,7 +90,19 @@ class ListReader(Reader):
         return len(self._samples)
 
     def __next__(self):
-        return self._samples[self._i]
+        try:
+            s = dict(self._samples[self._i])
+            self._i += 1
+            if self._loadfun is not None:
+                s['data'] = self._loadfun(s)
+            if s['label'] is None:
+                s.pop('label')
+            else:
+                s['labelstring'] = s['label']
+                s['label'] = self._labels[s['label']]
+            return self._convertfun(s)
+        except IndexError:
+            raise StopIteration()
 
     next = __next__
 

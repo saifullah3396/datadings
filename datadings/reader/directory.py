@@ -8,9 +8,8 @@ import io
 import glob2
 from glob2.fnmatch import fnmatch
 
-from datadings.reader.listreader import ListReader
-from datadings.reader.reader import pack
-from ..sets import ImageClassificationData
+from datadings.reader.list import ListReader
+from datadings.reader.list import convert_ImageClassificationData
 
 
 def match(f, p):
@@ -67,21 +66,6 @@ def yield_directory(patterns, separator):
     return it.chain(*gens)
 
 
-def get_labels(samples):
-    labels = set(s['label'] for s in samples)
-    if None in labels:
-        labels.remove(None)
-    return labels
-
-
-def convert_ImageClassificationData(sample):
-    return ImageClassificationData(
-        sample['data'],
-        sample['label'],
-        sample['key']
-    )
-
-
 class DirectoryReader(ListReader):
     def __init__(
             self,
@@ -90,30 +74,9 @@ class DirectoryReader(ListReader):
             convertfun=convert_ImageClassificationData,
             include=(),
             exclude=(),
+            labels=None,
     ):
-        self._convertfun = convertfun
         samples = list(yield_directory(patterns, separator))
         samples = [{'key': s, 'label': l} for s, l in samples
                    if check_included(s, include, exclude)]
-        labels = sorted(get_labels(samples))
-        self.labels = {l: i for i, l in enumerate(labels)}
-        ListReader.__init__(self, samples)
-
-    def __next__(self):
-        try:
-            s = dict(self._samples[self._i])
-            self._i += 1
-            s['data'] = load_binary(s['key'])
-            if s['label'] is None:
-                s.pop('label')
-            else:
-                s['labelstring'] = s['label']
-                s['label'] = self.labels[s['label']]
-            return self._convertfun(s)
-        except IndexError:
-            raise StopIteration()
-
-    next = __next__
-
-    def rawnext(self):
-        return pack(self.next())
+        ListReader.__init__(self, samples, labels, convertfun, load_binary)

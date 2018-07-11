@@ -5,13 +5,14 @@ import os.path as pt
 import itertools as it
 import zipfile
 
+from six import text_type
+
 from .reader import pack
-from .listreader import ListReader
+from .list import ListReader
+from .list import convert_ImageClassificationData
 from .directory import match
 from .directory import check_included
 from .directory import yield_file
-from .directory import get_labels
-from .directory import convert_ImageClassificationData
 
 
 def glob_pattern(infos, pattern):
@@ -57,31 +58,13 @@ class ZipFileReader(ListReader):
             convertfun=convert_ImageClassificationData,
             include=(),
             exclude=(),
+            labels=(),
     ):
         self._zipfile = zipfile.ZipFile(path)
-        self._convertfun = convertfun
         samples = list(yield_zipfile(self._zipfile, patterns, separator))
         samples = [{'key': s, 'label': l} for s, l in samples
                    if check_included(s, include, exclude)]
-        labels = sorted(get_labels(samples))
-        self.labels = {l: i for i, l in enumerate(labels)}
-        ListReader.__init__(self, samples)
+        ListReader.__init__(self, samples, labels, convertfun, self._load)
 
-    def __next__(self):
-        try:
-            s = dict(self._samples[self._i])
-            self._i += 1
-            s['data'] = self._zipfile.read(s['key'])
-            if s['label'] is None:
-                s.pop('label')
-            else:
-                s['labelstring'] = s['label']
-                s['label'] = self.labels[s['label']]
-            return self._convertfun(s)
-        except IndexError:
-            raise StopIteration()
-
-    next = __next__
-
-    def rawnext(self):
-        return pack(self.next())
+    def _load(self, s):
+        return self._zipfile.read(s['key'])
