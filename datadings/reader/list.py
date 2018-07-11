@@ -58,7 +58,7 @@ class ListReader(Reader):
         labels = labels or sorted(get_labels(samples))
         try:
             labels = load_lines(labels)
-        except (TypeError, FileNotFoundError, IOError):
+        except (TypeError, IOError):
             pass
         self._labels = {l: i for i, l in enumerate(labels)}
         self._i = 0
