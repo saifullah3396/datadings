@@ -6,7 +6,7 @@ import io
 from collections import OrderedDict
 from os import path as pt
 
-from msgpack import unpackb as _unpack
+from msgpack import unpack as _unpack
 
 from .reader import Reader
 from .reader import unpack
