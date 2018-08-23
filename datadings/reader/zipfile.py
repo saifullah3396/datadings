@@ -18,8 +18,10 @@ from .directory import yield_file
 def glob_pattern(infos, pattern):
     parts = pattern.split(os.sep)
     label_index = None
+    label_start = 0
     try:
         label_index = parts.index('{LABEL}')
+        label_start = pattern.index('{LABEL}')
         pattern = pattern.replace('{LABEL}', '*', 1)
     except ValueError:
         pass
@@ -31,7 +33,7 @@ def glob_pattern(infos, pattern):
                 label = i.filename.split(os.sep)[label_index]
             else:
                 label = None
-            yield i.filename, label
+            yield i.filename[label_start:], i.filename, label
 
 
 def yield_zipfile(zipfile, patterns, separator):

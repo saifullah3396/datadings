@@ -21,7 +21,7 @@ def check_included(filename, include, exclude):
         and not any(match(filename, e) for e in exclude)
 
 
-def yield_file(infile, separator):
+def yield_file(infile, prefix, separator):
     with open(infile) as f:
         for line in f:
             path, label = line.strip('\n').split(separator)[:2]
@@ -29,19 +29,21 @@ def yield_file(infile, separator):
                 label = int(label)
             except ValueError:
                 pass
-            yield path, label
+            yield path.replace(prefix, ''), path, label
 
 
-def load_binary(path):
-    with io.FileIO(path, 'rb') as f:
+def load_binary(sample):
+    with io.FileIO(sample['path'], 'rb') as f:
         return f.read()
 
 
-def glob_pattern(pattern):
+def glob_pattern(pattern, prefix):
     parts = pattern.split(os.sep)
     label_index = None
     try:
         label_index = parts.index('{LABEL}')
+        if not prefix:
+            prefix = pattern[:pattern.index('{LABEL}')]
         pattern = pattern.replace('{LABEL}', '*', 1)
     except ValueError:
         pass
@@ -51,18 +53,24 @@ def glob_pattern(pattern):
                 label = p.split(os.sep)[label_index]
             else:
                 label = None
-            yield p, label
+            yield p.replace(prefix, ''), p, label
 
 
 def yield_directory(patterns, separator):
+    if len(patterns) > 1:
+        prefix = os.path.commonprefix(patterns)
+    else:
+        prefix = ''
+    if '{LABEL}' in prefix:
+        prefix = prefix[:prefix.index('{LABEL}')]
     gens = []
     for pattern in patterns:
         if pt.isfile(pattern):
             # pattern is csv-like (path, label) file
-            gens.append(yield_file(pattern, separator))
+            gens.append(yield_file(pattern, prefix, separator))
         else:
             # pattern is glob-pattern
-            gens.append(glob_pattern(pattern))
+            gens.append(glob_pattern(pattern, prefix))
     return it.chain(*gens)
 
 
@@ -77,6 +85,6 @@ class DirectoryReader(ListReader):
             labels=None,
     ):
         samples = list(yield_directory(patterns, separator))
-        samples = [{'key': s, 'label': l} for s, l in samples
-                   if check_included(s, include, exclude)]
+        samples = [{'key': k, 'label': l, 'path': p} for k, p, l in samples
+                   if check_included(p, include, exclude)]
         ListReader.__init__(self, samples, labels, convertfun, load_binary)
