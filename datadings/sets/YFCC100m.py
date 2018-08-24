@@ -51,19 +51,27 @@ def validate_image(data):
 def _find_zip_key(zips, key):
     z, f = key.split(os.sep)
     try:
-        return zips.index(z+'.zip'), f
+        return zips.index(z), f
     except ValueError:
-        return 0, ''
+        raise IndexError('ZIP file {!r} not found'.format(z))
 
 
 def _find_zip_index(rejects, index):
-    for i, (f, count) in enumerate(FILE_COUNTS):
-        count -= len(rejects[f])
-        if count > index:
-            return i, index
-        index -= count
-    raise IndexError('index %d exceeds %d samples'
-                     % (index, FILES_TOTAL))
+    total = FILES_TOTAL
+    for z, _ in FILE_COUNTS:
+        total -= len(rejects[z])
+    rem = index
+    if index < 0:
+        rem += total
+    if rem < 0 or rem >= total:
+        raise IndexError('index {} out of range for {} items'.format(
+            index, total - 1
+        ))
+    for i, (z, count) in enumerate(FILE_COUNTS):
+        count -= len(rejects[z])
+        if count > rem:
+            return i, rem
+        rem -= count
 
 
 def _filter_zipinfo(infos):
@@ -71,17 +79,20 @@ def _filter_zipinfo(infos):
     return [info for info in infos if p.search(info.filename)]
 
 
-def _find_member_image(members, start_image):
+def _find_member_image(members, rejected, start_image):
     if not start_image:
         return members
     for i, m in enumerate(members):
         if m.filename.split(os.sep)[1] == start_image:
+            if i in rejected:
+                raise IndexError(
+                    '{!r} is on the rejected list'.format(m.filename)
+                )
             return i
+    raise IndexError('{!r} not found'.format(start_image))
 
 
-def _find_member_index(members, rejected, start_index):
-    z = members[0].filename.split(os.sep)[0]
-    rejected = sorted(rejected[z])
+def _find_member_index(rejected, start_index):
     for r in rejected:
         if start_index > r:
             start_index += 1
@@ -90,50 +101,62 @@ def _find_member_index(members, rejected, start_index):
     return start_index
 
 
-def yield_from_zips(
+def _find_start(
         path,
         rejected,
-        start_key=os.sep,
-        start_index=0,
-        validator=noop,
+        start_key='',
+        start_index=0
 ):
-    if start_index and start_key != os.sep:
+    if start_index and start_key:
         raise ValueError('cannot set both start_key and start_index')
 
-    zips = [pt.splitext(f)[0] for f in sorted(os.listdir(path))
-            if f.endswith('.zip')]
+    zips = [f for f, _ in FILE_COUNTS]
     # find out which zipfile to start from
     if start_index:
         zip_index, start_index = _find_zip_index(rejected, start_index)
         start_image = ''
-    else:
+    elif start_key:
         zip_index, start_image = _find_zip_key(zips, start_key)
-    zips = zips[zip_index:]
+    else:
+        return zips, 0
 
+    z = zips[zip_index]
+    r = rejected[z]
+    with zipfile.ZipFile(pt.join(path, z) + '.zip') as imagezip:
+        # z must be bytes so the set of rejected images is found in py3
+        # filter out non-image members
+        members = _filter_zipinfo(imagezip.infolist())
+    if start_index:
+        start_index = _find_member_index(r, start_index)
+    elif start_image:
+        start_index = _find_member_image(members, r, start_image)
+    return zips, start_index
+
+
+def yield_from_zips(
+        path,
+        zips,
+        rejected,
+        start_index,
+        validator=noop,
+):
     for z in zips:
         with zipfile.ZipFile(pt.join(path, z) + '.zip') as imagezip:
-            # z must be bytes so the set of rejected images is found in py3
-            z = z.encode('utf-8')
+            r = rejected[z]
             # filter out non-image members
             members = _filter_zipinfo(imagezip.infolist())
-            if start_index:
-                start_index = _find_member_index(members, rejected, start_index)
-            elif start_image:
-                start_index = _find_member_image(members, start_image)
-            r = rejected[z]
             for i, m in enumerate(members[start_index:], start_index):
                 if i in r:
                     continue
                 f = m.filename
                 yield validator(imagezip.read(f)), f, z, i
-            start_index = 0
-            start_image = ''
+        start_index = 0
 
 
 def _parse_rejected(f, rejected):
-    for l in f:
-        z, i = l.split()
-        rejected[z].add(int(i))
+    new_rejected = msgpack.load(f, encoding='utf-8')
+    for z, r in new_rejected.items():
+        rejected[z].update(r)
     return rejected
 
 
@@ -154,7 +177,7 @@ class YFCC100mReader(Reader):
             image_packs_dir,
             validator=noop,
             reject_file_paths=(
-                    pt.join(ROOT, 'YFCC100m_rejected_images.txt.gz'),
+                    pt.join(ROOT, 'YFCC100m_rejected_images.msgpack.gz'),
             ),
             error_file=None,
             error_file_mode='a',
@@ -168,12 +191,7 @@ class YFCC100mReader(Reader):
         self._rejected = defaultdict(lambda: set())
         try:
             for path in reject_file_paths:
-                if path is None:
-                    continue
-                ofunc = open
-                if path.endswith('.gz'):
-                    ofunc = gzip.open
-                with ofunc(path) as f:
+                with gzip.open(path, 'rb') as f:
                     self._rejected = _parse_rejected(f, self._rejected)
         except IOError:
             pass
@@ -181,9 +199,10 @@ class YFCC100mReader(Reader):
             self._error_file = DevNull()
         else:
             self._error_file = open(error_file, error_file_mode)
+        zips, start_index = _find_start(image_packs_dir, self._rejected)
         self._gen = yield_from_zips(
-            image_packs_dir, self._rejected,
-            validator=self._validator,
+            image_packs_dir, zips, self._rejected, start_index,
+            self._validator,
         )
         self._packer = msgpack.Packer(
             use_bin_type=True, encoding='utf8'
@@ -201,8 +220,7 @@ class YFCC100mReader(Reader):
 
     def _get_next_sample(self):
         while self._next_sample is None:
-            next_sample = next(self._gen)
-            sample, key, z, i = next_sample
+            sample, key, z, i = next(self._gen)
             if i not in self._rejected[z]:
                 if sample is None:
                     self._rejected[z].add(i)
@@ -212,7 +230,7 @@ class YFCC100mReader(Reader):
         return self._next_sample
 
     def next(self):
-        sample = self._convert(self._get_next_sample())
+        sample = YFCC100mData(*self._get_next_sample())
         self._next_sample = None
         return sample
 
@@ -222,31 +240,30 @@ class YFCC100mReader(Reader):
         return self._packer.pack(self.next())
 
     def seek_index(self, index):
+        zips, start_index = _find_start(
+            self._path, self._rejected, start_index=index
+        )
         self._gen = yield_from_zips(
-            self._path, self._rejected,
-            start_index=index,
-            validator=self._validator,
+            self._path, zips, self._rejected, start_index, self._validator,
         )
 
     seek = seek_index
 
     def seek_key(self, key):
+        zips, start_index = _find_start(
+            self._path, self._rejected, start_key=key
+        )
         self._gen = yield_from_zips(
-            self._path, self._rejected,
-            start_key=key,
-            validator=self._validator,
+            self._path, zips, self._rejected, start_index, self._validator,
         )
 
     def get_key(self, index=None):
         return self._get_next_sample()[1]
 
-    def _convert(self, item):
-        return YFCC100mData(*item)
-
 
 def main():
-    from datadings.tools import IntervalPrinter
-    from datadings.tools import print_over
+    from ..tools import IntervalPrinter
+    from ..tools import print_over
     printer = IntervalPrinter(0.5)
     reader = YFCC100mReader(
         '/ds2/YFCC100m/image_packs/', validator=validate_image
