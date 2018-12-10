@@ -67,7 +67,7 @@ ADE20k_           Scene Parsing, Segmentation
 ANP460_           own Eye-Tracking dataset (Jalpa)
 CAMVID_           Motion-based Segmentation
 CAT2000_          MIT Saliency
-CIFAR10/100_      32x32 color image classification with 10/100 classes
+CIFAR_            32x32 color image classification with 10/100 classes
 Cityscape_        Segmentation, Semantic understanding of urban street scenes
 Coutrot1_         Eye-Tracking, Saliency
 FIGRIMFixation_   Eye-Tracking, Saliency
@@ -89,7 +89,7 @@ iSUN_             Large-Scale Scene Understanding, Saliency
 .. _ANP460: 
 .. _CAMVID: http://mi.eng.cam.ac.uk/research/projects/VideoRec/CamVid/
 .. _CAT2000: http://saliency.mit.edu/results_cat2000.html
-.. _CIFAR10/100: https://www.cs.toronto.edu/~kriz/cifar.html
+.. _CIFAR: https://www.cs.toronto.edu/~kriz/cifar.html
 .. _Cityscape: https://www.cityscapes-dataset.com/
 .. _Coutrot1: http://antoinecoutrot.magix.net/public/databases.html
 .. _FIGRIMFixation: http://figrim.mit.edu/index_eyetracking.html
