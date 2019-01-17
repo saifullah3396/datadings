@@ -134,7 +134,7 @@ COARSE_CLASSES = (
 )
 
 
-make_typefun(
-    b'CIFAR100Data',
+CIFAR100Data = make_typefun(
+    'CIFAR100Data',
     'image', 'label', 'coarse_label', 'key',
 )

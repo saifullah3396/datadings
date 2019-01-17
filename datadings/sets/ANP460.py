@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 from . import make_typefun
 
 
-make_typefun(
-    b'ANP460Data',
+ANP460Data = make_typefun(
+    'ANP460Data',
     'image', 'experiments', 'key', 'anp', 'type',
 )
-make_typefun(
-    b'ANP460Experiment',
+ANP460Experiment = make_typefun(
+    'ANP460Experiment',
     'locations', 'map', 'answer', 'duration',
 )

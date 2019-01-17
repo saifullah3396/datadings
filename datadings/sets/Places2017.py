@@ -60,11 +60,11 @@ def index_to_color(array):
     return COLORS[array]
 
 
-make_typefun(
-    b'Places2017Data',
+Places2017Data = make_typefun(
+    'Places2017Data',
     'image', 'tasks', 'key', 'classes',
 )
-make_typefun(
-    b'Places2017Task',
+Places2017Task = make_typefun(
+    'Places2017Task',
     'label_image', 'class_weights',
 )
