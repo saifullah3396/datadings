@@ -29,7 +29,6 @@ def make_typefun(name, *keys):
     values = ', '.join('%r:%s' % (k, __argify(k)) for k in keys)
     code = 'def {name}({args}): return {{ {values} }}' \
         .format(name=name, args=args, values=values)
-    print(code)
     target = {}
     exec(code, {}, target)
     return target[name]
