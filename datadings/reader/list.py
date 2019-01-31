@@ -1,6 +1,7 @@
-from __future__ import print_function, division, unicode_literals
-
-import os.path as pt
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
 
 from .reader import Reader, pack
 from ..sets import ImageClassificationData

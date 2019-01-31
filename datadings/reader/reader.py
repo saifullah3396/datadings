@@ -1,9 +1,14 @@
-from __future__ import print_function, division, unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
 
 from abc import ABCMeta, abstractmethod
 
-from msgpack import packb as _packb, unpackb as _unpackb
-from msgpack_numpy import encode as _encode, decode as _decode
+from msgpack import packb as _packb
+from msgpack import unpackb as _unpackb
+from msgpack_numpy import encode as _encode
+from msgpack_numpy import decode as _decode
 
 
 class Reader(object):

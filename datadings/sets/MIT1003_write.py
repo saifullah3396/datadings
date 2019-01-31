@@ -8,7 +8,10 @@ and download them if necessary:
     - ALLSTIMULI.zip
     - DATA.zip
 """
-from __future__ import print_function, division
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
 
 import io
 import os

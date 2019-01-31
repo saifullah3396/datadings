@@ -1,13 +1,14 @@
-from __future__ import print_function, division, unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
+
 
 import os
 import os.path as pt
 import itertools as it
 import zipfile
 
-from six import text_type
-
-from .reader import pack
 from .list import ListReader
 from .list import convert_ImageClassificationData
 from .directory import match

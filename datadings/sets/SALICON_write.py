@@ -10,6 +10,9 @@ and download them if necessary:
     - validation.mat
     - testing.mat"""
 from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
 
 import os.path as pt
 import zipfile
@@ -20,7 +23,7 @@ import scipy.io
 from six import text_type
 
 from ..writer import FileWriter
-from .SALICON import SALICONData
+from . import SaliencyData
 from .SALICON import SALICONExperiment
 from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
@@ -63,7 +66,7 @@ def _yield_salicon_metadata(matpath, shuffle):
 def __write_image(image, imagezip, writer):
     experiments, filename = image
     jpegdata = imagezip.read(pt.join('images', filename))
-    item = SALICONData(jpegdata, experiments, filename)
+    item = SaliencyData(jpegdata, experiments, filename)
     writer.write(item)
 
 

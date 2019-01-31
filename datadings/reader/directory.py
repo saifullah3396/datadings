@@ -1,4 +1,7 @@
-from __future__ import print_function, division, unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
 
 import os
 import os.path as pt
@@ -8,8 +11,8 @@ import io
 import glob2
 from glob2.fnmatch import fnmatch
 
-from datadings.reader.list import ListReader
-from datadings.reader.list import convert_ImageClassificationData
+from .list import ListReader
+from .list import convert_ImageClassificationData
 
 
 def match(f, p):
