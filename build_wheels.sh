@@ -3,6 +3,7 @@ set -e -x
 
 # Install native dependencies
 # yum install ...
+/opt/python/cp36-cp36m/bin/pip install six
 
 # Compile wheels
 /opt/python/cp36-cp36m/bin/python setup.py bdist_wheel --dist-dir=.
