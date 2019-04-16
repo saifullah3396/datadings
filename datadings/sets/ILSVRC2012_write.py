@@ -13,6 +13,7 @@ import os.path as pt
 import io
 import gzip
 import random
+import warnings
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 
@@ -35,6 +36,7 @@ except ImportError:
         b = io.BytesIO(data)
         data.convert('RGB').save(b, format='JPEG', quality=85, subsampling=1)
         return b.getvalue()
+    warnings.warn('turbojpeg not available, falling back to PIL')
 
 from ..writer import FileWriter
 from . import ImageClassificationData
@@ -101,14 +103,13 @@ def main():
     )
     parser.add_argument(
         '-o', '--outdir',
-        metavar='OUTPATH',
+        metavar='OUTDIR',
         help='output directory; defaults to indir'
     )
     parser.add_argument(
         '--compress',
         action='store_true',
-        help='recompress images as JPEG with quality 85 and 422 color '
-             'subsampling'
+        help='recompress images as JPEG with q=85 and 422 color subsampling'
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
