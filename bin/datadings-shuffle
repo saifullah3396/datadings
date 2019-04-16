@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!python
 """Shuffle an existing dataset file.
 """
 import sys
@@ -7,17 +7,14 @@ import os.path as pt
 from datadings.reader import IdentityReader
 from datadings.reader import Shuffler
 from datadings.writer import RawWriter
-from datadings.tools import IntervalPrinter
 
 
 def shuffle(infile, outfile):
     r = IdentityReader(infile)
     shuffler = Shuffler(r)
-    printer = IntervalPrinter()
     with RawWriter(outfile) as writer:
         for key, raw in shuffler.rawiter(yield_key=True):
             writer.write(key, raw)
-            printer.update()
 
 
 def main():

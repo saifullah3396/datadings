@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!python
 """Splits one dataset in several smaller ones
 """
 from __future__ import print_function, division
@@ -6,14 +6,12 @@ from __future__ import print_function, division
 import sys
 import os.path as pt
 
-from datadings.reader import IdentityReader
+from datadings.reader import MsgpackReader
 from datadings.writer import RawWriter
-from datadings.tools import IntervalPrinter
 
 
 def split(infile, outfiles, splits):
-    printer = IntervalPrinter()
-    reader = IdentityReader(infile)
+    reader = MsgpackReader(infile)
     if splits[len(splits)-1] > len(reader):
         print('max split = %d greater than %d = len(dataset)'
               % (splits[len(splits)-1], len(reader)))
@@ -29,7 +27,6 @@ def split(infile, outfiles, splits):
                     writer.close()
                     writer = RawWriter(outfile)
                 writer.write(key, raw)
-                printer.update()
         finally:
             writer.close()
 

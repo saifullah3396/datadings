@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!python
 """Extract samples from a larger
 """
 from __future__ import print_function, division
@@ -6,15 +6,13 @@ from __future__ import print_function, division
 import sys
 import os.path as pt
 
-from datadings.reader import IdentityReader
+from datadings.reader import MsgpackReader
 from datadings.reader import Shuffler
 from datadings.writer import RawWriter
-from datadings.tools import IntervalPrinter
 
 
 def sample(infile, outfile, number, strategy):
-    printer = IntervalPrinter()
-    reader = IdentityReader(infile)
+    reader = MsgpackReader(infile)
     if number > len(reader):
         print('number = %d greater than %d = len(dataset)'
               % (number, len(reader)))
@@ -26,7 +24,6 @@ def sample(infile, outfile, number, strategy):
                 if i >= number:
                     break
                 writer.write(key, raw)
-                printer.update()
 
 
 def main():

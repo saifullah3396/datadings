@@ -1,26 +1,27 @@
-#!/usr/bin/env python
+#!python
 """Run a read benchmark on a given dataset file.
 """
 from __future__ import print_function
 
 import time
+import os.path as pt
 
 from datadings.reader import IdentityReader
-from datadings.tools import IntervalPrinter
-from datadings.tools import print_over
+from datadings.tools import make_printer
 
 
 def bench(infile):
     r = IdentityReader(infile)
-    printer = IntervalPrinter()
+    printer = make_printer(desc='bench ' + pt.basename(infile))
     a = time.time()
     for _ in r:
-        printer.update()
+        printer()
     d = time.time() - a
-    n = printer.total_updates
+    n = printer.n
     s = n / d
-    print_over('%s samples read in %.2f seconds, %.2f samples/s'
-               % (n, d, s), end='')
+    printer.close()
+    print('%s samples read in %.2f seconds, %.2f samples/s'
+          % (n, d, s), end='')
 
 
 def main():
