@@ -1,43 +1,44 @@
+# AUTO-GENERATED FILE! DO NOT EDIT!
 from __future__ import unicode_literals
 
 
-def ImageClassificationData(image, label, key): return {'image': image, 'label': label, 'key': key}
+def ANP460Data(image, experiments, key, anp, type): return {u'image': image, u'experiments': experiments, u'key': key, u'anp': anp, u'type': type}
 
 
-def ImageSegmentationData(image, target_image, key, classes, class_weights): return {'image': image, 'target_image': target_image, 'key': key, 'classes': classes, 'class_weights': class_weights}
+def ANP460Experiment(locations, map, answer, duration): return {u'locations': locations, u'map': map, u'answer': answer, u'duration': duration}
 
 
-def MaskedImageSegmentationData(image, label_image, mask, key, classes, class_weights): return {'image': image, 'label_image': label_image, 'mask': mask, 'key': key, 'classes': classes, 'class_weights': class_weights}
+def CIFAR100Data(image, label, coarse_label, key): return {u'image': image, u'label': label, u'coarse_label': coarse_label, u'key': key}
 
 
-def SegmentationDisparityData(image, disparity_map, label_image, key, classes, class_weights): return {'image': image, 'disparity_map': disparity_map, 'label_image': label_image, 'key': key, 'classes': classes, 'class_weights': class_weights}
+def ImageClassificationData(image, label, key): return {u'image': image, u'label': label, u'key': key}
 
 
-def SaliencyData(image, experiments, key): return {'image': image, 'experiments': experiments, 'key': key}
+def ImageSegmentationData(image, target_image, key, classes, class_weights): return {u'image': image, u'target_image': target_image, u'key': key, u'classes': classes, u'class_weights': class_weights}
 
 
-def SaliencyExperiment(locations, map): return {'locations': locations, 'map': map}
+def MaskedImageSegmentationData(image, label_image, mask, key, classes, class_weights): return {u'image': image, u'label_image': label_image, u'mask': mask, u'key': key, u'classes': classes, u'class_weights': class_weights}
 
 
-def UnsupervisedImageData(image, key): return {'image': image, 'key': key}
+def Places2017Data(image, tasks, key, classes): return {u'image': image, u'tasks': tasks, u'key': key, u'classes': classes}
 
 
-def ANP460Data(image, experiments, key, anp, type): return {'image': image, 'experiments': experiments, 'key': key, 'anp': anp, 'type': type}
+def Places2017Task(label_image, class_weights): return {u'label_image': label_image, u'class_weights': class_weights}
 
 
-def ANP460Experiment(locations, map, answer, duration): return {'locations': locations, 'map': map, 'answer': answer, 'duration': duration}
+def SaliencyData(image, experiments, key): return {u'image': image, u'experiments': experiments, u'key': key}
 
 
-def CIFAR100Data(image, label, coarse_label, key): return {'image': image, 'label': label, 'coarse_label': coarse_label, 'key': key}
+def SaliencyExperiment(locations, map): return {u'locations': locations, u'map': map}
 
 
-def iSUNData(image, experiments, key, scenecategory): return {'image': image, 'experiments': experiments, 'key': key, 'scenecategory': scenecategory}
+def SegmentationDisparityData(image, disparity_map, label_image, key, classes, class_weights): return {u'image': image, u'disparity_map': disparity_map, u'label_image': label_image, u'key': key, u'classes': classes, u'class_weights': class_weights}
 
 
-def iSUNExperiment(locations, map, timestamps, fixations): return {'locations': locations, 'map': map, 'timestamps': timestamps, 'fixations': fixations}
+def UnsupervisedImageData(image, key): return {u'image': image, u'key': key}
 
 
-def Places2017Data(image, tasks, key, classes): return {'image': image, 'tasks': tasks, 'key': key, 'classes': classes}
+def iSUNData(image, experiments, key, scenecategory): return {u'image': image, u'experiments': experiments, u'key': key, u'scenecategory': scenecategory}
 
 
-def Places2017Task(label_image, class_weights): return {'label_image': label_image, 'class_weights': class_weights}
+def iSUNExperiment(locations, map, timestamps, fixations): return {u'locations': locations, u'map': map, u'timestamps': timestamps, u'fixations': fixations}
