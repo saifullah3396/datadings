@@ -15,12 +15,13 @@ def loadmat(mat):
     """
     try:
         return scipy.io.loadmat(mat)
-    except (TypeError, IOError):
+    except (ValueError, TypeError, IOError):
         buf = io.BytesIO(mat)
+        # noinspection PyTypeChecker
         return scipy.io.loadmat(buf)
 
 
-def iter_fields(arr, ignore=set()):
+def iter_fields(arr, ignore=()):
     """ Iterate over the fields of a structured numpy array
         (i.e., an array with a complex data type).
         Each iteration yields (fieldname, value).
