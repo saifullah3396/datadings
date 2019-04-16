@@ -14,6 +14,8 @@ from abc import abstractmethod
 import msgpack
 from msgpack_numpy import encode as encode_array
 
+from .tools import make_printer
+
 
 class Writer(object):
     """
@@ -35,9 +37,10 @@ class Writer(object):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, outfile):
+    def __init__(self, outfile, **kwargs):
         """
         :param outfile: path to the dataset file
+        :param kwargs: keyword arguments for datadings.tools.make_printer
         """
         self._path = outfile
         self._outfile = io.open(outfile, 'wb', 1024*1024)
@@ -47,6 +50,9 @@ class Writer(object):
         self._packer = msgpack.Packer(
             default=encode_array, use_bin_type=True, encoding='utf8'
         )
+        if 'desc' not in kwargs:
+            kwargs['desc'] = pt.basename(outfile)
+        self._printer = make_printer(**kwargs)
 
     def __enter__(self):
         return self
@@ -69,11 +75,14 @@ class Writer(object):
             name = pt.basename(self._path)
             f.write('%s  %s\n' % (self._hash.hexdigest(), name))
             f.write('%s  %s\n' % (indexhash, name + '.index'))
+        self._printer.close()
+        print('%d samples written' % self.written)
 
     def _write_data(self, packed):
         self._hash.update(packed)
         self._outfile.write(packed)
         self.written += 1
+        self._printer()
 
     def _write(self, sample):
         self._write_data(self._packer.pack(sample))

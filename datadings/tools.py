@@ -7,83 +7,14 @@ import time
 import sys
 import os
 import os.path as pt
-import functools
-import inspect
-import warnings
 from itertools import product
 
 import wget
 import numpy as np
+import tqdm
 
 
 string_types = (type(b''), type(u''))
-
-
-def deprecated(reason):
-    """
-    This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used.
-    """
-    if isinstance(reason, string_types):
-        # The @deprecated is used with a 'reason'.
-        #
-        # .. code-block:: python
-        #
-        #    @deprecated("please, use another function")
-        #    def old_function(x, y):
-        #      pass
-
-        def decorator(func1):
-            if inspect.isclass(func1):
-                fmt1 = "Call to deprecated class {name} ({reason})."
-            else:
-                fmt1 = "Call to deprecated function {name} ({reason})."
-
-            @functools.wraps(func1)
-            def new_func1(*args, **kwargs):
-                warnings.simplefilter('always', DeprecationWarning)
-                warnings.warn(
-                    fmt1.format(name=func1.__name__, reason=reason),
-                    category=DeprecationWarning,
-                    stacklevel=2
-                )
-                warnings.simplefilter('default', DeprecationWarning)
-                return func1(*args, **kwargs)
-
-            return new_func1
-
-        return decorator
-
-    elif inspect.isclass(reason) or inspect.isfunction(reason):
-        # The @deprecated is used without any 'reason'.
-        #
-        # .. code-block:: python
-        #
-        #    @deprecated
-        #    def old_function(x, y):
-        #      pass
-        func2 = reason
-        if inspect.isclass(func2):
-            fmt2 = "Call to deprecated class {name}."
-        else:
-            fmt2 = "Call to deprecated function {name}."
-
-        @functools.wraps(func2)
-        def new_func2(*args, **kwargs):
-            warnings.simplefilter('always', DeprecationWarning)
-            warnings.warn(
-                fmt2.format(name=func2.__name__),
-                category=DeprecationWarning,
-                stacklevel=2
-            )
-            warnings.simplefilter('default', DeprecationWarning)
-            return func2(*args, **kwargs)
-
-        return new_func2
-
-    else:
-        raise TypeError(repr(type(reason)))
 
 
 def print_over(*args, **kwargs):
@@ -106,175 +37,22 @@ def print_over(*args, **kwargs):
         stream.flush()
 
 
-class IntervalPrinter(object):
-    """
-    Print in fixed intervals.
-    Call every time something happens to regularly print progress
-    and speed along custom values.
-    """
-    def __init__(self,
-                 interval=1,
-                 formatstring='{num:12d} updates, {freq:.2f} updates/s',
-                 printlines=False):
-        """
-        :param interval: Min interval in seconds between printing
-        :param formatstring: String with {} format parameters used to print.
-                             Must have num (number of updates) and freq
-                             (update frequency) placeholders.
-                             Add more as desired.
-        :param printlines: if True, print new results on new line
-        """
-        self.interval = interval
-        if not printlines:
-            formatstring = formatstring
-        self.formatstring = formatstring
-        self.end = None if printlines else ''
-        self.new_updates = 0
-        self.total_updates = 0
-        self.last_print = None
-        self._maxlen = 0
-
-    def update(self, **kwargs):
-        """
-        Call every time something happens
-        to regularly print frequency and values.
-
-        :param kwargs: additional values to format the given
-                       formatstring
-        """
-        now = time.time()
-        self.new_updates += 1
-        self.total_updates += 1
-        if self.last_print is None:
-            self.last_print = now
-        if now - self.last_print > self.interval:
-            seconds = now - self.last_print
-            print_over(self.formatstring.format(
-                num=self.total_updates,
-                freq=self.new_updates / seconds,
-                **kwargs
-            ), end=self.end, flush=True)
-            self.last_print = now
-            self.new_updates = 0
-
-    def print_total_updates(self):
-        print_over('\r%d samples written' % self.total_updates)
+BAR_FORMAT = '{desc} {percentage:3.0f}% {elapsed}<{remaining}, {rate_fmt}{postfix}'
 
 
-class FrequencyPrinter(object):
-    """ Convenient printer for frequencies.
-        Call update every time something happens
-        to regularly print the current frequency.
-    """
-    @deprecated('will be removed in next major update, use IntervalPrinter')
-    def __init__(self,
-                 interval=2,
-                 formatstring='%12d samples, %.2f samples/s',
-                 printlines=False):
-        """ @param interval: Interval in seconds between print output
-            @param formatstring: String format used to print;
-                                 must have exactly one float placeholder
-            @param printlines: if True, print new results on new line;
-                               if False, current line is reused
-        """
-        self.interval = interval
-        if not printlines:
-            formatstring = formatstring
-        self.formatstring = formatstring
-        self.end = None if printlines else ''
-        self.new_updates = 0
-        self.total_updates = 0
-        self.last_print = 0
-        self.start = 0
-        self._maxlen = 0
-
-    def update(self, info=[]):
-        """ Call update every time a new frame is shown
-            to regularly print the current framerate.
-            @param info: [str] additional information to be printed as suffix
-        """
-        self.new_updates += 1
-        self.total_updates += 1
-        now = time.time()
-        if self.start is None:
-            self.start = now
-            self.last_print = now
-        if now - self.last_print > self.interval:
-            seconds = now - self.start
-            print_over(
-                " | ".join(
-                    [self.formatstring % (self.total_updates, self.new_updates / seconds)]
-                    + [str(i) for i in info]
-                )
-            , end=self.end, flush=True)
-            self.last_print = now
-            self.start = now
-            self.new_updates = 0
-
-    def print_total_updates(self):
-        print_over('\r%d samples written' % self.total_updates)
+class ProgressPrinter(tqdm.tqdm):
+    def __call__(self, **kwargs):
+        self.set_postfix(refresh=False, **kwargs)
+        self.update()
 
 
-class MovingAveragePrinter(object):
-    # TODO subclass IntervalPrinter
-    """ Convenient printer for moving averages.
-        Call update every time something happens
-        to regularly print the current frequency.
-    """
-    def __init__(
-            self,
-            interval=2,
-            formatstring='{num:12d} updates, {freq:.2f} updates/s, avg {value}',
-            printlines=False,
-            alpha=0.9
-    ):
-        """ @param interval: Interval in seconds between print output
-            @param formatstring: String format used to print;
-                                 must have exactly one float placeholder
-            @param printlines: if True, print new results on new line;
-                               if False, current line is reused
-        """
-        self.interval = interval
-        if not printlines:
-            formatstring = formatstring
-        self.formatstring = formatstring
-        self.end = None if printlines else ''
-        self.new_updates = 0
-        self.total_updates = 0
-        self.last_print = 0
-        self.start = 0
-        self._maxlen = 0
-        self.alpha = alpha
-        self.value = None
-
-    def update(self, value=None, **kwargs):
-        """ Call update every time a new frame is shown
-            to regularly print the current framerate.
-        """
-        if self.value is None:
-            self.value = value
-        if value is not None:
-            self.value = self.alpha*self.value + (1-self.alpha)*value
-        self.new_updates += 1
-        self.total_updates += 1
-        now = time.time()
-        if self.start is None:
-            self.start = now
-            self.last_print = now
-        if now - self.last_print > self.interval:
-            seconds = now - self.start
-            print_over(self.formatstring.format(
-                num=self.total_updates,
-                freq=self.new_updates / seconds,
-                value=self.value,
-                **kwargs
-            ), end=self.end, flush=True)
-            self.last_print = now
-            self.start = now
-            self.new_updates = 0
-
-    def print_total_updates(self):
-        print_over('\r%d samples written' % self.total_updates)
+def make_printer(bar_format=BAR_FORMAT, miniters=0,
+                 mininterval=0.5, smoothing=0.1, **kwargs):
+    tqdm.tqdm.monitor_interval = 0
+    p = ProgressPrinter(bar_format=bar_format, miniters=miniters,
+                        mininterval=mininterval, smoothing=smoothing,
+                        **kwargs)
+    return p
 
 
 def find_best_unit(value, multiples, units):
@@ -328,7 +106,8 @@ def download_if_not_found(url, path):
         fmt_first = ' %s / %s      '
         fmt = ' %s / %s, %s/s, %s left      '
 
-        def _progress(current, total, width=80, _snapshots=snapshots, _fmt=fmt, _fmt_first=fmt_first):
+        def _progress(current, total, width=80, _snapshots=snapshots,
+                      _fmt=fmt, _fmt_first=fmt_first):
             s_current = '%7.2f %s' % find_byte_unit(current)
             s_total = '%.2f %s' % find_byte_unit(total)
             rem = total - current
