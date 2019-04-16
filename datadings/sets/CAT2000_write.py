@@ -25,7 +25,6 @@ from PIL import Image
 from PIL import ImageChops
 
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from . import SaliencyData
 from . import SaliencyExperiment
@@ -109,19 +108,15 @@ def __is_stimulus(path):
 def write_sets(indir, outdir, shuffle=True):
     url_prefix = 'http://saliency.mit.edu/'
     for name in ('train', 'test'):
-        print(name)
-        printer = IntervalPrinter()
         imagepath = pt.join(indir, name + 'Set.zip')
         download_if_not_found(url_prefix + '%sSet.zip' % name, imagepath)
         with zipfile.ZipFile(imagepath) as imagezip:
-            with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
-                names = [f for f in imagezip.namelist() if __is_stimulus(f)]
-                if shuffle:
-                    random.shuffle(names)
+            names = [f for f in imagezip.namelist() if __is_stimulus(f)]
+            if shuffle:
+                random.shuffle(names)
+            with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(names)) as writer:
                 for path in names:
                     write_image(imagezip, path, writer)
-                    printer.update()
-        printer.print_total_updates()
 
 
 def main():

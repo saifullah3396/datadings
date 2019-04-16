@@ -17,7 +17,6 @@ import numpy as np
 import os.path as pt
 
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
 from . import MaskedImageSegmentationData
 from .Vaihingen import CLASSES
 from .Vaihingen import CROP_SIZE
@@ -72,8 +71,6 @@ def images_label_dsm_iter(indir, image_ids):
 
 
 def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
-    printer = IntervalPrinter()
-
     # Training-Split -> give whole image
     train_file = pt.join(outdir, 'Vaihingen_train.msgpack')
     with FileWriter(train_file) as writer:
@@ -82,9 +79,6 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
                                     images_label_dsm_iter(indir, image_ids):
 
             write(writer, train_img, train_labels, train_dsm, fn)
-            printer.update()
-    printer.print_total_updates()
-
 
     # Validation-Split -> give splitted images
     val_file = pt.join(outdir, 'Vaihingen_val.msgpack')
@@ -103,9 +97,6 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
                 sub_label = np.array(sub_label[0]).astype(np.int64)
                 sub_dsm = np.array(sub_dsm[0])
                 write(writer, sub_img, sub_label, sub_dsm, "%s_%s"%(fn, idx))
-                printer.update()
-    printer.print_total_updates()
-
 
 
 def main():

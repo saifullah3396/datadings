@@ -26,7 +26,6 @@ from six import text_type
 from ..writer import FileWriter
 from . import SaliencyData
 from . import SaliencyExperiment
-from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 
 
@@ -54,9 +53,7 @@ def __get_experiments(subjects):
     return experiments
 
 
-def write_images(imagezip, locations, writer, shuffle):
-    printer = IntervalPrinter()
-    names = [f for f in imagezip.namelist() if f.endswith('.jpg')]
+def write_images(imagezip, names, locations, writer, shuffle):
     if shuffle:
         random.shuffle(names)
     for path in names:
@@ -69,8 +66,6 @@ def write_images(imagezip, locations, writer, shuffle):
             continue
         item = SaliencyData(jpegdata, experiments, path)
         writer.write(item)
-        printer.update()
-    printer.print_total_updates()
 
 
 def write_sets(indir, outdir, shuffle=True):
@@ -88,8 +83,9 @@ def write_sets(indir, outdir, shuffle=True):
         download_if_not_found(mat_url, datapath)
         locations = __load_mat_file(datapath)
         with zipfile.ZipFile(imagepath) as imagezip:
-            with FileWriter(outpath) as writer:
-                write_images(imagezip, locations, writer, shuffle)
+            names = [f for f in imagezip.namelist() if f.endswith('.jpg')]
+            with FileWriter(outpath, total=len(names)) as writer:
+                write_images(imagezip, names, locations, writer, shuffle)
 
 
 def main():

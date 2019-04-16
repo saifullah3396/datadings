@@ -9,10 +9,11 @@ import json
 
 import numpy as np
 
-from . import make_typefun
 from .VOC2012 import median_frequency_weights
 from .ADE20k import load_statistics
 from .ADE20k import SCENELABELS
+from . import Places2017Data
+from . import Places2017Task
 
 
 ROOT_DIR = pt.abspath(pt.dirname(__file__))
@@ -61,13 +62,3 @@ with gzip.open(
 
 def index_to_color(array):
     return COLORS[array]
-
-
-Places2017Data = make_typefun(
-    'Places2017Data',
-    'image', 'tasks', 'key', 'classes',
-)
-Places2017Task = make_typefun(
-    'Places2017Task',
-    'label_image', 'class_weights',
-)

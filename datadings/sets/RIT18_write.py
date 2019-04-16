@@ -17,7 +17,6 @@ import os.path as pt
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from . import MaskedImageSegmentationData
 from .RIT18 import CLASSES
@@ -44,7 +43,6 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
         'http://www.cis.rit.edu/~rmk6217/rit18_data.mat',
         imagepath
     )
-    printer = IntervalPrinter()
     dataset = loadmat(imagepath)
 
     # Training-Split -> give whole image
@@ -55,7 +53,6 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
 
     with FileWriter(pt.join(outdir, 'RIT18_train.msgpack')) as writer:
         write(writer, train_img, train_labels, train_mask, "train")
-    printer.update()
 
     # Validation & Test-Split -> give splitted images
     for split in ("val", ):
@@ -72,12 +69,10 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
             for idx, (sub_data, sub_label) in \
                     enumerate(zip(split_array(data, *crop_size),
                                   split_array(labels, *crop_size))):
-                sub_label = np.array(sub_label[0]).astype(np.int64)# squeeze again!
+                sub_label = np.array(sub_label[0]).astype(np.int64)  # squeeze again!
                 sub_mask = np.array(sub_data[-1]).astype(np.uint8)
                 sub_img = np.array(sub_data[:6]).astype(np.uint16)
-                write(writer, sub_img, sub_label, sub_mask, "%_%" %(split, idx))
-                printer.update()
-    printer.print_total_updates()
+                write(writer, sub_img, sub_label, sub_mask, "%s_%s" % (split, idx))
 
 
 def main():

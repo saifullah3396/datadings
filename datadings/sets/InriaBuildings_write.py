@@ -17,7 +17,6 @@ import numpy as np
 import os.path as pt
 
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
 from . import ImageSegmentationData
 from .InriaBuildings import CLASSES
 from .InriaBuildings import CROP_SIZE
@@ -67,8 +66,6 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
     train_locations = ["vienna", "kitsap", "tyrol-w", "chicago", "austin"]
     test_locations = ["bellingham", "bloomington", "innsbruck",
                       "sfo", "tyrol-e"]
-    printer = IntervalPrinter()
-
 
     # Training-Split -> give whole image
     train_file = pt.join(outdir, TRAIN_MSG_FILE)
@@ -78,9 +75,6 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
                                                             train_locations,
                                                             range(6, 37)):
             write(writer, train_img, labels, fn)
-            printer.update()
-    printer.print_total_updates()
-
 
     # Put first 5 images into the validation set, as in the paper
     # https://hal.inria.fr/hal-01468452/document
@@ -102,9 +96,6 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
                 if 8 in [w, h]: # reject very small patches
                     continue
                 write(writer, sub_img, sub_label, "%s_%s"%(fn, idx))
-                printer.update()
-    printer.print_total_updates()
-
 
     # Test-Split -> give splitted images without labels
     val_file = pt.join(outdir, TEST_MSG_FILE)
@@ -117,9 +108,6 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
                 sub_img = np.array(sub_img).astype(np.uint8)
                 sub_label = np.array([])
                 write(writer, sub_img, sub_label, "%s_%s"%(fn, idx))
-                printer.update()
-    printer.print_total_updates()
-
 
 
 def main():
@@ -151,6 +139,3 @@ if __name__ == '__main__':
         pass
     finally:
         print()
-
-
-

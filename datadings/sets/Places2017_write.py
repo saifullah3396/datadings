@@ -36,7 +36,6 @@ from PIL import Image
 import cv2
 
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from ..matlab import loadmat
 from .VOC2012_write import imagedata_to_array
@@ -134,11 +133,9 @@ def write_set(
         outdir, name, members,
         classes, class_weights, scenes
 ):
-    print(name)
-    printer = IntervalPrinter()
     scenes_indices = dict(map(_reverse, enumerate(SCENELABELS)))
     scenes = {f: scenes_indices[s] for f, s in scenes.items()}
-    with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
+    with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(members)) as writer:
         for m in members:
             writer.write(Places2017Data(
                 extractmember(imagetar, m),
@@ -155,8 +152,6 @@ def write_set(
                 pt.basename(m.name),
                 classes,
             ))
-            printer.update()
-    printer.print_total_updates()
 
 
 def write_sets(indir, ade20kdir, outdir, shuffle=True):

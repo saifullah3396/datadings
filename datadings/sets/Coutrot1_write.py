@@ -27,7 +27,6 @@ except ImportError:
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
 from ..tools import print_over
 from . import SaliencyData
 from . import SaliencyExperiment
@@ -134,7 +133,7 @@ def iter_frames_with_fixpoints(frame_gen, experiments):
         yield key, frame, [ex[key] for ex in experiments]
 
 
-def write_video(name_prefix, frame_gen, experiments, writer, printer,
+def write_video(name_prefix, frame_gen, experiments, writer,
                 min_fixpoints=30, write_delta=10, max_fixpoint_age=60):
     tracker = LucasKanade()
     last_written = 0
@@ -170,11 +169,9 @@ def write_video(name_prefix, frame_gen, experiments, writer, printer,
         )
         writer.write(item)
         last_written = key
-        printer.update()
 
 
 def write_sets(indir, outdir, shuffle=False):
-    printer = IntervalPrinter()
     mat = loadmat(pt.join(indir, 'coutrot_database1.mat'))
     clip_data = __parse_mat(mat['Coutrot_Database1'])
     with FileWriter(pt.join(outdir, 'Coutrot1.msgpack')) as writer:
@@ -188,8 +185,7 @@ def write_sets(indir, outdir, shuffle=False):
             clip = name.split('.')[0]
             experiments = clip_data[clip]
             frame_gen = iter_video_frames_opencv(path)
-            write_video(name, frame_gen, experiments, writer, printer)
-    printer.print_total_updates()
+            write_video(name, frame_gen, experiments, writer)
 
 
 def main():

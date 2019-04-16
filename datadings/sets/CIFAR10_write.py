@@ -17,7 +17,6 @@ from six.moves.cPickle import load
 
 from PIL import Image
 
-from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from ..writer import FileWriter
 from . import ImageClassificationData
@@ -44,21 +43,17 @@ def __yield_rows(files):
 
 def __write_sets(outdir, train_names, test_names, shuffle):
     for name, files in (('train', train_names), ('test', test_names)):
-        print(name)
-        printer = IntervalPrinter()
         gen = __yield_rows(files)
         if shuffle:
             gen = list(gen)
             random.shuffle(gen)
-        with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
+        with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(files)) as writer:
             for data, label, filename in gen:
                 writer.write(ImageClassificationData(
                     data,
                     int(label),
                     filename,
                 ))
-                printer.update()
-        printer.print_total_updates()
 
 
 def get_files(tar, prefix, names):

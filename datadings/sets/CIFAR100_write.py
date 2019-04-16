@@ -15,7 +15,6 @@ import random
 from six.moves.cPickle import load
 
 from ..tools import download_if_not_found
-from ..tools import IntervalPrinter
 from ..writer import FileWriter
 from .CIFAR100 import CIFAR100Data
 from .CIFAR10_write import get_files
@@ -36,13 +35,11 @@ def yield_rows(files):
 
 def __write_sets(outdir, train_names, test_names, shuffle):
     for name, files in (('train', train_names), ('test', test_names)):
-        print(name)
-        printer = IntervalPrinter()
         gen = yield_rows(files)
         if shuffle:
             gen = list(gen)
             random.shuffle(gen)
-        with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
+        with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(files)) as writer:
             for data, label, coarse_label, filename in gen:
                 writer.write(CIFAR100Data(
                     data,
@@ -50,8 +47,6 @@ def __write_sets(outdir, train_names, test_names, shuffle):
                     int(coarse_label),
                     filename,
                 ))
-                printer.update()
-        printer.print_total_updates()
 
 
 def write_sets(indir, outdir, shuffle=True):

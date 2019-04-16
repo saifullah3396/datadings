@@ -23,7 +23,7 @@ from PIL import Image
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
+from ..tools import make_printer
 from ..tools import download_if_not_found
 from ..tools import print_over
 from . import ImageSegmentationData
@@ -110,7 +110,6 @@ def write_sets(indir, outdir, shuffle=True):
     with tarfile.TarFile(datapath) as tar:
         for split in ('train', 'val'):
             print(split)
-            printer = IntervalPrinter()
             outpath = pt.join(outdir, 'VOC2012_%s.msgpack' % split)
             with FileWriter(outpath) as writer:
                 sets_path = pt.join(sets_dir, '%s.txt' % split)
@@ -121,22 +120,21 @@ def write_sets(indir, outdir, shuffle=True):
                     im = extract(tar, pt.join(image_dir, name) + '.jpg')
                     seg = extract(tar, pt.join(seg_dir, name) + '.png')
                     write_image(writer, name, im, seg)
-                    printer.update()
-            printer.print_total_updates()
 
 
 def class_counts(gen):
     counts = np.float64([])
-    printer = IntervalPrinter()
+    printer = make_printer(desc='class counts')
     for segmap in gen:
-        printer.update()
+        printer()
         cs = np.bincount(segmap.flatten()).astype(np.float64) / segmap.size
         if len(cs) <= len(counts):
             counts[:len(cs)] += cs
         else:
             cs[:len(counts)] += counts
             counts = cs
-    print_over('%d samples analyzed' % printer.total_updates)
+    printer.close()
+    print('%d samples analyzed' % printer.n)
     counts = {c: counts[c] for c in np.nonzero(counts)[0]}
     return counts
 

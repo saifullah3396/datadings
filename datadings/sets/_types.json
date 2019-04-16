@@ -1,0 +1,84 @@
+{
+  "ImageClassificationData": [
+    "image",
+    "label",
+    "key"
+  ],
+  "ImageSegmentationData": [
+    "image",
+    "target_image",
+    "key",
+    "classes",
+    "class_weights"
+  ],
+  "MaskedImageSegmentationData": [
+    "image",
+    "label_image",
+    "mask",
+    "key",
+    "classes",
+    "class_weights"
+  ],
+  "SegmentationDisparityData": [
+    "image",
+    "disparity_map",
+    "label_image",
+    "key",
+    "classes",
+    "class_weights"
+  ],
+  "SaliencyData": [
+    "image",
+    "experiments",
+    "key"
+  ],
+  "SaliencyExperiment": [
+    "locations",
+    "map"
+  ],
+  "UnsupervisedImageData": [
+    "image",
+    "key"
+  ],
+  "ANP460Data": [
+    "image",
+    "experiments",
+    "key",
+    "anp",
+    "type"
+  ],
+  "ANP460Experiment": [
+    "locations",
+    "map",
+    "answer",
+    "duration"
+  ],
+  "CIFAR100Data": [
+    "image",
+    "label",
+    "coarse_label",
+    "key"
+  ],
+  "iSUNData": [
+    "image",
+    "experiments",
+    "key",
+    "scenecategory"
+  ],
+  "iSUNExperiment": [
+    "locations",
+    "map",
+    "timestamps",
+    "fixations"
+  ],
+  "Places2017Data": [
+    "image",
+    "tasks",
+    "key",
+    "classes"
+  ],
+  "Places2017Task": [
+    "label_image",
+    "class_weights"
+  ]
+}

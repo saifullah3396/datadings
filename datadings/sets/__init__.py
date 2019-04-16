@@ -3,6 +3,9 @@ from __future__ import division
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
+import os.path as pt
+import json
+
 from six import text_type
 
 
@@ -10,7 +13,7 @@ def __argify(key):
     return key if isinstance(key, text_type) else '_%r' % key
 
 
-def make_typefun(name, *keys):
+def make_typefun(name, keys):
     """
     Returns a function that creates dictionaries with fixed keys
     from positional arguments.
@@ -30,39 +33,25 @@ def make_typefun(name, *keys):
     :return: callable function
     """
     args = ', '.join(map(__argify, keys))
-    values = ', '.join('%r:%s' % (k, __argify(k)) for k in keys)
-    code = 'def {name}({args}): return {{ {values} }}' \
+    values = ', '.join('%r: %s' % (k, __argify(k)) for k in keys)
+    return 'def {name}({args}): return {{{values}}}\n' \
         .format(name=name, args=args, values=values)
-    target = {}
-    exec(code, {}, target)
-    return target[name]
 
 
-ImageClassificationData = make_typefun(
-    'ImageClassificationData',
-    'image', 'label', 'key'
-)
-ImageSegmentationData = make_typefun(
-    'ImageSegmentationData',
-    'image', 'target_image', 'key', 'classes', 'class_weights',
-)
-MaskedImageSegmentationData = make_typefun(
-    'MaskedImageSegmentationData',
-    'image', 'label_image', 'mask', 'key', 'classes', 'class_weights',
-)
-SegmentationDisparityData = make_typefun(
-    'SegmentationDisparityData',
-    'image', 'disparity_map', 'label_image', 'key', 'classes', 'class_weights',
-)
-SaliencyData = make_typefun(
-    'SaliencyData',
-    'image', 'experiments', 'key',
-)
-SaliencyExperiment = make_typefun(
-    'SaliencyExperiment',
-    'locations', 'map',
-)
-UnsupervisedImageData = make_typefun(
-    'UnsupervisedImageData',
-    'image', 'key',
-)
+def __generate_types():
+    root = pt.dirname(__file__)
+    types_json = pt.join(root, '_types.json')
+    types_py = pt.join(root, '_types.py')
+    if (pt.exists(types_json) and not pt.exists(types_py)) \
+    or pt.getmtime(types_json) >= pt.getmtime(types_py):
+        with open(types_json) as f:
+            typespec = json.load(f)
+        with open(types_py, 'w') as f:
+            f.write('from __future__ import unicode_literals\n')
+            for typename, keys in typespec.items():
+                f.write('\n\n')
+                f.write(make_typefun(typename, keys))
+
+
+__generate_types()
+from ._types import *

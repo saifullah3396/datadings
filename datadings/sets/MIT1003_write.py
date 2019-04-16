@@ -24,7 +24,6 @@ import scipy.io
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from . import SaliencyData
 from . import SaliencyExperiment
@@ -81,18 +80,15 @@ def write_sets(indir, outdir, shuffle=True):
         'http://people.csail.mit.edu/tjudd/WherePeopleLook/DATA.zip',
         datapath
     )
-    printer = IntervalPrinter()
     with zipfile.ZipFile(imagepath) as imagezip:
         with zipfile.ZipFile(datapath) as datazip:
             experiments = __find_all_experiments(datazip)
-            with FileWriter(pt.join(outdir, 'MIT1003.msgpack')) as writer:
-                names = [f for f in imagezip.namelist() if f.endswith('.jpeg')]
+            names = [f for f in imagezip.namelist() if f.endswith('.jpeg')]
+            with FileWriter(pt.join(outdir, 'MIT1003.msgpack'), total=len(names)) as writer:
                 if shuffle:
                     random.shuffle(names)
                 for path in names:
                     write_image(imagezip, datazip, experiments, path, writer)
-                    printer.update()
-    printer.print_total_updates()
 
 
 def main():

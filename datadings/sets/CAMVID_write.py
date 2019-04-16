@@ -27,7 +27,6 @@ from .VOC2012_write import sorted_values
 from .VOC2012_write import print_values
 from .VOC2012 import median_frequency_weights
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from . import ImageSegmentationData
 from .CAMVID import CLASSES
@@ -74,19 +73,16 @@ def _get_pairs(fp, root_dir):
 
 def write_sets(indir, outdir, shuffle=True):
     datapath, root_dir, pairs_dir = _prepare_indir(indir)
-    printer = IntervalPrinter()
     with zipfile.ZipFile(datapath) as imagezip:
         for split in ('test', 'val', 'train'):
             outpath = pt.join(outdir, 'CAMVID_%s.msgpack' % split)
-            with FileWriter(outpath) as writer:
-                pairs_path = pt.join(pairs_dir, '%s.txt' % split)
-                pairs = _get_pairs(imagezip.open(pairs_path), root_dir)
+            pairs_path = pt.join(pairs_dir, '%s.txt' % split)
+            pairs = _get_pairs(imagezip.open(pairs_path), root_dir)
+            with FileWriter(outpath, total=len(pairs)) as writer:
                 if shuffle:
                     random.shuffle(pairs)
                 for pair in pairs:
                     write_image(imagezip, writer, *pair)
-                    printer.update()
-    printer.print_total_updates()
 
 
 def _segmap(imagezip, path):

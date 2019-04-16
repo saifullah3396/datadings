@@ -40,7 +40,6 @@ except ImportError:
 
 from ..writer import FileWriter
 from . import ImageClassificationData
-from ..tools import IntervalPrinter
 
 
 def __yield_ilsvrc2012_metadata(name, shuffle):
@@ -60,16 +59,17 @@ def __verify_image(data, compress):
     return encode_jpeg(im) if compress else data
 
 
+TOTAL = {'train': 1280000, 'val': 50000, 'test': 100000}
+
+
 def write_sets(indir, outdir, shuffle=True, compress=False):
     if not pt.exists(outdir):
         os.makedirs(outdir)
     for name in ('train', 'val'):
-        print(name)
-        printer = IntervalPrinter()
         datadir = pt.join(indir, name)
         gen = __yield_ilsvrc2012_metadata(name, shuffle)
         lock = th.Lock()
-        with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
+        with FileWriter(pt.join(outdir, name + '.msgpack'), total=TOTAL[name]) as writer:
             def write_image(item):
                 filename, label = item
                 path = pt.join(datadir, filename)
@@ -82,12 +82,10 @@ def write_sets(indir, outdir, shuffle=True, compress=False):
                     )
                 with lock:
                     writer.write(image)
-                printer.update()
             pool = ThreadPool(cpu_count()*4)
             result = pool.map_async(write_image, gen)
             while not result.ready():
                 result.wait(1000)
-        printer.print_total_updates()
 
 
 def main():

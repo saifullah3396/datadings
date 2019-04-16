@@ -25,7 +25,6 @@ from six import text_type
 from ..writer import FileWriter
 from .iSUN import iSUNData
 from .iSUN import iSUNExperiment
-from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 
 
@@ -78,15 +77,11 @@ def write_sets(indir, outdir, shuffle=True):
     download_if_not_found(url_prefix + 'image.zip', imagepath)
     with zipfile.ZipFile(imagepath) as imagezip:
         for name in ('training', 'validation', 'testing'):
-            print(name)
-            printer = IntervalPrinter()
             datapath = pt.join(indir, name + '.mat')
             download_if_not_found(url_prefix + '%s.mat' % name, datapath)
             with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
                 for image in __yield_isun_metadata(datapath, shuffle):
                     __write_image(image, imagezip, writer)
-                    printer.update()
-            printer.print_total_updates()
 
 
 def main():

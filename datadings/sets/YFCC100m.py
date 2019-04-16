@@ -267,9 +267,9 @@ class YFCC100mReader(Reader):
 
 
 def main():
-    from ..tools import IntervalPrinter
+    from ..tools import ProgressPrinter
     from ..tools import print_over
-    printer = IntervalPrinter(0.5)
+    printer = ProgressPrinter(0.5)
     reader = YFCC100mReader(
         '/ds2/YFCC100m/image_packs/', validator=validate_image
     )

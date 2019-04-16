@@ -16,9 +16,8 @@ from collections import defaultdict
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
-from .ANP460 import ANP460Data
-from .ANP460 import ANP460Experiment
+from . import ANP460Data
+from . import ANP460Experiment
 
 
 def __lines(s):
@@ -86,19 +85,16 @@ def __find_all_experiments(datazip):
 def write_sets(indir, outdir, shuffle=True):
     imagepath = pt.join(indir, 'images_original.zip')
     datapath = pt.join(indir, 'wrangled_data.zip')
-    printer = IntervalPrinter()
     with zipfile.ZipFile(imagepath) as imagezip:
         with zipfile.ZipFile(datapath) as datazip:
             anp_list = __get_anp_list(datazip)
             experiments = __find_all_experiments(datazip)
-            with FileWriter(pt.join(outdir, 'ANP460.msgpack')) as writer:
-                names = [f for f in imagezip.namelist() if f.endswith('.jpg')]
-                if shuffle:
-                    random.shuffle(names)
+            names = [f for f in imagezip.namelist() if f.endswith('.jpg')]
+            if shuffle:
+                random.shuffle(names)
+            with FileWriter(pt.join(outdir, 'ANP460.msgpack'), total=len(names)) as writer:
                 for path in names:
                     write_image(imagezip, datazip, anp_list, experiments, path, writer)
-                    printer.update()
-    printer.print_total_updates()
 
 
 def main():

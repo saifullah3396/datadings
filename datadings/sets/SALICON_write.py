@@ -25,7 +25,6 @@ from six import text_type
 from ..writer import FileWriter
 from . import SaliencyData
 from .SALICON import SALICONExperiment
-from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 
 
@@ -77,14 +76,11 @@ def write_sets(indir, outdir, shuffle=True):
     with zipfile.ZipFile(pt.join(indir, 'image.zip')) as imagezip:
         for name in ('training', 'validation', 'testing'):
             print(name)
-            printer = IntervalPrinter()
             datapath = pt.join(indir, name + '.mat')
             download_if_not_found(url_prefix + '%s.mat' % name, datapath)
             with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
                 for image in _yield_salicon_metadata(datapath, shuffle):
                     __write_image(image, imagezip, writer)
-                    printer.update()
-            printer.print_total_updates()
 
 
 def main():

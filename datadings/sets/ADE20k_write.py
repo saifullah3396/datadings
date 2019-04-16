@@ -1,4 +1,4 @@
-"""Create Vaihingen data set files.
+"""Create ADE20k data set files.
 
 The data set is described here:
     http://groups.csail.mit.edu/vision/datasets/ADE20K/ADE20K_2016_07_26.zip
@@ -23,7 +23,6 @@ from PIL import Image
 
 from . import ImageSegmentationData
 from ..writer import FileWriter
-from ..tools import IntervalPrinter
 from ..tools import download_if_not_found
 from ..matlab import loadmat
 from ..matlab import iter_fields
@@ -41,7 +40,7 @@ DATASET_FILE = 'ADE20K_2016_07_26.zip'
 def load_index(imagezip):
     data = imagezip.read(pt.join('ADE20K_2016_07_26', 'index_ade20k.mat'))
     index = loadmat(data)['index']
-    return {k: v for k, v in iter_fields(index)}
+    return dict(iter_fields(index))
 
 
 def get_classes(index):
@@ -92,12 +91,14 @@ def yield_images(names):
 
 
 def write_set(imagezip, outdir, name, classes, class_weights):
-    print(name)
-    printer = IntervalPrinter()
-    with FileWriter(pt.join(outdir, name + '.msgpack')) as writer:
-        for im, seg, parts in yield_images(imagezip.namelist()):
-            if name not in im:
-                continue
+    names = [p for p in imagezip.namelist()
+             if name in p and p.endswith('.jpg')]
+    writer = FileWriter(
+        pt.join(outdir, name + '.msgpack'),
+        total=len(names),
+    )
+    with writer:
+        for im, seg, parts in yield_images(names):
             imdata = imagezip.read(im)
             segdata = imagezip.read(seg)
             # partsdata = [imagezip.read(p) for p in parts]
@@ -108,8 +109,6 @@ def write_set(imagezip, outdir, name, classes, class_weights):
                 classes,
                 class_weights
             ))
-            printer.update()
-    printer.print_total_updates()
 
 
 def write_sets(indir, outdir):

@@ -3,7 +3,8 @@ from __future__ import division
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
-from . import make_typefun
+
+from . import CIFAR100Data
 
 
 CLASSES = (
@@ -134,10 +135,4 @@ COARSE_CLASSES = (
     'trees',
     'vehicles_1',
     'vehicles_2'
-)
-
-
-CIFAR100Data = make_typefun(
-    'CIFAR100Data',
-    'image', 'label', 'coarse_label', 'key',
 )
