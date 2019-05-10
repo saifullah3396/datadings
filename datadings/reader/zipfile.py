@@ -43,7 +43,7 @@ def yield_zipfile(zipfile, patterns, separator):
     for pattern in patterns:
         if pt.isfile(pattern):
             # pattern is csv-like (path, label) file
-            gens.append(yield_file(pattern, separator))
+            gens.append(yield_file(pattern, '', separator))
         else:
             if infos is None:
                 infos = zipfile.infolist()
