@@ -70,40 +70,20 @@ class ListReader(Reader):
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def iter(self, yield_key=False):
-        """
-        :param yield_key: if True, yields (key, sample) pairs
-        """
-        try:
-            if yield_key:
-                while 1:
-                    yield self.get_key(), self.next()
-            else:
-                while 1:
-                    yield self.next()
-        except StopIteration:
-            self._i = 0
-            raise
-
-    __iter__ = iter
-
     def __len__(self):
         return len(self._samples)
 
     def __next__(self):
-        try:
-            s = dict(self._samples[self._i])
-            self._i += 1
-            if self._loadfun is not None:
-                s['data'] = self._loadfun(s)
-            if s['label'] is None:
-                s.pop('label')
-            else:
-                s['labelstring'] = s['label']
-                s['label'] = self._labels[s['label']]
-            return self._convertfun(s)
-        except IndexError:
-            raise StopIteration()
+        s = dict(self._samples[self._i])
+        self._i += 1
+        if self._loadfun is not None:
+            s['data'] = self._loadfun(s)
+        if s['label'] is None:
+            s.pop('label')
+        else:
+            s['labelstring'] = s['label']
+            s['label'] = self._labels[s['label']]
+        return self._convertfun(s)
 
     next = __next__
 
@@ -113,23 +93,6 @@ class ListReader(Reader):
         :return:
         """
         return pack(self.next())
-
-    def rawiter(self, yield_key=False):
-        """
-        Like iter, but yields raw bytes.
-
-        :param yield_key: if True, yields (key, sample) pairs
-        """
-        try:
-            if yield_key:
-                while 1:
-                    yield self.get_key(), self.rawnext()
-            else:
-                while 1:
-                    yield self.rawnext()
-        except StopIteration:
-            self._i = 0
-            raise
 
     def seek_index(self, index):
         """

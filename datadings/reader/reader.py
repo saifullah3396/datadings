@@ -36,12 +36,15 @@ class Reader(object):
         """
         :param yield_key: if True, yields (key, sample) pairs
         """
-        if yield_key:
-            while 1:
-                yield self.get_key(), self.next()
-        else:
-            while 1:
-                yield self.next()
+        try:
+            if yield_key:
+                while 1:
+                    yield self.get_key(), self.next()
+            else:
+                while 1:
+                    yield self.next()
+        except IndexError:
+            return
 
     __iter__ = iter
 
@@ -71,12 +74,15 @@ class Reader(object):
 
         :param yield_key: if True, yields (key, sample) pairs
         """
-        if yield_key:
-            while 1:
-                yield self.get_key(), self.rawnext()
-        else:
-            while 1:
-                yield self.rawnext()
+        try:
+            if yield_key:
+                while 1:
+                    yield self.get_key(), self.rawnext()
+            else:
+                while 1:
+                    yield self.rawnext()
+        except IndexError:
+            return
 
     @abstractmethod
     def seek_index(self, index):

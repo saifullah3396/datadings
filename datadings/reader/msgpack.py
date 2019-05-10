@@ -63,7 +63,7 @@ class MsgpackReader(Reader):
         except IndexError:
             raw = self._infile.read()
             if not raw:
-                raise StopIteration()
+                raise
             return raw
 
     def seek_index(self, index):
