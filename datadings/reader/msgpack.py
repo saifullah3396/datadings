@@ -22,13 +22,13 @@ class MsgpackReader(Reader):
     Can Optionally verify the integrity of dataset and index files
     if md5 file is present.
     """
-    def __init__(self, infile):
+    def __init__(self, infile, buffering=4*1024*1024):
         """
         :param infile: dataset file to load
         :raises IOError: if dataset or index cannot be loaded
         """
         self._path = infile
-        self._infile = io.FileIO(infile, 'rb')
+        self._infile = io.open(infile, 'rb', buffering)
         key_to_position = _load_index(infile + '.index')
         self._keys = [v for v, _ in key_to_position]
         self._positions = [v for _, v in key_to_position]
