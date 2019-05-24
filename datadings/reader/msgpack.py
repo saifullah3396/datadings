@@ -28,6 +28,7 @@ class MsgpackReader(Reader):
         :raises IOError: if dataset or index cannot be loaded
         """
         self._path = infile
+        self._buffering = buffering
         self._infile = io.open(infile, 'rb', buffering)
         key_to_position = _load_index(infile + '.index')
         self._keys = [v for v, _ in key_to_position]
@@ -35,6 +36,12 @@ class MsgpackReader(Reader):
         self._key_to_index_dict = None
         self._len = len(self._positions)
         self._i = 0
+
+    def __copy__(self):
+        reader = MsgpackReader.__new__(MsgpackReader)
+        reader.__dict__.update(self.__dict__)
+        reader._infile = io.open(self._path, 'rb', self._buffering)
+        return reader
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._infile.close()
@@ -78,7 +85,9 @@ class MsgpackReader(Reader):
     @property
     def _key_to_index(self):
         if self._key_to_index_dict is None:
-            self._key_to_index_dict = dict(enumerate(self._keys))
+            self._key_to_index_dict = dict(
+                (k, i) for i, k in enumerate(self._keys)
+            )
         return self._key_to_index_dict
 
     def seek_key(self, key):

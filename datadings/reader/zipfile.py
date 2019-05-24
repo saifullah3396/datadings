@@ -63,6 +63,8 @@ class ZipFileReader(ListReader):
             exclude=(),
             labels=(),
     ):
+        self._args = (path, patterns, separator, convertfun,
+                      include, exclude, labels)
         self._zipfile = zipfile.ZipFile(path)
         samples = list(yield_zipfile(self._zipfile, patterns, separator))
         samples = [{'key': s, 'label': l} for s, l in samples
@@ -71,3 +73,6 @@ class ZipFileReader(ListReader):
 
     def _load(self, s):
         return self._zipfile.read(s['key'])
+
+    def __copy__(self):
+        return ZipFileReader(*self._args)
