@@ -179,7 +179,7 @@ class Range(Augment):
             yield next(gen)
 
     def seek(self, index):
-        self._reader.seek(index - self.start)
+        self._reader.seek(self.start + index)
 
 
 def split_reader(reader, num_ranges):
