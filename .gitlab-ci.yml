@@ -3,13 +3,13 @@ stages:
   - test
 
 .py36: &py36
-  image: crumpets/torch:1.1.0-python3.6.8-cuda10.0-cudnn7
+  image: quay.io/pypa/manylinux1_x86_64
   variables:
     PYVER: "cp36-cp36m"
 
 
 .py37: &py37
-  image: crumpets/torch:1.1.0-python3.7.3-cuda10.0-cudnn7
+  image: quay.io/pypa/manylinux1_x86_64
   variables:
     PYVER: "cp37-cp37m"
 
