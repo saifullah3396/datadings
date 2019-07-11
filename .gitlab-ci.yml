@@ -2,15 +2,30 @@ stages:
   - build
   - test
 
-run_tests:
-  image: quay.io/pypa/manylinux1_x86_64
+.py36: &py36
+  image: crumpets/torch:1.1.0-python3.6.8-cuda10.0-cudnn7
+  variables:
+    PYVER: "cp36-cp36m"
+
+
+.py37: &py37
+  image: crumpets/torch:1.1.0-python3.7.3-cuda10.0-cudnn7
+  variables:
+    PYVER: "cp37-cp37m"
+
+.test:
   stage: test
   script:
+  - ./install.sh
   - ./test.sh
-  artifacts:
-    paths:
-    - ./*.whl
-    expire_in: 8 hours
+
+test-3.6:
+  <<: *py36
+  extends: .test
+
+test-3.7:
+  <<: *py37
+  extends: .test
 
 
 devel:
