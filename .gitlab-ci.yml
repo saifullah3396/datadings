@@ -16,7 +16,6 @@ stages:
 .test:
   stage: test
   script:
-  - ./install.sh
   - ./test.sh
 
 test-3.6:
