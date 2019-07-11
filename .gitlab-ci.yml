@@ -1,3 +1,18 @@
+stages:
+  - build
+  - test
+
+run_tests:
+  image: quay.io/pypa/manylinux1_x86_64
+  stage: test
+  script:
+  - ./test.sh
+  artifacts:
+    paths:
+    - ./*.whl
+    expire_in: 8 hours
+
+
 devel:
   image: quay.io/pypa/manylinux1_x86_64
   stage: build
