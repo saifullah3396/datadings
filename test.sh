@@ -5,4 +5,4 @@
 /opt/python/cp36-cp36m/bin/pip install pytest-cov
 cd test
 LIBDIR=`/opt/python/cp36-cp36m/bin/python -c"import os.path as pt; import datadings; print(pt.dirname(datadings.__file__))"`
-/opt/python/cp36-cp36m/bin/python -m pytest --cov=$LIBDIR . --cov-report term-missing
+/opt/python/cp36-cp36m/bin/python -m pytest --cov=$LIBDIR * --cov-report term-missing
