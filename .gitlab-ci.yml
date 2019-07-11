@@ -26,27 +26,45 @@ test-3.7:
   <<: *py37
   extends: .test
 
-
-devel:
-  image: quay.io/pypa/manylinux1_x86_64
+.build:
   stage: build
   script:
   - ./build_wheels.sh
   artifacts:
     paths:
     - ./*.whl
+
+
+.devel:
+  extends: .build
+  artifacts:
     expire_in: 8 hours
   except:
   - tags
 
-release:
-  image: quay.io/pypa/manylinux1_x86_64
-  stage: build
-  script:
-  - ./build_wheels.sh
+
+.release:
+  extends: .build
   artifacts:
-    paths:
-    - ./*.whl
     expire_in: 1000 years
   only:
   - tags
+
+
+devel-3.6:
+  <<: *py36
+  extends: .devel
+
+devel-3.7:
+  <<: *py37
+  extends: .devel
+
+release-3.6:
+  <<: *py36
+  extends: .release
+
+release-3.7:
+  <<: *py37
+  extends: .release
+
+
