@@ -27,6 +27,10 @@ def convert_ImageClassificationData(sample):
     )
 
 
+def identity(sample):
+    return sample
+
+
 def noop(sample):
     return sample.get('data')
 
@@ -39,7 +43,7 @@ class ListReader(Reader):
             self,
             samples,
             labels=None,
-            convertfun=convert_ImageClassificationData,
+            convertfun=identity,
             loadfun=noop,
     ):
         """
@@ -78,8 +82,8 @@ class ListReader(Reader):
         self._i += 1
         if self._loadfun is not None:
             s['data'] = self._loadfun(s)
-        if s['label'] is None:
-            s.pop('label')
+        if s.get('label') is None:
+            s.pop('label', None)
         else:
             s['labelstring'] = s['label']
             s['label'] = self._labels[s['label']]
