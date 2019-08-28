@@ -6,6 +6,9 @@ The data set is described here:
 The tar files need to be unpacked.
 """
 from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import absolute_import
 
 import threading as th
 import os
@@ -17,14 +20,17 @@ import warnings
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 
+import numpy as np
+from PIL import Image
+
 try:
     from turbojpeg import decode_jpeg
+    # noinspection PyUnresolvedReferences
     from turbojpeg import encode_jpeg as _encode_jpeg
 
-    def encode_jpeg(image):
-        return _encode_jpeg(image, 85, colorsubsampling='422')
+    def encode_jpeg(image, quality=85):
+        return _encode_jpeg(image, quality=quality, colorsubsampling='422')
 except ImportError:
-    from PIL import Image
 
     def decode_jpeg(data):
         b = io.BytesIO(data)
@@ -32,9 +38,9 @@ except ImportError:
         im.load()
         return im
 
-    def encode_jpeg(data):
+    def encode_jpeg(data, quality=85):
         b = io.BytesIO(data)
-        data.convert('RGB').save(b, format='JPEG', quality=85, subsampling=1)
+        data.convert('RGB').save(b, format='JPEG', quality=quality, subsampling=1)
         return b.getvalue()
     warnings.warn('turbojpeg not available, falling back to PIL')
 
@@ -54,9 +60,19 @@ def __yield_ilsvrc2012_metadata(name, shuffle):
             yield item
 
 
-def __verify_image(data, compress):
+def verify_image(data, quality=None, normal_size=3*375*500, long_side=500):
     im = decode_jpeg(data)
-    return encode_jpeg(im) if compress else data
+    if quality is not None and im.size > 0.5*normal_size:
+        if im.size > normal_size*1.5:
+            h, w = im.shape[:2]
+            s = max(h, w)
+            r = long_side/s
+            h, w = int(round(r*h)), int(round(r*w))
+            pil = Image.fromarray(im, 'RGB')
+            im = np.array(pil.resize((w, h)))
+        return encode_jpeg(im, quality=quality)
+    else:
+        return data
 
 
 TOTAL = {'train': 1280000, 'val': 50000, 'test': 100000}
@@ -65,7 +81,8 @@ TOTAL = {'train': 1280000, 'val': 50000, 'test': 100000}
 def write_sets(indir, outdir, shuffle=True, compress=False):
     if not pt.exists(outdir):
         os.makedirs(outdir)
-    for name in ('train', 'val'):
+    quality = 85 if compress else None
+    for name in ('val', 'train', ):
         datadir = pt.join(indir, name)
         gen = __yield_ilsvrc2012_metadata(name, shuffle)
         lock = th.Lock()
@@ -74,7 +91,7 @@ def write_sets(indir, outdir, shuffle=True, compress=False):
                 filename, label = item
                 path = pt.join(datadir, filename)
                 with io.FileIO(path) as f:
-                    data = __verify_image(f.read(), compress)
+                    data = verify_image(f.read(), quality)
                     image = ImageClassificationData(
                         data,
                         int(label),
