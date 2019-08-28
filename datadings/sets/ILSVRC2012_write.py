@@ -69,7 +69,7 @@ def verify_image(data, quality=None, normal_size=3*375*500, long_side=500):
             r = long_side/s
             h, w = int(round(r*h)), int(round(r*w))
             pil = Image.fromarray(im, 'RGB')
-            im = np.array(pil.resize((w, h)))
+            im = np.array(pil.resize((w, h), resample=Image.LANCZOS))
         return encode_jpeg(im, quality=quality)
     else:
         return data
