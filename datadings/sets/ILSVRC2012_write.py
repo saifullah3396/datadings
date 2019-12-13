@@ -16,33 +16,14 @@ import os.path as pt
 import io
 import gzip
 import random
-import warnings
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 
 import numpy as np
 from PIL import Image
-
-try:
-    from turbojpeg import decode_jpeg
-    # noinspection PyUnresolvedReferences
-    from turbojpeg import encode_jpeg as _encode_jpeg
-
-    def encode_jpeg(image, quality=85):
-        return _encode_jpeg(image, quality=quality, colorsubsampling='422')
-except ImportError:
-
-    def decode_jpeg(data):
-        b = io.BytesIO(data)
-        im = Image.open(b)
-        im.load()
-        return im
-
-    def encode_jpeg(data, quality=85):
-        b = io.BytesIO(data)
-        data.convert('RGB').save(b, format='JPEG', quality=quality, subsampling=1)
-        return b.getvalue()
-    warnings.warn('turbojpeg not available, falling back to PIL')
+from simplejpeg import decode_jpeg
+from simplejpeg import decode_jpeg_header
+from simplejpeg import encode_jpeg as encode_jpeg
 
 from ..writer import FileWriter
 from . import ImageClassificationData
@@ -62,7 +43,18 @@ def __yield_ilsvrc2012_metadata(name, shuffle):
 
 def verify_image(data, quality=None, normal_size=3*375*500, long_side=500):
     im = decode_jpeg(data)
-    if quality is not None and im.size > 0.5*normal_size:
+    _, _, colorspace, _ = decode_jpeg_header(data)
+    # if images are CMYK or encode quality is given and they are big enough
+    if colorspace == 'CMYK' or (quality is not None and im.size > 0.5*normal_size):
+        # for CMYK images, quality might not be given, so assume 99
+        if quality is None:
+            quality = 99
+        # default to subsampling 422
+        # use full color resolution for small images
+        colorsubsampling = '422'
+        if im.size <= 0.5*normal_size:
+            colorsubsampling = '444'
+        # downscale large images
         if im.size > normal_size*1.5:
             h, w = im.shape[:2]
             s = max(h, w)
@@ -70,7 +62,7 @@ def verify_image(data, quality=None, normal_size=3*375*500, long_side=500):
             h, w = int(round(r*h)), int(round(r*w))
             pil = Image.fromarray(im, 'RGB')
             im = np.array(pil.resize((w, h), resample=Image.LANCZOS))
-        return encode_jpeg(im, quality=quality)
+        return encode_jpeg(im, quality=quality, colorsubsampling=colorsubsampling)
     else:
         return data
 

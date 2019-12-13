@@ -7,3 +7,4 @@ msgpack_numpy>=0.4.2<1.0.0
 wget>=3.0<4.0
 glob2>=0.5<1.0
 tqdm>=4.23.0<5.0.0
+simplejpeg>=1.2.5
