@@ -42,13 +42,16 @@ class MsgpackReader(Reader):
         reader.__dict__.update(self.__dict__)
         reader._infile = io.open(self._path, 'rb', self._buffering)
         return reader
+    
+    def _close(self):
+        if hasattr(self, 'infile') and not self._infile.closed:
+            self._infile.close()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._infile.close()
+        self._close()
 
     def __del__(self):
-        if not self._infile.closed:
-            self._infile.close()
+        self._close()
 
     def __len__(self):
         return self._len
