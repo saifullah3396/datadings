@@ -10,7 +10,10 @@ from datadings.reader import ZipFileReader
 from datadings.reader import DirectoryReader
 
 
-def bench(infile, raw, type_):
+def bench(kwargs):
+    infile = kwargs['infile']
+    raw = kwargs['raw']
+    type_ = kwargs['type']
     if type_ == 'msgpack':
         r = MsgpackReader(infile)
     elif type_ == 'zip':
@@ -83,7 +86,7 @@ def main():
         kw = {
             'infile': args.infile,
             'raw': args.raw,
-            'type_': args.type
+            'type': args.type
         }
         times = pool.map(bench, [kw]*n)
         num, delta, speed, throughput = zip(*times)
