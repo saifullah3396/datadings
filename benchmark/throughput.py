@@ -1,5 +1,5 @@
+import sys
 import time
-import os.path as pt
 import multiprocessing as mp
 from statistics import mean
 from statistics import stdev
@@ -19,16 +19,20 @@ def bench(infile, raw, type_):
     else:
         raise ValueError('unknown reader type %r' % type_)
     n = 0
+    read_bytes = 0
     a = time.time()
     if raw:
-        for _ in r.rawiter():
+        for sample in r.rawiter():
             n += 1
+            read_bytes += len(sample)
     else:
-        for _ in r:
+        for sample in r:
             n += 1
+            read_bytes += sys.getsizeof(sample) \
+                       + sum(sys.getsizeof(v) for v in sample.values)
     d = time.time() - a
     s = n / d
-    b = pt.getsize(infile) / d / 1024 / 1024
+    b = read_bytes / d / 1024 / 1024
     return n, d, s, b
 
 
