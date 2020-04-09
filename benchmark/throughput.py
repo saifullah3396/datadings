@@ -1,5 +1,6 @@
 import sys
 import time
+import json
 import multiprocessing as mp
 from statistics import mean
 from statistics import stdev
@@ -55,6 +56,7 @@ def main():
         '--replicas',
         default=1,
         type=int,
+        nargs='+',
         help='number of processes to run parallel',
     )
     parser.add_argument(
@@ -63,25 +65,49 @@ def main():
         choices=('msgpack', 'zip', 'dir'),
         type=str
     )
+    parser.add_argument(
+        '-o', '--output',
+        default='throughput_results.json',
+        type=str
+    )
     args, unknown = parser.parse_known_args()
-    n = args.replicas
-    print(f'Starting {n} processes')
-    pool = mp.Pool(n, maxtasksperchild=1)
-    times = pool.starmap(bench, zip(*zip(*[(args.infile, args.raw, args.type)] * n)))
-    num, delta, speed, throughput = zip(*times)
-    if not all([n == max(num) for n in num]):
-        raise RuntimeError('Processes read unequal number of samples: '
-                           f'{", ".join(num)}')
-    if n > 1:
-        print(f'{max(num)} samples read '
-              f'in {mean(delta):.2f} (± {stdev(delta):.2f}) seconds, '
-              f'{mean(speed):.2f} (± {stdev(speed):.2f}) samples/s, '
-              f'{mean(throughput):.2f} (± {stdev(throughput):.2f}) MB/s')
-    else:
-        print(f'{max(num)} samples read '
-              f'in {mean(delta):.2f} seconds, '
-              f'{mean(speed):.2f} samples/s, '
-              f'{mean(throughput):.2f} MB/s')
+    results = {
+        'infile': args.infile,
+        'raw': args.raw,
+        'type': args.type,
+        'replicas': {}
+    }
+    for n in args.replicas:
+        print(f'Starting {n} processes')
+        pool = mp.Pool(n, maxtasksperchild=1)
+        kw = {
+            'infile': args.infile,
+            'raw': args.raw,
+            'type_': args.type
+        }
+        times = pool.map(bench, [kw]*n)
+        num, delta, speed, throughput = zip(*times)
+        results['replicas'][n] = {
+            'num': num,
+            'delta': delta,
+            'speed': speed,
+            'throughput': throughput
+        }
+        if not all([n == max(num) for n in num]):
+            raise RuntimeError('Processes read unequal number of samples: '
+                               f'{", ".join(num)}')
+        if n > 1:
+            print(f'{max(num)} samples read '
+                  f'in {mean(delta):.2f} (± {stdev(delta):.2f}) seconds, '
+                  f'{mean(speed):.2f} (± {stdev(speed):.2f}) samples/s, '
+                  f'{mean(throughput):.2f} (± {stdev(throughput):.2f}) MB/s')
+        else:
+            print(f'{max(num)} samples read '
+                  f'in {mean(delta):.2f} seconds, '
+                  f'{mean(speed):.2f} samples/s, '
+                  f'{mean(throughput):.2f} MB/s')
+    with open(args.output, 'w') as f:
+        json.dump(results, f)
 
 
 if __name__ == '__main__':
