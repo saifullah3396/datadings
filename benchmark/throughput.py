@@ -63,7 +63,7 @@ def main():
     n = args.replicas
     print(f'Starting {n} processes')
     pool = mp.Pool(n, maxtasksperchild=1)
-    times = pool.starmap(bench, zip(range(n), (args.raw,)*n, (args.type,)*n))
+    times = pool.starmap(bench, zip(*zip(*[(args.infile, args.raw, args.type)] * 3)))
     num, delta, speed, throughput = zip(*times)
     if not all([n == max(num) for n in num]):
         raise RuntimeError('Processes read unequal number of samples: '
