@@ -1,12 +1,23 @@
 import time
 import os.path as pt
 import multiprocessing as mp
+from statistics import mean
+from statistics import stdev
 
 from datadings.reader import MsgpackReader
+from datadings.reader import ZipFileReader
+from datadings.reader import DirectoryReader
 
 
-def bench(infile, raw):
-    r = MsgpackReader(infile)
+def bench(infile, raw, type_):
+    if type_ == 'msgpack':
+        r = MsgpackReader(infile)
+    elif type == 'zip':
+        r = ZipFileReader(infile)
+    elif type == 'dir':
+        r = DirectoryReader((infile,))
+    else:
+        raise ValueError('unknown reader type %r' % type_)
     n = 0
     a = time.time()
     if raw:
@@ -18,8 +29,7 @@ def bench(infile, raw):
     d = time.time() - a
     s = n / d
     b = pt.getsize(infile) / d / 1024 / 1024
-    print('%s samples read in %.2f seconds, %.2f samples/s, %.2f MB/s'
-          % (n, d, s, b), end='')
+    return n, d, s, b
 
 
 def main():
@@ -43,14 +53,31 @@ def main():
         type=int,
         help='number of processes to run parallel',
     )
+    parser.add_argument(
+        '--type',
+        default='msgpack',
+        choices=('msgpack', 'zip', 'dir'),
+        type=str
+    )
     args, unknown = parser.parse_known_args()
-    print('Starting %d processes' % args.replicas)
-    procs = [mp.Process(target=bench, args=(args.infile, args.raw))
-             for _ in range(args.replicas)]
-    for p in procs:
-        p.start()
-    for p in procs:
-        p.join()
+    n = args.replicas
+    print(f'Starting {n} processes')
+    pool = mp.Pool(n, maxtasksperchild=1)
+    times = pool.starmap(bench, zip(range(n), (args.raw,)*n, (args.type,)*n))
+    num, delta, speed, throughput = zip(*times)
+    if not all([n == max(num) for n in num]):
+        raise RuntimeError('Processes read unequal number of samples: '
+                           f'{", ".join(num)}')
+    if n > 1:
+        print(f'{max(num)} samples read '
+              f'in {mean(delta):.2f} (± {stdev(delta):.2f}) seconds, '
+              f'{mean(speed):.2f} (± {stdev(speed):.2f}) samples/s, '
+              f'{mean(throughput):.2f} (± {stdev(throughput):.2f}) MB/s')
+    else:
+        print(f'{max(num)} samples read '
+              f'in {mean(delta):.2f} seconds, '
+              f'{mean(speed):.2f} samples/s, '
+              f'{mean(throughput):.2f} MB/s')
 
 
 if __name__ == '__main__':
