@@ -12,9 +12,9 @@ from datadings.reader import DirectoryReader
 def bench(infile, raw, type_):
     if type_ == 'msgpack':
         r = MsgpackReader(infile)
-    elif type == 'zip':
+    elif type_ == 'zip':
         r = ZipFileReader(infile)
-    elif type == 'dir':
+    elif type_ == 'dir':
         r = DirectoryReader((infile,))
     else:
         raise ValueError('unknown reader type %r' % type_)
