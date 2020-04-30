@@ -35,7 +35,7 @@ def SaliencyExperiment(locations, map): return {u'locations': locations, u'map':
 def SegmentationDisparityData(image, disparity_map, label_image, key, classes, class_weights): return {u'image': image, u'disparity_map': disparity_map, u'label_image': label_image, u'key': key, u'classes': classes, u'class_weights': class_weights}
 
 
-def UnsupervisedImageData(image, key): return {u'image': image, u'key': key}
+def ImageData(image, key): return {u'image': image, u'key': key}
 
 
 def iSUNData(image, experiments, key, scenecategory): return {u'image': image, u'experiments': experiments, u'key': key, u'scenecategory': scenecategory}

@@ -15,7 +15,7 @@ import cv2
 import msgpack
 
 from ..reader import Reader
-from . import UnsupervisedImageData as YFCC100mData
+from . import ImageData as YFCC100mData
 from .YFCC100m_counts import FILE_COUNTS
 from .YFCC100m_counts import FILES_TOTAL
 
