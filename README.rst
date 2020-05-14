@@ -76,6 +76,7 @@ InriaBuildings_   Inria Areal Image Labeling Dataset (Buildings), Segmentation, 
 MIT1003_          Eye-Tracking, Saliency, Learning to predict where humans look
 MIT300_           Eye-Tracking, Saliency
 Places2017_       MIT Places, Scene Recognition
+Places365_        MIT Places365, Scene Recognition
 RIT18_            High-Res Multispectral Semantic Segmentation, Remote Sensing
 SALICON_          Saliency in Context, Eye-Tracking
 VOC2012_          Pascal Visual Object Classes Challenge
@@ -98,6 +99,7 @@ iSUN_             Large-Scale Scene Understanding, Saliency
 .. _MIT1003: http://people.csail.mit.edu/tjudd/WherePeopleLook/index.html
 .. _MIT300: http://saliency.mit.edu/results_mit300.html
 .. _Places2017: http://places.csail.mit.edu/
+.. _Places365: http://places2.csail.mit.edu/
 .. _RIT18: https://github.com/rmkemker/RIT-18
 .. _SALICON: http://salicon.net/
 .. _VOC2012: http://host.robots.ox.ac.uk/pascal/VOC/voc2012/
