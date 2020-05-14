@@ -2,18 +2,20 @@ stages:
   - build
   - test
 
+.image: &image
+  image: quay.io/pypa/manylinux2010_x86_64
+
 .py36: &py36
-  image: quay.io/pypa/manylinux1_x86_64
   variables:
     PYVER: "cp36-cp36m"
 
 
 .py37: &py37
-  image: quay.io/pypa/manylinux1_x86_64
   variables:
     PYVER: "cp37-cp37m"
 
 .test:
+  <<: *image
   stage: test
   script:
   - ./test.sh
@@ -27,6 +29,7 @@ test-3.7:
   extends: .test
 
 .build:
+  <<: *image
   stage: build
   script:
   - ./build_wheels.sh
