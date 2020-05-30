@@ -7,11 +7,13 @@ import os
 import os.path as pt
 import zipfile
 import re
+import io
 from collections import defaultdict
 import gzip
 
 import numpy as np
-import cv2
+from simplejpeg import decode_jpeg
+from PIL import Image
 
 from ..reader import Reader
 from ..msgpack import unpack
@@ -28,30 +30,35 @@ def noop(data):
     return data
 
 
+def decode_fast(data):
+    try:
+        # decode JPEGs at reduced scale for speedup
+        return decode_jpeg(
+            data,
+            'gray',
+            fastdct=True,
+            fastupsample=True,
+            min_height=1,
+            min_width=1
+        )
+    except ValueError:
+        # use pillow in case anything goes wrong
+        bio = io.BytesIO(data)
+        return np.array(Image.open(bio).convert('L'))
+
+
 def validate_image(data):
     if len(data) < 2600 or len(data) == 9218:
         return None
     try:
-        # decode at reduced scale for speedup
-        im = cv2.imdecode(
-            np.frombuffer(data, dtype=np.uint8),
-            cv2.IMREAD_REDUCED_GRAYSCALE_8
-        )
-        # image did not decode properly
-        if im is None:
-            return None
-        # too little data, check for meaningful content
+        im = decode_fast(data)
+        # if only small amounts of data, check for meaningful content,
+        # i.e., at least 5% of all lines in image show some variance
         if len(data) < 20000 and np.percentile(im.var(0), 95) < 50:
-            # print()
-            # print(len(data), np.percentile(im.var(0), 95))
             return None
         return data
-    except cv2.error as e:
-        print(e)
-        if '!buf.empty() && buf.isContinuous() in function imdecode_' in str(e):
-            return None
-        else:
-            raise e
+    except (ValueError, IOError, OSError):
+        return None
 
 
 def _find_zip_key(zips, key):
@@ -195,12 +202,9 @@ class YFCC100mReader(Reader):
         self._validator = validator
         self._next_sample = None
         self._rejected = defaultdict(lambda: set())
-        try:
-            for path in reject_file_paths:
-                with gzip.open(path, 'rb') as f:
-                    self._rejected = _parse_rejected(f, self._rejected)
-        except IOError:
-            pass
+        for path in reject_file_paths:
+            with gzip.open(path, 'rb') as f:
+                self._rejected = _parse_rejected(f, self._rejected)
         if error_file is None:
             self._error_file = DevNull()
         else:
@@ -266,24 +270,41 @@ class YFCC100mReader(Reader):
 
 
 def main():
-    from ..tools import ProgressPrinter
+    import argparse
+
+    from ..tools import make_printer
     from ..tools import print_over
-    printer = ProgressPrinter(0.5)
-    reader = YFCC100mReader(
-        '/ds2/YFCC100m/image_packs/', validator=validate_image
+
+    parser = argparse.ArgumentParser(
+        description='Load and decode every image from given image packs. '
+                    'If an image either does not decode properly or does '
+                    'not contain useful content, its containing zip file '
+                    'and name are written to the reject file.')
+    parser.add_argument(
+        'image_packs',
+        type=str,
+        help='path to directory of image zip files',
     )
-    # reader.seek(29232)
-    n = 0
+    parser.add_argument(
+        '-r', '--rejectfile',
+        type=str,
+        help='path to rejected images log file',
+    )
+
+    args = parser.parse_args()
+
+    printer = make_printer(total=100000000)
+    reader = YFCC100mReader(
+        args.image_packs,
+        validator=validate_image,
+        reject_file_paths=(),
+        error_file=args.rejectfile
+    )
     for key, data in reader.iter(yield_key=True):
-        if n > 0:
-            print(key)
         if data['image'] is None:
-            print(key)
+            print('rejected', key)
         printer.update()
-        n -= 1
-        if not n:
-            break
-    print_over(printer.total_updates)
+    print_over(printer.total_updates, 'images passed testing')
 
 
 if __name__ == '__main__':
