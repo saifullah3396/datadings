@@ -67,13 +67,16 @@ def __requests_download(url, path, chunk_size=256*1024):
     if pt.exists(part_path):
         existing_size = os.stat(part_path).st_size
         resume_header['Range'] = 'bytes=%d-' % existing_size
-    r = requests.get(
-        url,
-        headers=resume_header,
-        stream=True,
-        verify=False,
-        allow_redirects=True
-    )
+    try:
+        r = requests.get(
+            url,
+            headers=resume_header,
+            stream=True,
+            verify=False,
+            allow_redirects=True
+        )
+    except requests.exceptions.RequestException:
+        raise OSError('Could not connect to %s' % url) from None
     if r.status_code in (200, 206):
         total_bytes = int(r.headers.get('content-length', 0)) or None
         printer = make_printer(
@@ -83,12 +86,12 @@ def __requests_download(url, path, chunk_size=256*1024):
             unit_scale=True,
             unit='B'
         )
-        with open(part_path, 'ab' if r.status_code == 206 else 'wb') as f:
+        with printer, open(part_path, 'ab' if r.status_code == 206 else 'wb') as f:
             for chunk in r.iter_content(chunk_size):
                 f.write(chunk)
                 printer.update(len(chunk))
     else:
-        raise IOError(r.status_code)
+        raise OSError('Download error HTTP status %r' % r.status_code)
     r.close()
     os.rename(path + '.part', path)
 
@@ -102,8 +105,9 @@ def download_if_not_found(url, path):
         print('downloading', filename, '-->', path)
         try:
             __requests_download(url, path)
-        except IOError as e:
-            raise IOError('Download failed', e)
+        except (ConnectionError, IOError, OSError) as e:
+            print(e)
+            sys.exit(1)
         print()
 
 
