@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
+import os
 import os.path as pt
 import io
 import codecs
@@ -42,6 +43,9 @@ class Writer(object):
         :param kwargs: keyword arguments for datadings.tools.make_printer
         """
         self._path = outfile
+        outdir = pt.dirname(outfile)
+        if not pt.exists(outdir):
+            os.makedirs(outdir)
         self._outfile = io.open(outfile, 'wb', 1024*1024)
         self._indices = OrderedDict()
         self.written = 0
@@ -101,6 +105,8 @@ class RawWriter(Writer):
     write requires key and data as arguments.
     """
     def write(self, key, data):
+        if key in self._indices:
+            raise ValueError('duplicate key %r not allowed' % key)
         self._indices[key] = self._outfile.tell()
         self._write_data(data)
 
@@ -111,5 +117,8 @@ class FileWriter(Writer):
     Requires sample dicts with a unique "key" value.
     """
     def write(self, sample):
-        self._indices[sample['key']] = self._outfile.tell()
+        key = sample['key']
+        if key in self._indices:
+            raise ValueError('duplicate key %r not allowed' % key)
+        self._indices[key] = self._outfile.tell()
         self._write(sample)
