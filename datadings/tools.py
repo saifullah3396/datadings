@@ -60,21 +60,35 @@ DOWNLOAD_BAR = '{rate_fmt}, ' \
                '{elapsed}<{remaining}'
 
 
-def __requests_download(url, path, chunk_size=4*1024):
+def __requests_download(url, path, chunk_size=256*1024):
     part_path = path + '.part'
-    r = requests.get(url, stream=True, verify=False, allow_redirects=True)
-    if r.status_code == 200:
+    resume_header = {}
+    existing_size = 0
+    if pt.exists(part_path):
+        existing_size = os.stat(part_path).st_size
+        resume_header['Range'] = 'bytes=%d-' % existing_size
+    r = requests.get(
+        url,
+        headers=resume_header,
+        stream=True,
+        verify=False,
+        allow_redirects=True
+    )
+    if r.status_code in (200, 206):
         total_bytes = int(r.headers.get('content-length', 0)) or None
         printer = make_printer(
+            initial=existing_size,
             bar_format=DOWNLOAD_BAR,
             total=total_bytes,
             unit_scale=True,
             unit='B'
         )
-        with open(part_path, 'wb') as f:
+        with open(part_path, 'ab' if r.status_code == 206 else 'wb') as f:
             for chunk in r.iter_content(chunk_size):
                 f.write(chunk)
                 printer.update(len(chunk))
+    else:
+        raise IOError(r.status_code)
     r.close()
     os.rename(path + '.part', path)
 
