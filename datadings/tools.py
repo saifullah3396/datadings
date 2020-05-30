@@ -3,13 +3,12 @@ from __future__ import division
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
-import time
 import sys
 import os
 import os.path as pt
 from itertools import product
 
-import wget
+import requests
 import numpy as np
 import tqdm
 
@@ -55,45 +54,29 @@ def make_printer(bar_format=BAR_FORMAT, miniters=0,
     return p
 
 
-def find_best_unit(value, multiples, units):
-    for m, unit in zip(multiples, units):
-        if value > m:
-            value /= m
-        else:
-            return value, unit
+DOWNLOAD_BAR = '{rate_fmt}, ' \
+               '{n_fmt} of {total_fmt} ' \
+               '({percentage:3.0f}%) ' \
+               '{elapsed}<{remaining}'
 
 
-def find_byte_unit(value):
-    return find_best_unit(value, [1024]*5, ['B', 'KB', 'MB', 'GB', 'TB'])
-
-
-def format_time(seconds):
-    parts = []
-    for divisor in (86400, 3600, 60, 1):
-        t = seconds // divisor
-        seconds -= t * divisor
-        parts.append(t)
-    units = ['days', 'hours', 'minutes', 'seconds']
-    for unit in units:
-        if parts[0] > 0:
-            break
-        parts.pop(0)
-    s = ':'.join('%02d' % p for p in parts) + ' ' + unit
-    if len(s) > 1:
-        s.lstrip('0')
-    return s
-
-
-def _estimate_speed(snapshots):
-    if not snapshots:
-        return None
-    time_a, rem_a = snapshots[0]
-    time_b, rem_b = snapshots[-1]
-    loaded = rem_a - rem_b
-    seconds = time_b - time_a
-    if seconds <= 1:
-        return None
-    return loaded / seconds
+def __requests_download(url, path, chunk_size=4*1024):
+    part_path = path + '.part'
+    r = requests.get(url, stream=True, verify=False, allow_redirects=True)
+    if r.status_code == 200:
+        total_bytes = int(r.headers.get('content-length', 0)) or None
+        printer = make_printer(
+            bar_format=DOWNLOAD_BAR,
+            total=total_bytes,
+            unit_scale=True,
+            unit='B'
+        )
+        with open(part_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size):
+                f.write(chunk)
+                printer.update(len(chunk))
+    r.close()
+    os.rename(path + '.part', path)
 
 
 def download_if_not_found(url, path):
@@ -101,27 +84,12 @@ def download_if_not_found(url, path):
         parent = pt.dirname(path)
         if parent and not pt.exists(parent):
             os.makedirs(parent, mode=0o777)
-        snapshots = []
         filename = pt.basename(path)
-        fmt_first = ' %s / %s      '
-        fmt = ' %s / %s, %s/s, %s left      '
-
-        def _progress(current, total, width=80, _snapshots=snapshots,
-                      _fmt=fmt, _fmt_first=fmt_first):
-            s_current = '%7.2f %s' % find_byte_unit(current)
-            s_total = '%.2f %s' % find_byte_unit(total)
-            rem = total - current
-            _snapshots.append((time.time(), rem))
-            _snapshots = _snapshots[:-10]
-            speed = _estimate_speed(_snapshots)
-            if not speed:
-                return _fmt_first % (s_current, s_total)
-            s_rem = format_time(rem / speed)
-            s_speed = '%6.1f %s' % find_byte_unit(speed)
-            return _fmt % (s_current, s_total, s_speed, s_rem)
-
         print('downloading', filename, '-->', path)
-        wget.download(url, path, bar=_progress)
+        try:
+            __requests_download(url, path)
+        except IOError as e:
+            raise IOError('Download failed', e)
         print()
 
 
