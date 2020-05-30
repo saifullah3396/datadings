@@ -3,7 +3,8 @@ from __future__ import division
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
-from .reader import Reader, pack
+from .reader import Reader
+from ..msgpack import packb
 from ..sets import ImageClassificationData
 
 
@@ -96,7 +97,7 @@ class ListReader(Reader):
         Return the next sample as raw bytes.
         :return:
         """
-        return pack(self.next())
+        return packb(self.next())
 
     def seek_index(self, index):
         """

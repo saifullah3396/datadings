@@ -12,9 +12,10 @@ import gzip
 
 import numpy as np
 import cv2
-import msgpack
 
 from ..reader import Reader
+from ..msgpack import unpack
+from ..msgpack import make_packer
 from . import ImageData as YFCC100mData
 from .YFCC100m_counts import FILE_COUNTS
 from .YFCC100m_counts import FILES_TOTAL
@@ -159,7 +160,7 @@ def yield_from_zips(
 
 
 def _parse_rejected(f, rejected):
-    new_rejected = msgpack.load(f, encoding='utf-8')
+    new_rejected = unpack(f, encoding='utf-8')
     for z, r in new_rejected.items():
         rejected[z].update(r)
     return rejected
@@ -209,9 +210,7 @@ class YFCC100mReader(Reader):
             image_packs_dir, zips, self._rejected, start_index,
             self._validator,
         )
-        self._packer = msgpack.Packer(
-            use_bin_type=True, encoding='utf8'
-        )
+        self._packer = make_packer()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__del__()

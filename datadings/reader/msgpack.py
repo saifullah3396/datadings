@@ -9,10 +9,9 @@ import io
 from collections import OrderedDict
 from os import path as pt
 
-from msgpack import unpack as _unpack
-
 from .reader import Reader
-from .reader import unpack
+from ..msgpack import unpack
+from ..msgpack import unpackb
 
 
 class MsgpackReader(Reader):
@@ -57,7 +56,7 @@ class MsgpackReader(Reader):
         return self._len
 
     def __next__(self):
-        return unpack(self.rawnext())
+        return unpackb(self.rawnext())
 
     next = __next__
 
@@ -68,6 +67,7 @@ class MsgpackReader(Reader):
         """
         try:
             n = self._positions[self._i + 1] - self._positions[self._i]
+            self._infile.seek(self._positions[self._i], 0)
             self._i += 1
             return self._infile.read(n)
         except IndexError:
@@ -139,7 +139,7 @@ def _load_index(path):
     """
     try:
         with io.FileIO(path, 'rb') as f:
-            return _unpack(f, encoding='utf8', object_pairs_hook=list)
+            return unpack(f, object_hook=None, object_pairs_hook=list)
     except IOError:
         return OrderedDict()
 

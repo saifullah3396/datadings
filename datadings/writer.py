@@ -11,9 +11,8 @@ from collections import OrderedDict
 from abc import ABCMeta
 from abc import abstractmethod
 
-import msgpack
-from msgpack_numpy import encode as encode_array
-
+from .msgpack import make_packer
+from .msgpack import packb
 from .tools import make_printer
 
 
@@ -47,9 +46,7 @@ class Writer(object):
         self._indices = OrderedDict()
         self.written = 0
         self._hash = hashlib.md5()
-        self._packer = msgpack.Packer(
-            default=encode_array, use_bin_type=True, encoding='utf8'
-        )
+        self._packer = make_packer()
         if 'desc' not in kwargs:
             kwargs['desc'] = pt.basename(outfile)
         self._printer = make_printer(**kwargs)
@@ -68,7 +65,7 @@ class Writer(object):
         self._outfile.flush()
         self._outfile.close()
         with io.FileIO(self._path + '.index', 'wb') as f:
-            indexdata = msgpack.packb(self._indices)
+            indexdata = packb(self._indices)
             f.write(indexdata)
             indexhash = hashlib.md5(indexdata).hexdigest()
         with codecs.open(self._path + '.md5', 'w') as f:

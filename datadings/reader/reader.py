@@ -5,11 +5,6 @@ from __future__ import absolute_import
 
 from abc import ABCMeta, abstractmethod
 
-from msgpack import packb as _packb
-from msgpack import unpackb as _unpackb
-from msgpack_numpy import encode as _encode
-from msgpack_numpy import decode as _decode
-
 
 class Reader(object):
     """
@@ -112,11 +107,3 @@ class Reader(object):
         Uses current index if none is given.
         """
         pass
-
-
-def pack(b):
-    return _packb(b, encoding='utf8', use_bin_type=True, default=_encode)
-
-
-def unpack(b):
-    return _unpackb(b, encoding='utf8', object_hook=_decode)
