@@ -5,8 +5,6 @@ from __future__ import absolute_import
 
 import codecs
 import hashlib
-import io
-from collections import OrderedDict
 from os import path as pt
 
 from .reader import Reader
@@ -28,8 +26,8 @@ class MsgpackReader(Reader):
         """
         self._path = infile
         self._buffering = buffering
-        self._infile = io.open(infile, 'rb', buffering)
-        key_to_position = _load_index(infile + '.index')
+        self._infile = open(infile, 'rb', buffering)
+        key_to_position = _load_index(infile + '.index', buffering)
         self._keys = [v for v, _ in key_to_position]
         self._positions = [v for _, v in key_to_position]
         self._key_to_index_dict = None
@@ -39,7 +37,7 @@ class MsgpackReader(Reader):
     def __copy__(self):
         reader = MsgpackReader.__new__(MsgpackReader)
         reader.__dict__.update(self.__dict__)
-        reader._infile = io.open(self._path, 'rb', self._buffering)
+        reader._infile = open(self._path, 'rb', self._buffering)
         return reader
 
     def _close(self):
@@ -130,7 +128,7 @@ class MsgpackReader(Reader):
         return hashes[indexname] == hash_md5hex(self._path + '.index', read_size)
 
 
-def _load_index(path):
+def _load_index(path, buffering=4*1024*1024):
     """
     Load an index file as list of (file, position) pairs.
 
@@ -138,7 +136,7 @@ def _load_index(path):
     @return: list of (file, position) index pairs
     """
     try:
-        with io.FileIO(path, 'rb') as f:
+        with open(path, 'rb', buffering) as f:
             return unpack(f, object_hook=None, object_pairs_hook=list)
     except IOError:
         return []
@@ -152,7 +150,7 @@ def hash_md5hex(path, read_size=64*1024):
     @param read_size: read-ahead size
     @return: hexadecimal MD5 hash as string
     """
-    with io.FileIO(path, 'rb') as f:
+    with open(path, 'rb', read_size) as f:
         md5 = hashlib.md5()
         while 1:
             data = f.read(read_size)
