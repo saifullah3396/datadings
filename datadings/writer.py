@@ -5,7 +5,6 @@ from __future__ import absolute_import
 
 import os
 import os.path as pt
-import io
 import codecs
 import hashlib
 from collections import OrderedDict
@@ -46,7 +45,7 @@ class Writer(object):
         outdir = pt.dirname(outfile)
         if not pt.exists(outdir):
             os.makedirs(outdir)
-        self._outfile = io.open(outfile, 'wb', 1024*1024)
+        self._outfile = open(outfile, 'wb', 1024*1024)
         self._indices = OrderedDict()
         self.written = 0
         self._hash = hashlib.md5()
@@ -68,7 +67,7 @@ class Writer(object):
         """
         self._outfile.flush()
         self._outfile.close()
-        with io.FileIO(self._path + '.index', 'wb') as f:
+        with open(self._path + '.index', 'wb') as f:
             indexdata = packb(self._indices)
             f.write(indexdata)
             indexhash = hashlib.md5(indexdata).hexdigest()

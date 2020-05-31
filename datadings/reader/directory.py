@@ -6,7 +6,6 @@ from __future__ import absolute_import
 import os
 import os.path as pt
 import itertools as it
-import io
 
 import glob2
 from glob2.fnmatch import fnmatch
@@ -36,7 +35,7 @@ def yield_file(infile, prefix, separator):
 
 
 def load_binary(sample):
-    with io.FileIO(sample['path'], 'rb') as f:
+    with open(sample['path'], 'rb') as f:
         return f.read()
 
 

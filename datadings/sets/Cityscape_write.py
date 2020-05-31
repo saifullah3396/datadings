@@ -18,7 +18,6 @@ from ..tools import make_printer
 from . import SegmentationDisparityData
 import os
 import cv2
-import io
 
 
 def write_image(writer, indata, dsm, outdata, filename):
@@ -50,7 +49,7 @@ def write_sets(indir, outdir, shuffle=True):
                 for img_name in os.listdir(gt_city_folder):
                     if img_name.endswith("_labelIds.png"):
                         gt_path = os.path.join(gt_city_folder, img_name)
-                        with io.FileIO(gt_path, "rb") as f:
+                        with open(gt_path, "rb") as f:
                             gt_data = f.read()
 
                         image_id = img_name.split("_")[1]
@@ -59,13 +58,13 @@ def write_sets(indir, outdir, shuffle=True):
                         img_name = "%s_%s_%s_leftImg8bit.png" \
                                    %(city_name, image_id, frame_id)
                         img_path = os.path.join(img_city_folder, img_name)
-                        with io.FileIO(img_path, "rb") as f:
+                        with open(img_path, "rb") as f:
                             img_data = f.read()
 
                         dsm_name = "%s_%s_%s_disparity.png" \
                                    % (city_name, image_id, frame_id)
                         dsm_path = os.path.join(dsm_city_folder, dsm_name)
-                        with io.FileIO(dsm_path, "rb") as f:
+                        with open(dsm_path, "rb") as f:
                             dsm_data = f.read()
 
                         write_image(writer, img_data, dsm_data, gt_data, gt_path)
