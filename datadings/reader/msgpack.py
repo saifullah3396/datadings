@@ -141,7 +141,7 @@ def _load_index(path):
         with io.FileIO(path, 'rb') as f:
             return unpack(f, object_hook=None, object_pairs_hook=list)
     except IOError:
-        return OrderedDict()
+        return []
 
 
 def hash_md5hex(path, read_size=64*1024):
