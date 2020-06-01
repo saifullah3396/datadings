@@ -2,7 +2,7 @@ import os
 import os.path as pt
 import itertools as it
 import glob
-from glob.fnmatch import fnmatch
+from fnmatch import fnmatch
 
 from .list import ListReader
 from .list import identity
