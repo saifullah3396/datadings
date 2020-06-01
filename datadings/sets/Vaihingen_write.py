@@ -35,7 +35,7 @@ def write(writer, img, labels, mask, filename=""):
 def map_color_values_to_class_indices(img):
     arr_2d = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
     for c, i in COLOR_TO_CLASS_MAP.items():
-        m = np.all(img == np.array(c).reshape(1, 1, 3), axis=2)
+        m = np.all(img == np.array(c).reshape((1, 1, 3)), axis=2)
         arr_2d[m] = i
     return arr_2d
 
@@ -124,6 +124,3 @@ if __name__ == '__main__':
         pass
     finally:
         print()
-
-
-
