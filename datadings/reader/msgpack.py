@@ -1,11 +1,5 @@
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
-import codecs
-import hashlib
 from os import path as pt
+import hashlib
 
 from .reader import Reader
 from ..msgpack import unpack
@@ -167,5 +161,5 @@ def load_md5file(path):
     :param path: path to md5 file
     :return: dict {file: hash}
     """
-    with codecs.open(path, encoding='utf-8') as f:
+    with open(path, encoding='utf-8') as f:
         return dict(l.strip().split('  ')[::-1] for l in f)
