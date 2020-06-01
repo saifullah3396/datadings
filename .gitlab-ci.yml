@@ -4,7 +4,7 @@ stages:
 
 
 .image: &image
-  image: quay.io/pypa/manylinux1_x86_64
+  image: quay.io/pypa/manylinux2014_x86_64
 
 
 .build:
