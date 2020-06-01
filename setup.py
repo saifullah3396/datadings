@@ -2,10 +2,8 @@
     machine learning, i.e., to convert them into easy to
     handle and quick to read messagepack files.
 """
-from codecs import open
 import os
 import os.path as pt
-import io
 import re
 from setuptools import setup, find_packages
 
@@ -16,8 +14,8 @@ PACKAGE_DIR = pt.abspath(pt.dirname(__file__))
 
 
 def read(*names, **kwargs):
-    with io.open(
-        os.path.join(os.path.dirname(__file__), *names),
+    with open(
+        pt.join(os.path.dirname(__file__), *names),
         encoding=kwargs.get("encoding", "utf8")
     ) as fp:
         return fp.read()
@@ -35,8 +33,7 @@ def find_version(*file_paths):
 
 
 # Use the README as the long description
-with open(pt.join(PACKAGE_DIR, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
+long_description = read(PACKAGE_DIR, 'README.rst')
 
 
 packages = find_packages(
@@ -58,8 +55,7 @@ package_data = {
 }
 
 
-with open(pt.join(PACKAGE_DIR, 'requirements.txt')) as f:
-    dependencies = [l.strip(' \n') for l in f]
+dependencies = read(PACKAGE_DIR, 'requirements.txt').splitlines()
 
 
 scripts = [
