@@ -52,7 +52,6 @@ def generate_types():
         typespec = json.load(f)
     with open(types_py, 'w') as f:
         f.write('# AUTO-GENERATED FILE! DO NOT EDIT!\n')
-        f.write('from __future__ import unicode_literals\n')
         for typename, keys in sorted(typespec.items()):
             f.write('\n')
             f.write(make_typefun(typename, keys))
