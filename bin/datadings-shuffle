@@ -4,15 +4,15 @@
 import sys
 import os.path as pt
 
-from datadings.reader import IdentityReader
+from datadings.reader import MsgpackReader
 from datadings.reader import Shuffler
 from datadings.writer import RawWriter
 
 
 def shuffle(infile, outfile):
-    r = IdentityReader(infile)
+    r = MsgpackReader(infile, buffering=32*1024)
     shuffler = Shuffler(r)
-    with RawWriter(outfile) as writer:
+    with RawWriter(outfile, total=len(r)) as writer:
         for key, raw in shuffler.rawiter(yield_key=True):
             writer.write(key, raw)
 
