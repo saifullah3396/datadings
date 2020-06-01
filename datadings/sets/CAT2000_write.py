@@ -14,13 +14,13 @@ import os.path as pt
 import zipfile
 import random
 
-import scipy.io
 import numpy as np
 from PIL import Image
 from PIL import ImageChops
 
 from ..writer import FileWriter
 from ..tools import download_if_not_found
+from ..matlab import loadmat
 from . import SaliencyData
 from . import SaliencyExperiment
 
@@ -54,8 +54,7 @@ def __load_fixmap(imagezip, stimuluspath):
             stimuluspath.replace('Stimuli', 'FIXATIONLOCS').replace('jpg', 'mat')
     ) as f:
         data = f.read()
-    buf = io.BytesIO(data)
-    return scipy.io.loadmat(buf)['fixLocs']
+    return loadmat(data)['fixLocs']
 
 
 def find_fixpoints(arr):
