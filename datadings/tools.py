@@ -7,6 +7,10 @@ import sys
 import os
 import os.path as pt
 from itertools import product
+import threading as th
+from queue import Queue
+from queue import Full
+from queue import Empty
 
 import requests
 import numpy as np
@@ -122,4 +126,48 @@ def tiff_to_nd_array(file_path, type=np.int8):
     from osgeo import gdal
     dataset = gdal.Open(file_path, gdal.GA_ReadOnly)
     return np.array([dataset.GetRasterBand(idx+1).ReadAsArray()
-                        for idx in range(dataset.RasterCount)]).astype(type)
+                     for idx in range(dataset.RasterCount)]).astype(type)
+
+
+class Yielder(th.Thread):
+    def __init__(self, gen, queue, end):
+        super().__init__()
+        self.daemon = True
+        self.running = True
+        self.gen = gen
+        self.queue = queue
+        self.end = end
+
+    def run(self):
+        for obj in self.gen:
+            if not self.running:
+                break
+            while True:
+                try:
+                    self.queue.put(obj, timeout=1)
+                    break
+                except Full:
+                    pass
+        else:
+            self.queue.put(self.end, timeout=1)
+
+    def stop(self):
+        self.running = False
+
+
+def yield_threaded(gen):
+    end = object()
+    queue = Queue(maxsize=3)
+    yielder = Yielder(gen, queue, end)
+    try:
+        yielder.start()
+        while True:
+            try:
+                obj = queue.get(timeout=1)
+                if obj is end:
+                    break
+                yield obj
+            except Empty:
+                pass
+    finally:
+        yielder.stop()
