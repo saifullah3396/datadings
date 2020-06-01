@@ -15,14 +15,6 @@ def get_labels(samples):
     return labels
 
 
-def convert_ImageClassificationData(sample):
-    return ImageClassificationData(
-        sample['data'],
-        sample['label'],
-        sample['key']
-    )
-
-
 def identity(sample):
     return sample
 

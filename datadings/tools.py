@@ -15,6 +15,7 @@ import tqdm
 string_types = (type(b''), type(u''))
 
 
+# noinspection PyIncorrectDocstring
 def print_over(*args, **kwargs):
     """ Wrapper around print that replaces the current line.
         It prints from the start of the line and clears remaining

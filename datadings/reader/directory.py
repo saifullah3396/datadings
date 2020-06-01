@@ -6,7 +6,7 @@ import glob2
 from glob2.fnmatch import fnmatch
 
 from .list import ListReader
-from .list import convert_ImageClassificationData
+from .list import identity
 
 
 def match(f, p):
@@ -76,7 +76,7 @@ class DirectoryReader(ListReader):
             self,
             patterns,
             separator='\t',
-            convertfun=convert_ImageClassificationData,
+            convertfun=identity,
             include=(),
             exclude=(),
             labels=None,

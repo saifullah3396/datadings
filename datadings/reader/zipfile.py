@@ -4,7 +4,7 @@ import itertools as it
 import zipfile
 
 from .list import ListReader
-from .list import convert_ImageClassificationData
+from .list import identity
 from .directory import match
 from .directory import check_included
 from .directory import yield_file
@@ -31,7 +31,7 @@ def glob_pattern(infos, pattern):
             yield i.filename[label_start:], i.filename, label
 
 
-def yield_zipfile(zipfile, patterns, separator):
+def yield_zipfile(zipfile_, patterns, separator):
     infos = None
     gens = []
     for pattern in patterns:
@@ -40,7 +40,7 @@ def yield_zipfile(zipfile, patterns, separator):
             gens.append(yield_file(pattern, '', separator))
         else:
             if infos is None:
-                infos = zipfile.infolist()
+                infos = zipfile_.infolist()
             # pattern is glob-pattern
             gens.append(glob_pattern(infos, pattern))
     return it.chain(*gens)
@@ -52,7 +52,7 @@ class ZipFileReader(ListReader):
             path,
             patterns=('{LABEL}/**',),
             separator='\t',
-            convertfun=convert_ImageClassificationData,
+            convertfun=identity,
             include=(),
             exclude=(),
             labels=(),
