@@ -97,6 +97,9 @@ setup(
     packages=packages,
     package_data=package_data,
     install_requires=dependencies,
+    extras_require={
+        "geo": ["GDAL>=2.4.0"],
+    },
     scripts=scripts,
     cmdclass={
         'build_py': build_py,
