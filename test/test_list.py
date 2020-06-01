@@ -1,9 +1,14 @@
 import os
 import os.path as pt
 import sys
+import random
+
+from datadings.reader import ListReader
+
 
 ROOT = pt.dirname(__file__)
 parent = pt.abspath(pt.join(ROOT, os.pardir))
+
 
 for p in (os.pardir, parent):
     try:
@@ -11,10 +16,6 @@ for p in (os.pardir, parent):
     except ValueError:
         pass
 print(sys.path)
-
-import random
-
-from datadings.reader import ListReader
 
 
 def floatrange(start, stop=None, step=None):
@@ -100,7 +101,7 @@ def test_seek_keys():
     with reader:
         for test in reader:
             map.pop(test["key"])
-    assert len(map) == 10 #because the reader is ordered
+    assert len(map) == 10  # because the reader is ordered
 
 
 def test_seek_index():

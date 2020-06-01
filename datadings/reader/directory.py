@@ -1,21 +1,16 @@
 import os
 import os.path as pt
 import itertools as it
-
-import glob2
-from glob2.fnmatch import fnmatch
+import glob
+from glob.fnmatch import fnmatch
 
 from .list import ListReader
 from .list import identity
 
 
-def match(f, p):
-    return fnmatch(f, p, case_sensitive=False)
-
-
 def check_included(filename, include, exclude):
-    return (not include or any(match(filename, i) for i in include)) \
-        and not any(match(filename, e) for e in exclude)
+    return (not include or any(fnmatch(filename, i) for i in include)) \
+        and not any(fnmatch(filename, e) for e in exclude)
 
 
 def yield_file(infile, prefix, separator):
@@ -44,7 +39,7 @@ def glob_pattern(pattern, prefix):
         pattern = pattern.replace('{LABEL}', '*', 1)
     except ValueError:
         pass
-    for p in glob2.iglob(pattern):
+    for p in glob.iglob(pattern, recursive=True):
         if pt.isfile(p):
             if label_index is not None:
                 label = p.split(os.sep)[label_index]
