@@ -51,10 +51,10 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
 
     # Validation & Test-Split -> give splitted images
     for split in ("val", ):
-        file = pt.join(outdir, 'RIT18_%s.msgpack' % (split))
+        file = pt.join(outdir, 'RIT18_%s.msgpack' % (split,))
         with FileWriter(file) as writer:
 
-            data = dataset['%s_data' %(split)]
+            data = dataset['%s_data' % (split,)]
             if split == "val":
                 labels = dataset['val_labels']
             else:

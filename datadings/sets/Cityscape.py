@@ -10,8 +10,8 @@ def median_frequency_weights(counts):
     return [median_freq/f for f in freq]
 
 
-#WEIGHTS = median_frequency_weights(_COUNTS)
-#SCENELABELS = load_scenelabels()
+# WEIGHTS = median_frequency_weights(_COUNTS)
+# SCENELABELS = load_scenelabels()
 
 ignored_class_indices = [0, 1, 2, 3, 4, 5, 6, 9, 10, 14, 15, 16, 18,
                          29, 30, -1]

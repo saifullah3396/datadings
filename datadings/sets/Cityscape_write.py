@@ -51,7 +51,7 @@ def write_sets(indir, outdir, shuffle=True):
                         frame_id = img_name.split("_")[2]
 
                         img_name = "%s_%s_%s_leftImg8bit.png" \
-                                   %(city_name, image_id, frame_id)
+                                   % (city_name, image_id, frame_id)
                         img_path = os.path.join(img_city_folder, img_name)
                         with open(img_path, "rb") as f:
                             img_data = f.read()

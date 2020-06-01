@@ -20,7 +20,6 @@ import numpy as np
 from ..writer import FileWriter
 from ..tools import make_printer
 from ..tools import download_if_not_found
-from ..tools import print_over
 from . import ImageSegmentationData
 from .VOC2012 import CLASSES
 from .VOC2012 import COLORS

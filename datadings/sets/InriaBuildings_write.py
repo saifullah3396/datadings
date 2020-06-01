@@ -79,18 +79,18 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
         for fn, train_img, labels in images_and_labels_iter(train_img_dir,
                                                             train_gt_dir,
                                                             train_locations,
-                                                            range(1,6)):
+                                                            range(1, 6)):
             train_labels = np.expand_dims(labels, axis=0)
             for idx, (sub_img, sub_label) in \
-                    enumerate(zip(  split_array(train_img, *crop_size),
-                                    split_array(train_labels, *crop_size))):
+                    enumerate(zip(split_array(train_img, *crop_size),
+                                  split_array(train_labels, *crop_size))):
 
                 sub_img = np.array(sub_img).astype(np.uint8)
                 sub_label = np.array(sub_label[0]).astype(np.int64)
                 _, w, h = sub_img.shape
-                if 8 in [w, h]: # reject very small patches
+                if 8 in [w, h]:  # reject very small patches
                     continue
-                write(writer, sub_img, sub_label, "%s_%s"%(fn, idx))
+                write(writer, sub_img, sub_label, "%s_%s" % (fn, idx))
 
     # Test-Split -> give splitted images without labels
     val_file = pt.join(outdir, TEST_MSG_FILE)
@@ -98,11 +98,11 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
         for fn, train_img, labels in images_and_labels_iter(test_img_dir,
                                                             None,
                                                             test_locations,
-                                                            range(1,37)):
+                                                            range(1, 37)):
             for idx, sub_img in enumerate(split_array(train_img, *crop_size)):
                 sub_img = np.array(sub_img).astype(np.uint8)
                 sub_label = np.array([])
-                write(writer, sub_img, sub_label, "%s_%s"%(fn, idx))
+                write(writer, sub_img, sub_label, "%s_%s" % (fn, idx))
 
 
 def main():

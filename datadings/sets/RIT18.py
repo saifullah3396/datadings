@@ -20,5 +20,5 @@ CLASSES = [
     '15. Sand',
     '16. Water (Lake)',
     '17. Water (Pond)',
-    '18. Asphalt (Parking Lot/Walkway)'
+    '18. Asphalt (Parking Lot/Walkway)',
 ]

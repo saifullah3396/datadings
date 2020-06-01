@@ -47,7 +47,7 @@ def images_label_dsm_iter(indir, image_ids):
     label_dir = pt.join(dataset_dir, 'gts_for_participants')
 
     for id in image_ids:
-        fn = "top_mosaic_09cm_area%s.tif" % (id)
+        fn = "top_mosaic_09cm_area%s.tif" % (id,)
         img_path = pt.join(img_dir, fn)
         label_path = pt.join(label_dir, fn)
         dsm_path = pt.join(dsm_dir, fn.replace("top_", "dsm_"))
@@ -71,7 +71,7 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
     with FileWriter(train_file) as writer:
         image_ids = [1, 3, 5, 7, 13, 17, 21, 23, 26, 32, 37]
         for fn, train_img, train_labels, train_dsm in \
-                                    images_label_dsm_iter(indir, image_ids):
+                images_label_dsm_iter(indir, image_ids):
 
             write(writer, train_img, train_labels, train_dsm, fn)
 
@@ -79,19 +79,19 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
     val_file = pt.join(outdir, 'Vaihingen_val.msgpack')
     with FileWriter(val_file) as writer:
         for fn, train_img, train_labels, train_dsm in \
-                            images_label_dsm_iter(indir, [11, 15, 28, 30, 34]):
+                images_label_dsm_iter(indir, [11, 15, 28, 30, 34]):
 
             train_labels = np.expand_dims(train_labels, axis=0)
             train_dsm = np.expand_dims(train_dsm, axis=0)
 
             for idx, (sub_img, sub_label, sub_dsm) in \
-                    enumerate(zip(  split_array(train_img, *crop_size),
-                                    split_array(train_labels, *crop_size),
-                                    split_array(train_dsm, *crop_size))):
+                    enumerate(zip(split_array(train_img, *crop_size),
+                                  split_array(train_labels, *crop_size),
+                                  split_array(train_dsm, *crop_size))):
                 sub_img = np.array(sub_img).astype(np.uint8)
                 sub_label = np.array(sub_label[0]).astype(np.int64)
                 sub_dsm = np.array(sub_dsm[0])
-                write(writer, sub_img, sub_label, sub_dsm, "%s_%s"%(fn, idx))
+                write(writer, sub_img, sub_label, sub_dsm, "%s_%s" % (fn, idx))
 
 
 def main():
