@@ -2,10 +2,10 @@ import os
 import os.path as pt
 import itertools as it
 import zipfile
+from fnmatch import fnmatch
 
 from .list import ListReader
 from .list import identity
-from .directory import match
 from .directory import check_included
 from .directory import yield_file
 
@@ -23,7 +23,7 @@ def glob_pattern(infos, pattern):
     for i in infos:
         if i.is_dir():
             continue
-        if match(i.filename, pattern):
+        if fnmatch(i.filename, pattern):
             if label_index is not None:
                 label = i.filename.split(os.sep)[label_index]
             else:
