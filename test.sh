@@ -2,6 +2,7 @@
 set -e -x
 
 for PYBIN in /opt/python/*/bin; do
+  "${PYBIN}/pip" install -U pip wheel setuptools
   "${PYBIN}/pip" install -r requirements.txt
   "${PYBIN}/pip" install -r test-requirements.txt
   "${PYBIN}/pip" install datadings --no-index -f dist --no-deps
