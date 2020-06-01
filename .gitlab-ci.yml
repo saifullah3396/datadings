@@ -14,7 +14,7 @@ stages:
   - ./build_wheels.sh
   artifacts:
     paths:
-    - ./dist/*.whl
+    - dist/*.whl
 
 
 devel:
