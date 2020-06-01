@@ -2,31 +2,10 @@ stages:
   - build
   - test
 
+
 .image: &image
-  image: quay.io/pypa/manylinux2010_x86_64
+  image: quay.io/pypa/manylinux1_x86_64
 
-.py36: &py36
-  variables:
-    PYVER: "cp36-cp36m"
-
-
-.py37: &py37
-  variables:
-    PYVER: "cp37-cp37m"
-
-.test:
-  <<: *image
-  stage: test
-  script:
-  - ./test.sh
-
-test-3.6:
-  <<: *py36
-  extends: .test
-
-test-3.7:
-  <<: *py37
-  extends: .test
 
 .build:
   <<: *image
@@ -35,10 +14,10 @@ test-3.7:
   - ./build_wheels.sh
   artifacts:
     paths:
-    - ./*.whl
+    - ./dist/*.whl
 
 
-.devel:
+devel:
   extends: .build
   artifacts:
     expire_in: 8 hours
@@ -46,7 +25,7 @@ test-3.7:
   - tags
 
 
-.release:
+release:
   extends: .build
   artifacts:
     expire_in: 1000 years
@@ -54,20 +33,8 @@ test-3.7:
   - tags
 
 
-devel-3.6:
-  <<: *py36
-  extends: .devel
-
-devel-3.7:
-  <<: *py37
-  extends: .devel
-
-release-3.6:
-  <<: *py36
-  extends: .release
-
-release-3.7:
-  <<: *py37
-  extends: .release
-
-
+test:
+  <<: *image
+  stage: test
+  script:
+    - ./test.sh

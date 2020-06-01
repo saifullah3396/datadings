@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 set -e -x
 
-# Compile wheels
-/opt/python/${PYVER}/bin/python setup.py bdist_wheel --dist-dir=.
+# make wheel with Python 3.8
+/opt/python/cp38-cp38/bin/python setup.py bdist_wheel
 rm -rf build dist datadings.egg-info
-
-# Turn normal wheels into manylinux wheels:
-#   - Bundle external shared libraries into the wheels
-#for whl in *.whl; do
-#    auditwheel repair "${whl}" -w .
-#    rm "${whl}"
-#done

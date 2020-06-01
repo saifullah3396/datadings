@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
-echo "running tests for python version:"
-echo "$(/opt/python/${PYVER}/bin/python --version)"
-/opt/python/${PYVER}/bin/pip install *.whl
-/opt/python/${PYVER}/bin/pip install pytest
-/opt/python/${PYVER}/bin/pip install pytest-cov
-cd test
+set -e -x
 
-LIBDIR=`/opt/python/${PYVER}/bin/python -c"import os.path as pt; import datadings; print(pt.dirname(datadings.__file__))"`
-/opt/python/${PYVER}/bin/python -m pytest --cov=$LIBDIR * --cov-report term-missing
+for PYBIN in /opt/python/*/bin/; do
+    "${PYBIN}/pip" install -r ../test-requirements.txt
+    "${PYBIN}/pip" install datadings --no-index -f ../dist
+    LIBDIR=$(
+        "${PYDIR}"/bin/python -c \
+        "import os.path as pt; import datadings; print(pt.dirname(datadings.__file__))"
+    )
+    (
+    cd test
+    "${PYBIN}/python" -m pytest -vv
+    "${PYDIR}"/bin/python -m pytest --cov="${LIBDIR}" ./* --cov-report term-missing
+    )
+done
