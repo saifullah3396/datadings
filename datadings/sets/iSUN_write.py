@@ -20,6 +20,7 @@ from ..writer import FileWriter
 from .iSUN import iSUNData
 from .iSUN import iSUNExperiment
 from ..tools import download_if_not_found
+from ..matlab import loadmat
 
 
 def __convert_item(entry):
@@ -45,8 +46,7 @@ def __convert_item(entry):
 
 
 def __yield_isun_metadata(matpath, shuffle):
-    import scipy.io
-    data = scipy.io.loadmat(matpath)
+    data = loadmat(matpath)
     valid = {k: v for k, v in data.items() if not k.startswith('__')}
     if len(valid) > 1:
         raise ValueError('too many keys: %s' % ', '.join(valid))

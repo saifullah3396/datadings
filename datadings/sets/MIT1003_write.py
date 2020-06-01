@@ -15,11 +15,11 @@ import zipfile
 import random
 from collections import defaultdict
 
-import scipy.io
 import numpy as np
 
 from ..writer import FileWriter
 from ..tools import download_if_not_found
+from ..matlab import loadmat
 from . import SaliencyData
 from . import SaliencyExperiment
 
@@ -30,7 +30,7 @@ def __iter_fixpoints(datazip, mat_files, stimuluspath):
         mat_data = datazip.read(exp)
         buf = io.BytesIO(mat_data)
         mat = [
-            v for k, v in scipy.io.loadmat(buf).items()
+            v for k, v in loadmat(buf).items()
             if not k.startswith('__')
         ][0]
         try:

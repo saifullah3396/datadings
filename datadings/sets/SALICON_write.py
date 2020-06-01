@@ -14,12 +14,12 @@ import zipfile
 import random
 
 import numpy as np
-import scipy.io
 
 from ..writer import FileWriter
 from . import SaliencyData
 from .SALICON import SALICONExperiment
 from ..tools import download_if_not_found
+from ..matlab import loadmat
 
 
 def __convert_item(entry):
@@ -44,7 +44,7 @@ def __convert_item(entry):
 
 
 def _yield_salicon_metadata(matpath, shuffle):
-    data = scipy.io.loadmat(matpath)
+    data = loadmat(matpath)
     valid = {k: v for k, v in data.items() if not k.startswith('__')}
     if len(valid) > 1:
         raise ValueError('too many keys: %s' % ', '.join(valid))

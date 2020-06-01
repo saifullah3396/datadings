@@ -15,16 +15,16 @@ import zipfile
 import random
 
 import numpy as np
-import scipy.io
 
 from ..writer import FileWriter
 from . import SaliencyData
 from . import SaliencyExperiment
+from ..matlab import loadmat
 from ..tools import download_if_not_found
 
 
 def __load_mat_file(mat_file):
-    mat = scipy.io.loadmat(mat_file)
+    mat = loadmat(mat_file)
     valid = {k: v for k, v in mat.items() if not k.startswith('__')}
     if len(valid) > 1:
         raise ValueError('too many keys: %s' % ', '.join(valid))
