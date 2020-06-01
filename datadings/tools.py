@@ -156,6 +156,12 @@ class Yielder(th.Thread):
 
 
 def yield_threaded(gen):
+    """
+    Run a generator in a background thread and yield its
+    output in the current thread.
+
+    :param gen: generator
+    """
     end = object()
     queue = Queue(maxsize=3)
     yielder = Yielder(gen, queue, end)
