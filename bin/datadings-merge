@@ -12,7 +12,7 @@ import sys
 import os.path as pt
 import random
 
-from datadings.reader import IdentityReader
+from datadings.reader import MsgpackReader
 from datadings.reader import Shuffler
 from datadings.writer import RawWriter
 
@@ -20,7 +20,7 @@ from datadings.writer import RawWriter
 def merge_concat(infiles, outfile, shuffle=False):
     with RawWriter(outfile) as writer:
         for infile in infiles:
-            reader = IdentityReader(infile)
+            reader = MsgpackReader(infile)
             if shuffle:
                 reader = Shuffler(reader)
             with reader:
@@ -50,7 +50,7 @@ def select_set(ranges):
 
 
 def merge_random(infiles, outfile, shuffle=False):
-    readers = [IdentityReader(f) for f in infiles]
+    readers = [MsgpackReader(f) for f in infiles]
     if shuffle:
         readers = [Shuffler(r) for r in readers]
     try:
