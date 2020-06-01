@@ -12,5 +12,3 @@ from .augment import Cycler
 from .augment import Shuffler
 from .augment import Range
 from .augment import split_reader
-
-IdentityReader = MsgpackReader
