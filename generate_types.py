@@ -2,8 +2,6 @@ import os.path as pt
 from codecs import open
 import json
 
-from six import text_type
-
 from setuptools.command.build_py import build_py as _build_py
 
 
@@ -11,7 +9,7 @@ PACKAGE_DIR = pt.abspath(pt.dirname(__file__))
 
 
 def __argify(key):
-    return key if isinstance(key, text_type) else '_%r' % key
+    return key if isinstance(key, str) else '_%r' % key
 
 
 def make_typefun(name, keys):

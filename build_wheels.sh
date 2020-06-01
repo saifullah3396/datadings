@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -e -x
 
-# Install native dependencies
-# yum install ...
-/opt/python/${PYVER}/bin/pip install six
-
 # Compile wheels
 /opt/python/${PYVER}/bin/python setup.py bdist_wheel --dist-dir=.
 rm -rf build dist datadings.egg-info

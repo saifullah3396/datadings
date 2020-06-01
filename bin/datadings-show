@@ -3,8 +3,6 @@
 
 Requires OpenCV.
 """
-from six import text_type
-
 import numpy as np
 try:
     import cv2
@@ -46,7 +44,7 @@ def main():
     )
     parser.add_argument(
         'path',
-        type=text_type,
+        type=str,
         help='path to dataset file',
     )
     parser.add_argument(

@@ -2,8 +2,7 @@
 """Cat msgpack files.
 """
 import os.path as pt
-
-from six.moves import reprlib
+import reprlib
 
 from datadings.reader import MsgpackReader
 
