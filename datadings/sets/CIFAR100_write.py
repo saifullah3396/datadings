@@ -6,8 +6,7 @@ The data set is described here:
 import tarfile
 import os.path as pt
 import random
-
-from six.moves.cPickle import load
+from pickle import load
 
 from ..tools import download_if_not_found
 from ..writer import FileWriter

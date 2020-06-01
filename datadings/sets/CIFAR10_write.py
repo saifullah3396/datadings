@@ -7,8 +7,7 @@ import io
 import os.path as pt
 import random
 import tarfile
-
-from six.moves.cPickle import load
+from pickle import load
 
 from PIL import Image
 

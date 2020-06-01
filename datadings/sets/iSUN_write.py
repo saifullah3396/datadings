@@ -15,7 +15,6 @@ import zipfile
 import random
 
 import numpy as np
-from six import text_type
 
 from ..writer import FileWriter
 from .iSUN import iSUNData
@@ -24,10 +23,10 @@ from ..tools import download_if_not_found
 
 
 def __convert_item(entry):
-    filename = text_type(entry[0][0][0])
+    filename = str(entry[0][0][0])
     if not filename.endswith('.jpg'):
         filename += '.jpg'
-    scenecategory = text_type(entry[0][2][0])
+    scenecategory = str(entry[0][2][0])
     # resolution = tuple(entry[0][1][0].tolist()[::-1])
     try:
         experiments = [

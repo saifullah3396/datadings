@@ -15,7 +15,6 @@ import random
 
 import numpy as np
 import scipy.io
-from six import text_type
 
 from ..writer import FileWriter
 from . import SaliencyData
@@ -24,7 +23,7 @@ from ..tools import download_if_not_found
 
 
 def __convert_item(entry):
-    filename = text_type(entry[0][0])
+    filename = str(entry[0][0])
     if not filename.endswith('.jpg'):
         filename += '.jpg'
     # resolution = tuple(entry[0][1][0].tolist()[::-1])

@@ -22,10 +22,10 @@ import tarfile
 import json
 from collections import defaultdict
 from itertools import chain
+from itertools import zip_longest
 import io
 import random
 
-from six.moves import zip_longest
 import numpy as np
 from PIL import Image
 import cv2

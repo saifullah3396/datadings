@@ -16,7 +16,6 @@ import random
 
 import numpy as np
 import scipy.io
-from six import text_type
 
 from ..writer import FileWriter
 from . import SaliencyData
@@ -30,9 +29,7 @@ def __load_mat_file(mat_file):
     if len(valid) > 1:
         raise ValueError('too many keys: %s' % ', '.join(valid))
     files = list(valid.values())[0][0]
-    return {
-        text_type(f[2][0]): f[3][0] for f in files
-    }
+    return {str(f[2][0]): f[3][0] for f in files}
 
 
 def __get_experiments(subjects):
