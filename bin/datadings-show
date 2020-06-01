@@ -3,8 +3,6 @@
 
 Requires OpenCV.
 """
-from __future__ import print_function
-
 from six import text_type
 
 import numpy as np

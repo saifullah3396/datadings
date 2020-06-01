@@ -1,5 +1,4 @@
 # AUTO-GENERATED FILE! DO NOT EDIT!
-from __future__ import unicode_literals
 
 
 def ANP460Data(

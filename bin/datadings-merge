@@ -6,8 +6,6 @@ Available strategies:
     - random: chooses next sample randomly
               based on total number of samples
 """
-from __future__ import print_function, division
-
 import sys
 import os.path as pt
 import random

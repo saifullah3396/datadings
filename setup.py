@@ -2,8 +2,6 @@
     machine learning, i.e., to convert them into easy to
     handle and quick to read messagepack files.
 """
-from __future__ import print_function
-
 from codecs import open
 import os
 import os.path as pt

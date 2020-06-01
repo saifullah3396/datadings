@@ -1,8 +1,6 @@
 #!python
 """Splits one dataset in several smaller ones
 """
-from __future__ import print_function, division
-
 import sys
 import os.path as pt
 

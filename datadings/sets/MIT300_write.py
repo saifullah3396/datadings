@@ -7,11 +7,6 @@ This tool will look for the following files in the input directory
 and download them if necessary:
     - BenchmarkIMAGES.zip
 """
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
 import os.path as pt
 import zipfile
 import random

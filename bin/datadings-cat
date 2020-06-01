@@ -1,8 +1,6 @@
 #!python
 """Cat msgpack files.
 """
-from __future__ import print_function, division, unicode_literals
-
 import os.path as pt
 
 from six.moves import reprlib

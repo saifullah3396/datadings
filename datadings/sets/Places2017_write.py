@@ -14,11 +14,6 @@ May also look for/download, depending on options:
     - objectInfo150.txt
     - color150.mat
 """
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
 import csv
 import os
 import os.path as pt
