@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -e -x
 
-for PYBIN in /opt/python/*/bin/; do
+for PYBIN in /opt/python/*/bin; do
+  "${PYBIN}/pip" install -r requirements.txt
   "${PYBIN}/pip" install -r test-requirements.txt
-  "${PYBIN}/pip" install datadings --no-index -f dist
+  "${PYBIN}/pip" install datadings --no-index -f dist --no-deps
   LIBDIR=$(
     "${PYBIN}/python" -c \
     "import os.path as pt; import datadings; print(pt.dirname(datadings.__file__))"
