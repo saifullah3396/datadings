@@ -169,6 +169,3 @@ def load_md5file(path):
     """
     with open(path, encoding='utf-8') as f:
         return dict(l.strip().split('  ')[::-1] for l in f)
-
-
-MsgpackReader('/data/ds/places365/training.msgpack')
