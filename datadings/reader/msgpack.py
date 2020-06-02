@@ -1,3 +1,4 @@
+import os
 from os import path as pt
 import hashlib
 
@@ -21,11 +22,10 @@ class MsgpackReader(Reader):
         self._path = infile
         self._buffering = buffering
         self._infile = open(infile, 'rb', buffering)
-        key_to_position = _load_index(infile + '.index', buffering)
-        self._keys = [v for v, _ in key_to_position]
-        self._positions = [v for _, v in key_to_position]
+        self._keys, self._positions = _load_index(infile, buffering)
+        self._positions.append(os.stat(infile).st_size)
         self._key_to_index_dict = None
-        self._len = len(self._positions)
+        self._len = len(self._keys)
         self._i = 0
 
     def __copy__(self):
@@ -57,16 +57,10 @@ class MsgpackReader(Reader):
         Return the next sample as raw bytes.
         :return:
         """
-        try:
-            n = self._positions[self._i + 1] - self._positions[self._i]
-            self._infile.seek(self._positions[self._i], 0)
-            self._i += 1
-            return self._infile.read(n)
-        except IndexError:
-            raw = self._infile.read()
-            if not raw:
-                raise
-            return raw
+        n = self._positions[self._i+1] - self._positions[self._i]
+        self._infile.seek(self._positions[self._i], 0)
+        self._i += 1
+        return self._infile.read(n)
 
     def seek_index(self, index):
         """
@@ -122,18 +116,30 @@ class MsgpackReader(Reader):
         return hashes[indexname] == hash_md5hex(self._path + '.index', read_size)
 
 
+def _load_index1(path, buffering):
+    with open(path + '.index', 'rb', buffering) as f:
+        pairs = unpack(f, object_hook=None, object_pairs_hook=list)
+        return [k for k, _ in pairs], [p for _, p in pairs]
+
+
+def _load_index2(path, buffering):
+    with open(path + '.index2', 'rb', buffering) as f:
+        return unpack(f, object_hook=None)
+
+
 def _load_index(path, buffering=4*1024*1024):
     """
-    Load an index file as list of (file, position) pairs.
+    Load index as two lists of keys and positions.
 
-    @param path: path to index file
-    @return: list of (file, position) index pairs
+    @param path: path to dataset file
+    @return: keys and positions lists of equal length
     """
-    try:
-        with open(path, 'rb', buffering) as f:
-            return unpack(f, object_hook=None, object_pairs_hook=list)
-    except IOError:
-        return []
+    if pt.exists(path + '.index2'):
+        return _load_index2(path, buffering)
+    elif pt.exists(path + '.index'):
+        return _load_index1(path, buffering)
+    else:
+        raise IOError('index for %r not found' % path)
 
 
 def hash_md5hex(path, read_size=64*1024):
@@ -163,3 +169,6 @@ def load_md5file(path):
     """
     with open(path, encoding='utf-8') as f:
         return dict(l.strip().split('  ')[::-1] for l in f)
+
+
+MsgpackReader('/data/ds/places365/training.msgpack')

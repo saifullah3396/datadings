@@ -1,6 +1,5 @@
 import os
 import os.path as pt
-import codecs
 import hashlib
 from collections import OrderedDict
 from abc import ABCMeta
@@ -31,7 +30,7 @@ class Writer(object):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, outfile, **kwargs):
+    def __init__(self, outfile, buffering=4*1024*1024, **kwargs):
         """
         :param outfile: path to the dataset file
         :param kwargs: keyword arguments for datadings.tools.make_printer
@@ -40,8 +39,8 @@ class Writer(object):
         outdir = pt.dirname(outfile)
         if not pt.exists(outdir):
             os.makedirs(outdir)
-        self._outfile = open(outfile, 'wb', 1024*1024)
-        self._indices = OrderedDict()
+        self._outfile = open(outfile, 'wb', buffering)
+        self._index = OrderedDict()
         self.written = 0
         self._hash = hashlib.md5()
         self._packer = make_packer()
@@ -62,25 +61,31 @@ class Writer(object):
         """
         self._outfile.flush()
         self._outfile.close()
-        with open(self._path + '.index', 'wb') as f:
-            indexdata = packb(self._indices)
+        with open(self._path + '.index2', 'wb') as f:
+            indexdata = packb((
+                list(self._index.keys()),
+                list(self._index.values())
+            ))
             f.write(indexdata)
             indexhash = hashlib.md5(indexdata).hexdigest()
-        with codecs.open(self._path + '.md5', 'w') as f:
+        with open(self._path + '.md5', 'w', encoding='utf-8') as f:
             name = pt.basename(self._path)
             f.write('%s  %s\n' % (self._hash.hexdigest(), name))
-            f.write('%s  %s\n' % (indexhash, name + '.index'))
+            f.write('%s  %s\n' % (indexhash, name + '.index2'))
         self._printer.close()
         print('%d samples written' % self.written)
 
-    def _write_data(self, packed):
+    def _write_data(self, key, packed):
+        if key in self._index:
+            raise ValueError('duplicate key %r not allowed' % key)
+        self._index[key] = self._outfile.tell()
         self._hash.update(packed)
         self._outfile.write(packed)
         self.written += 1
         self._printer()
 
-    def _write(self, sample):
-        self._write_data(self._packer.pack(sample))
+    def _write(self, key, sample):
+        self._write_data(key, self._packer.pack(sample))
 
     @abstractmethod
     def write(self, *args):
@@ -99,10 +104,7 @@ class RawWriter(Writer):
     write requires key and data as arguments.
     """
     def write(self, key, data):
-        if key in self._indices:
-            raise ValueError('duplicate key %r not allowed' % key)
-        self._indices[key] = self._outfile.tell()
-        self._write_data(data)
+        self._write_data(key, data)
 
 
 class FileWriter(Writer):
@@ -111,8 +113,4 @@ class FileWriter(Writer):
     Requires sample dicts with a unique "key" value.
     """
     def write(self, sample):
-        key = sample['key']
-        if key in self._indices:
-            raise ValueError('duplicate key %r not allowed' % key)
-        self._indices[key] = self._outfile.tell()
-        self._write(sample)
+        self._write(sample['key'], sample)
