@@ -1,10 +1,11 @@
 import os
 from os import path as pt
-import hashlib
 
 from .reader import Reader
 from ..msgpack import unpack
 from ..msgpack import unpackb
+from ..tools import load_md5file
+from ..tools import hash_md5hex
 
 
 class MsgpackReader(Reader):
@@ -93,27 +94,31 @@ class MsgpackReader(Reader):
         """
         return self._keys[index or self._i]
 
-    def verify_data(self, read_size=64*1024):
+    def verify_data(self, read_size=64*1024, progress=False):
         """
         Hash the dataset file and verify against the md5 file.
 
         :param read_size: read-ahead size
+        :param progress: display progress
         :return: True if verification was successful
         """
         hashes = load_md5file(self._path + '.md5')
         dataname = pt.basename(self._path)
-        return hashes[dataname] == hash_md5hex(self._path, read_size)
+        md5 = hash_md5hex(self._path, read_size, progress)
+        return hashes[dataname] == md5
 
-    def verify_index(self, read_size=64*1024):
+    def verify_index(self, read_size=64*1024, progress=False):
         """
         Hash the index file and verify against the md5 file.
 
         :param read_size: read-ahead size
+        :param progress: display progress
         :return: True if verification was successful
         """
         hashes = load_md5file(self._path + '.md5')
         indexname = pt.basename(self._path) + '.index'
-        return hashes[indexname] == hash_md5hex(self._path + '.index', read_size)
+        md5 = hash_md5hex(self._path + '.index', read_size, progress)
+        return hashes[indexname] == md5
 
 
 def _load_index(path, buffering=4*1024*1024):
@@ -129,32 +134,3 @@ def _load_index(path, buffering=4*1024*1024):
             return [k for k, _ in pairs], [p for _, p in pairs]
     else:
         raise IOError('index for %r not found' % path)
-
-
-def hash_md5hex(path, read_size=64*1024):
-    """
-    Calculate the (hexadecimal) MD5 hash of a file.
-
-    @param path: file path
-    @param read_size: read-ahead size
-    @return: hexadecimal MD5 hash as string
-    """
-    with open(path, 'rb', read_size) as f:
-        md5 = hashlib.md5()
-        while 1:
-            data = f.read(read_size)
-            if not data:
-                break
-            md5.update(data)
-        return md5.hexdigest()
-
-
-def load_md5file(path):
-    """
-    Load a text-based "md5".
-
-    :param path: path to md5 file
-    :return: dict {file: hash}
-    """
-    with open(path, encoding='utf-8') as f:
-        return dict(l.strip().split('  ')[::-1] for l in f)

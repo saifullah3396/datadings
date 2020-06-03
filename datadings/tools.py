@@ -6,6 +6,7 @@ import threading as th
 from queue import Queue
 from queue import Full
 from queue import Empty
+import hashlib
 
 import requests
 import gdown
@@ -55,13 +56,51 @@ def make_printer(bar_format=BAR_FORMAT, miniters=0,
     return p
 
 
+def hash_md5hex(path, read_size=64*1024, progress=False):
+    """
+    Calculate the (hexadecimal) MD5 hash of a file.
+
+    @param path: file path
+    @param read_size: read-ahead size
+    @param progress: if True, display progress
+    @return: hexadecimal MD5 hash as string
+    """
+    printer = make_printer(
+        bar_format=DOWNLOAD_BAR,
+        total=os.stat(path).st_size,
+        unit_scale=True,
+        unit='B',
+        disable=not progress,
+    )
+    with open(path, 'rb', read_size) as f, printer:
+        md5 = hashlib.md5()
+        while 1:
+            data = f.read(read_size)
+            if not data:
+                break
+            md5.update(data)
+            printer.update(len(data))
+        return md5.hexdigest()
+
+
+def load_md5file(path):
+    """
+    Load a text-based "md5".
+
+    :param path: path to md5 file
+    :return: dict {file: hash}
+    """
+    with open(path, encoding='utf-8') as f:
+        return dict(l.strip().split('  ')[::-1] for l in f)
+
+
 DOWNLOAD_BAR = '{rate_fmt}, ' \
                '{n_fmt} of {total_fmt} ' \
                '({percentage:3.0f}%) ' \
                '{elapsed}<{remaining}'
 
 
-def __requests_download(url, path, chunk_size=256*1024):
+def __download_requests_inner(url, path, chunk_size=256*1024):
     part_path = path + '.part'
     resume_header = {}
     existing_size = 0
@@ -99,7 +138,7 @@ def __requests_download(url, path, chunk_size=256*1024):
 
 def __download_requests(url, path):
     try:
-        __requests_download(url, path)
+        __download_requests_inner(url, path)
     except (ConnectionError, IOError, OSError) as e:
         print(e)
         sys.exit(1)
@@ -121,6 +160,21 @@ def download_if_not_found(url, path):
             __download_gdown(url, path)
         else:
             __download_requests(url, path)
+
+
+def download_and_verify_files(files, indir):
+    for _, meta in files.items():
+        path = pt.join(indir, meta['path'])
+        if meta.get('url'):
+            download_if_not_found(meta['url'], path)
+        expected = meta.get('md5')
+        if expected:
+            name = pt.basename(meta['path'])
+            print('Verifying ' + name)
+            got = hash_md5hex(path, progress=True)
+            if got != expected:
+                raise IOError('could not verify MD5 for %s: expected %s, got %s'
+                              % (name, expected, got))
 
 
 def split_array(img, h_pixels, v_pixels, indices=(1, 2)):

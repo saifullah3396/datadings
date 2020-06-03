@@ -28,11 +28,24 @@ from simplejpeg import decode_jpeg_header
 from simplejpeg import encode_jpeg as encode_jpeg
 
 from ..writer import FileWriter
+from ..tools import download_and_verify_files
 from ..tools import yield_threaded
 from . import ImageClassificationData
 from .ILSVRC2012_synsets import SYNSETS
 
 
+FILES = {
+    'train': {
+        'url': None,
+        'path': 'ILSVRC2012_img_train.tar',
+        'md5': '1d675b47d978889d74fa0da5fadfb00e',
+    },
+    'val': {
+        'url': None,
+        'path': 'ILSVRC2012_img_val.tar',
+        'md5': '29b22e2961454d5413ddabcf34fc5622',
+    },
+}
 SET_ROOT = pt.abspath(pt.dirname(__file__))
 READ_SIZE = 4 * 1024 * 1024
 
@@ -133,6 +146,7 @@ def write_set(split, outdir, gen, quality, subsampling, threads):
 
 
 def write_sets(indir, outdir, quality, subsampling, threads):
+    download_and_verify_files(FILES, indir)
     for split in ('val', 'train', ):
         tarpath = pt.join(indir, 'ILSVRC2012_img_%s.tar' % split)
         with tarfile.open(tarpath, bufsize=READ_SIZE) as tar:
