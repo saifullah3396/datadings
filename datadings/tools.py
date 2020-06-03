@@ -162,19 +162,28 @@ def download_if_not_found(url, path):
             __download_requests(url, path)
 
 
-def download_and_verify_files(files, indir):
+def download_files_if_not_found(files, indir):
     for _, meta in files.items():
         path = pt.join(indir, meta['path'])
         if meta.get('url'):
             download_if_not_found(meta['url'], path)
-        expected = meta.get('md5')
-        if expected:
-            name = pt.basename(meta['path'])
-            print('Verifying ' + name)
-            got = hash_md5hex(path, progress=True)
-            if got != expected:
-                raise IOError('could not verify MD5 for %s: expected %s, got %s'
-                              % (name, expected, got))
+
+
+def verify_file(meta, indir):
+    path = pt.join(indir, meta['path'])
+    expected = meta['md5']
+    name = pt.basename(meta['path'])
+    print('Verifying ' + name)
+    got = hash_md5hex(path, progress=True)
+    if got != expected:
+        print('could not verify MD5 for %s: expected %s, got %s'
+              % (name, expected, got))
+        sys.exit(1)
+
+
+def verify_files(files, indir):
+    for _, meta in files.items():
+        verify_file(meta, indir)
 
 
 def split_array(img, h_pixels, v_pixels, indices=(1, 2)):
