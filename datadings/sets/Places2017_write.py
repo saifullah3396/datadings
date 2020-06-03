@@ -28,7 +28,19 @@ import random
 
 import numpy as np
 from PIL import Image
-import cv2
+try:
+    import cv2
+except ImportError:
+    print("""
+OpenCV could not be imported.
+OpenCV 2.4+ is required to create this dataset.
+If you are unsure how to install OpenCV you can use pip:
+
+    pip install opencv-python
+
+""")
+    import sys
+    sys.exit(1)
 
 from ..writer import FileWriter
 from ..tools import download_if_not_found

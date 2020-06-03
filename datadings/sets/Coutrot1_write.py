@@ -16,7 +16,14 @@ from collections import defaultdict
 try:
     import cv2
 except ImportError:
-    print('Install OpenCV 2.4+ to create video-based data sets')
+    print("""
+OpenCV could not be imported.
+OpenCV 2.4+ is required to create this dataset.
+If you are unsure how to install OpenCV you can use pip:
+
+    pip install opencv-python
+
+""")
     import sys
     sys.exit(1)
 import numpy as np
