@@ -138,26 +138,30 @@ def tiff_to_nd_array(file_path, type=np.int8):
 
 
 class Yielder(th.Thread):
-    def __init__(self, gen, queue, end):
+    def __init__(self, gen, queue, end, error):
         super().__init__()
         self.daemon = True
         self.running = True
         self.gen = gen
         self.queue = queue
         self.end = end
+        self.error = error
 
     def run(self):
-        for obj in self.gen:
-            if not self.running:
-                break
-            while True:
-                try:
-                    self.queue.put(obj, timeout=1)
+        try:
+            for obj in self.gen:
+                if not self.running:
                     break
-                except Full:
-                    pass
-        else:
-            self.queue.put(self.end, timeout=1)
+                while True:
+                    try:
+                        self.queue.put(obj, timeout=1)
+                        break
+                    except Full:
+                        pass
+            else:
+                self.queue.put(self.end, timeout=1)
+        finally:
+            self.queue.put(self.error, timeout=1)
 
     def stop(self):
         self.running = False
@@ -171,8 +175,9 @@ def yield_threaded(gen):
     :param gen: generator
     """
     end = object()
+    error = object()
     queue = Queue(maxsize=3)
-    yielder = Yielder(gen, queue, end)
+    yielder = Yielder(gen, queue, end, error)
     try:
         yielder.start()
         while True:
@@ -180,6 +185,8 @@ def yield_threaded(gen):
                 obj = queue.get(timeout=1)
                 if obj is end:
                     break
+                if obj is error:
+                    raise RuntimeError()
                 yield obj
             except Empty:
                 pass
