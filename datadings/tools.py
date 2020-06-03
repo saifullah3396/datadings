@@ -8,6 +8,7 @@ from queue import Full
 from queue import Empty
 
 import requests
+import gdown
 import numpy as np
 import tqdm
 
@@ -96,6 +97,19 @@ def __requests_download(url, path, chunk_size=256*1024):
     os.rename(path + '.part', path)
 
 
+def __download_requests(url, path):
+    try:
+        __requests_download(url, path)
+    except (ConnectionError, IOError, OSError) as e:
+        print(e)
+        sys.exit(1)
+    print()
+
+
+def __download_gdown(url, path):
+    gdown.download(url, path)
+
+
 def download_if_not_found(url, path):
     if not pt.exists(path):
         parent = pt.dirname(path)
@@ -103,12 +117,10 @@ def download_if_not_found(url, path):
             os.makedirs(parent, mode=0o777)
         filename = pt.basename(path)
         print('downloading', filename, '-->', path)
-        try:
-            __requests_download(url, path)
-        except (ConnectionError, IOError, OSError) as e:
-            print(e)
-            sys.exit(1)
-        print()
+        if 'drive.google.com' in url:
+            __download_gdown(url, path)
+        else:
+            __download_requests(url, path)
 
 
 def split_array(img, h_pixels, v_pixels, indices=(1, 2)):
