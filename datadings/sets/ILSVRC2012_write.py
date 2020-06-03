@@ -63,7 +63,13 @@ def yield_samples(split, tar):
         raise ValueError('test set not supported')
 
 
-def verify_image(data, quality=None, short_side=375, long_side=500):
+def verify_image(
+        data,
+        quality=None,
+        short_side=375,
+        long_side=500,
+        colorsubsampling='422',
+):
     target_size = 3 * short_side * long_side
 
     # try to decode data using simplejpeg
@@ -91,12 +97,11 @@ def verify_image(data, quality=None, short_side=375, long_side=500):
         # for CMYK or non-JPEG images,
         # quality might not be given, so assume 99
         if quality is None:
-            quality = 99
+            quality = 98
         # default to subsampling 422
         # use full color resolution for small images
         # or if compression is disabled,
         # i.e. for CMYK images or if simplejpeg failed to decode
-        colorsubsampling = '422'
         if not compress or im.size <= 0.5*target_size:
             colorsubsampling = '444'
         # downscale large images
@@ -115,24 +120,24 @@ def verify_image(data, quality=None, short_side=375, long_side=500):
 TOTAL = {'train': 1281167, 'val': 50000, 'test': 100000}
 
 
-def write_set(split, outdir, gen, quality, threads):
+def write_set(split, outdir, gen, quality, subsampling, threads):
     outfile = pt.join(outdir, split + '.msgpack')
     with FileWriter(outfile, total=TOTAL[split]) as writer:
         def __verify_inner(item):
             key, data, label = item
-            data = verify_image(data, quality)
+            data = verify_image(data, quality, colorsubsampling=subsampling)
             return ImageClassificationData(data, label, key)
         pool = ThreadPool(threads)
         for sample in pool.imap_unordered(__verify_inner, gen):
             writer.write(sample)
 
 
-def write_sets(indir, outdir, quality, threads):
+def write_sets(indir, outdir, quality, subsampling, threads):
     for split in ('val', 'train', ):
         tarpath = pt.join(indir, 'ILSVRC2012_img_%s.tar' % split)
         with tarfile.open(tarpath, bufsize=READ_SIZE) as tar:
             gen = yield_threaded(yield_samples(split, tar))
-            write_set(split, outdir, gen, quality, threads)
+            write_set(split, outdir, gen, quality, subsampling, threads)
 
 
 def main():
@@ -187,7 +192,7 @@ def main():
     outdir = args.outdir or args.indir
     threads = args.threads
     threads = min(threads, cpus) if threads > 0 else cpus
-    write_sets(args.indir, outdir, args.compress, threads)
+    write_sets(args.indir, outdir, args.compress, args.subsampling, threads)
 
 
 if __name__ == '__main__':
