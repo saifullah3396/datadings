@@ -26,7 +26,7 @@ GT = 'gtFine_trainvaltest.zip'
 
 def yield_samples(split, leftzip, disparityzip, gtzip):
     for left_name in leftzip.namelist():
-        key = left_name.replace('_leftImg8bit.png', '').replace('leftImg8bit/')
+        key = left_name.replace('_leftImg8bit.png', '').replace('leftImg8bit/', '')
         if not key.startswith(split):
             continue
         image = leftzip.read(left_name)
