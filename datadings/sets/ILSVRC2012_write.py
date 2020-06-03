@@ -103,9 +103,7 @@ def write_set(split, outdir, gen, compress):
             with lock:
                 writer.write(image)
         pool = ThreadPool(min(8, cpu_count()))
-        result = pool.map_async(write_image, gen)
-        while not result.ready():
-            result.wait(1000)
+        pool.imap_unordered(write_image, gen)
 
 
 def write_sets(indir, outdir, compress=False):
