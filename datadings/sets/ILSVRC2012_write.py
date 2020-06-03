@@ -28,7 +28,7 @@ from simplejpeg import decode_jpeg_header
 from simplejpeg import encode_jpeg as encode_jpeg
 
 from ..writer import FileWriter
-from ..tools import download_and_verify_files
+from ..tools import verify_files
 from ..tools import yield_threaded
 from . import ImageClassificationData
 from .ILSVRC2012_synsets import SYNSETS
@@ -145,9 +145,10 @@ def write_set(split, outdir, gen, quality, subsampling, threads):
             writer.write(sample)
 
 
-def write_sets(indir, outdir, quality, subsampling, threads):
-    download_and_verify_files(FILES, indir)
-    for split in ('val', 'train', ):
+def write_sets(indir, outdir, quality, subsampling, threads, verification):
+    if verification:
+        verify_files(FILES, indir)
+    for split in ('train', 'val'):
         tarpath = pt.join(indir, 'ILSVRC2012_img_%s.tar' % split)
         with tarfile.open(tarpath, bufsize=READ_SIZE) as tar:
             gen = yield_threaded(yield_samples(split, tar))
@@ -169,6 +170,11 @@ def main():
         '-o', '--outdir',
         metavar='OUTDIR',
         help='output directory; defaults to indir'
+    )
+    parser.add_argument(
+        "-s", "--skip-verification",
+        action="store_true",
+        help="If you're feeling lucky."
     )
     parser.add_argument(
         '-c', '--compress',
@@ -206,7 +212,14 @@ def main():
     outdir = args.outdir or args.indir
     threads = args.threads
     threads = min(threads, cpus) if threads > 0 else cpus
-    write_sets(args.indir, outdir, args.compress, args.subsampling, threads)
+    write_sets(
+        args.indir,
+        outdir,
+        args.compress,
+        args.subsampling,
+        threads,
+        not args.skip_verification,
+    )
 
 
 if __name__ == '__main__':
