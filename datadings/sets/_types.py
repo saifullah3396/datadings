@@ -147,6 +147,20 @@ def SaliencyExperiment(
     }
 
 
+def SaliencyTimeseriesExperiment(
+        locations,
+        map,
+        timestamps,
+        fixations
+):
+    return {
+        'locations': locations,
+        'map': map,
+        'timestamps': timestamps,
+        'fixations': fixations
+    }
+
+
 def SegmentationDisparityData(
         key,
         image,
@@ -158,32 +172,4 @@ def SegmentationDisparityData(
         'image': image,
         'label_image': label_image,
         'disparity_image': disparity_image
-    }
-
-
-def iSUNData(
-        image,
-        experiments,
-        key,
-        scenecategory
-):
-    return {
-        'image': image,
-        'experiments': experiments,
-        'key': key,
-        'scenecategory': scenecategory
-    }
-
-
-def iSUNExperiment(
-        locations,
-        map,
-        timestamps,
-        fixations
-):
-    return {
-        'locations': locations,
-        'map': map,
-        'timestamps': timestamps,
-        'fixations': fixations
     }

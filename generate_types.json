@@ -57,13 +57,7 @@
     "coarse_label",
     "key"
   ],
-  "iSUNData": [
-    "image",
-    "experiments",
-    "key",
-    "scenecategory"
-  ],
-  "iSUNExperiment": [
+  "SaliencyTimeseriesExperiment": [
     "locations",
     "map",
     "timestamps",

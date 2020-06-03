@@ -78,11 +78,11 @@ MIT300_           Eye-Tracking, Saliency
 Places2017_       MIT Places, Scene Recognition
 Places365_        MIT Places365, Scene Recognition
 RIT18_            High-Res Multispectral Semantic Segmentation, Remote Sensing
-SALICON_          Saliency in Context, Eye-Tracking
+SALICON2015_      Saliency in Context, Eye-Tracking
+SALICON2017_      Saliency in Context, Eye-Tracking
 VOC2012_          Pascal Visual Object Classes Challenge
 Vaihingen_        Remote Sensing, Semantic Object Classification, Segmentation
 YFCC100m_         Yahoo Flickr Creative Commons 100 M pics
-iSUN_             Large-Scale Scene Understanding, Saliency
 ================  ============================
 
 
@@ -101,11 +101,11 @@ iSUN_             Large-Scale Scene Understanding, Saliency
 .. _Places2017: http://places.csail.mit.edu/
 .. _Places365: http://places2.csail.mit.edu/
 .. _RIT18: https://github.com/rmkemker/RIT-18
-.. _SALICON: http://salicon.net/
+.. _SALICON2015: http://salicon.net/challenge-2015/
+.. _SALICON2017: http://salicon.net/challenge-2017/
 .. _VOC2012: http://host.robots.ox.ac.uk/pascal/VOC/voc2012/
 .. _Vaihingen: http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html
 .. _YFCC100m: http://yfcc100m.appspot.com/about
-.. _iSUN: http://lsun.cs.princeton.edu/2017/
 
 
 

@@ -1,4 +1,4 @@
-"""Create SALICON (LSUN release) data set files.
+"""Create SALICON 2015 challenge data set files.
 
 The data set is described here:
     http://salicon.net/challenge-2015/
@@ -16,7 +16,7 @@ import numpy as np
 
 from ..writer import FileWriter
 from . import SaliencyData
-from .SALICON2015 import SALICONExperiment
+from . import SaliencyTimeseriesExperiment
 from ..tools import download_if_not_found
 from ..tools import yield_threaded
 from ..matlab import loadmat
@@ -39,7 +39,7 @@ def yield_samples(keys, imagezip, fixationzip):
         mat = loadmat(fixationzip.read(key + '.mat'))
         if 'gaze' in mat:
             experiments = [
-                SALICONExperiment(
+                SaliencyTimeseriesExperiment(
                     subject[0].astype(np.float32).reshape((-1, 2)),  # locations
                     None,
                     subject[1].astype(np.float32).flatten(),  # timestamps
