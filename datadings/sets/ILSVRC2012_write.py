@@ -115,8 +115,7 @@ def verify_image(data, quality=None, short_side=375, long_side=500):
 TOTAL = {'train': 1281167, 'val': 50000, 'test': 100000}
 
 
-def write_set(split, outdir, gen, compress, quality, threads):
-    quality = quality if compress else None
+def write_set(split, outdir, gen, quality, threads):
     outfile = pt.join(outdir, split + '.msgpack')
     with FileWriter(outfile, total=TOTAL[split]) as writer:
         def __verify_inner(item):
@@ -128,12 +127,12 @@ def write_set(split, outdir, gen, compress, quality, threads):
             writer.write(sample)
 
 
-def write_sets(indir, outdir, compress, quality, threads):
+def write_sets(indir, outdir, quality, threads):
     for split in ('val', 'train', ):
         tarpath = pt.join(indir, 'ILSVRC2012_img_%s.tar' % split)
         with tarfile.open(tarpath, bufsize=READ_SIZE) as tar:
             gen = yield_threaded(yield_samples(split, tar))
-            write_set(split, outdir, gen, compress, quality, threads)
+            write_set(split, outdir, gen, quality, threads)
 
 
 def main():
@@ -154,32 +153,41 @@ def main():
     )
     parser.add_argument(
         '-c', '--compress',
-        action='store_true',
-        help='recompress images as JPEG with q=85 and 422 color subsampling; '
+        nargs='?',
+        default=None,
+        const=85,
+        choices=range(101),
+        metavar='quality 0-100',
+        type=int,
+        help='use JPEG compression with optional quality; '
+             'default quality is 85; '
              'big images are resized to roughly fit 500x375; '
-             '444 color is used for very small images'
+             '444 color is forced for very small images'
     )
     parser.add_argument(
-        '-q', '--quality',
-        default=85,
-        type=int,
-        action='store_true',
-        help='recompress images as JPEG with this quality'
+        '-s', '--subsampling',
+        default='422',
+        choices=('444', '422', '420', '440', '411', 'Gray'),
+        type=str,
+        help='color subsampling factor used with compress option'
     )
+    cpus = cpu_count()
+    default_cpu = min(8, cpus)
     parser.add_argument(
         '-t', '--threads',
-        default=8,
+        default=default_cpu,
+        choices=range(cpus+1),
+        metavar='0-%d' % cpus,
         type=int,
-        action='store_true',
         help='number of threads used to verify images; '
-             'set t<=0 to use all available CPUs; '
-             'values greater than CPU count are capped'
+             '0 uses all available CPUs; '
+             'default is %d' % default_cpu
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     threads = args.threads
-    threads = min(threads, cpu_count()) if threads > 0 else cpu_count()
-    write_sets(args.indir, outdir, args.compress, args.quality, threads)
+    threads = min(threads, cpus) if threads > 0 else cpus
+    write_sets(args.indir, outdir, args.compress, threads)
 
 
 if __name__ == '__main__':
