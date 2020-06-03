@@ -50,7 +50,7 @@ def write_sets(indir, outdir):
     def z(path):
         return zipfile.ZipFile(pt.join(indir, path))
     with z(LEFT) as left, z(DISPARITY) as disparity, z(GT) as gt:
-        for split in ('test', 'val', 'train'):
+        for split in ('train', 'val', 'test'):
             keys = get_keys(left, split)
             gen = yield_threaded(yield_samples(keys, left, disparity, gt))
             write_set(outdir, split, gen, len(keys))
