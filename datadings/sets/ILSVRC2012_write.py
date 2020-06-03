@@ -33,12 +33,14 @@ from .ILSVRC2012_synsets import SYNSETS
 
 
 SET_ROOT = pt.abspath(pt.dirname(__file__))
+READ_SIZE = 4 * 1024 * 1024
 
 
 def yield_train(tar):
     for synset in tar:
         label = SYNSETS[pt.splitext(synset.name)[0]]
-        with tarfile.open(fileobj=tar.extractfile(synset)) as images:
+        with tarfile.open(fileobj=tar.extractfile(synset),
+                          bufsize=READ_SIZE) as images:
             for image in images:
                 yield image.name, images.extractfile(image).read(), label
 
@@ -100,7 +102,7 @@ def write_set(split, outdir, gen, compress):
             image = ImageClassificationData(data, label, key)
             with lock:
                 writer.write(image)
-        pool = ThreadPool(min(8 if compress else 1, cpu_count()))
+        pool = ThreadPool(min(8, cpu_count()))
         result = pool.map_async(write_image, gen)
         while not result.ready():
             result.wait(1000)
@@ -109,7 +111,7 @@ def write_set(split, outdir, gen, compress):
 def write_sets(indir, outdir, compress=False):
     for split in ('val', 'train', ):
         tarpath = pt.join(indir, 'ILSVRC2012_img_%s.tar' % split)
-        with tarfile.open(tarpath) as tar:
+        with tarfile.open(tarpath, bufsize=READ_SIZE) as tar:
             gen = yield_samples(split, tar)
             write_set(split, outdir, gen, compress)
 
