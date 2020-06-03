@@ -148,20 +148,16 @@ def SaliencyExperiment(
 
 
 def SegmentationDisparityData(
-        image,
-        disparity_map,
-        label_image,
         key,
-        classes,
-        class_weights
+        image,
+        label_image,
+        disparity_map
 ):
     return {
-        'image': image,
-        'disparity_map': disparity_map,
-        'label_image': label_image,
         'key': key,
-        'classes': classes,
-        'class_weights': class_weights
+        'image': image,
+        'label_image': label_image,
+        'disparity_map': disparity_map
     }
 
 

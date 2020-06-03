@@ -20,12 +20,10 @@
     "class_weights"
   ],
   "SegmentationDisparityData": [
-    "image",
-    "disparity_map",
-    "label_image",
     "key",
-    "classes",
-    "class_weights"
+    "image",
+    "label_image",
+    "disparity_image"
   ],
   "SaliencyData": [
     "image",
