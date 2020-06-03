@@ -14,7 +14,6 @@ This tool will look for the following files in the input directory:
 Registration is required to download this dataset.
 Please visit the website to download it.
 """
-import threading as th
 import os.path as pt
 import gzip
 import tarfile
@@ -28,6 +27,7 @@ from simplejpeg import decode_jpeg_header
 from simplejpeg import encode_jpeg as encode_jpeg
 
 from ..writer import FileWriter
+from ..tools import yield_threaded
 from . import ImageClassificationData
 from .ILSVRC2012_synsets import SYNSETS
 
@@ -93,24 +93,22 @@ TOTAL = {'train': 1280000, 'val': 50000, 'test': 100000}
 
 def write_set(split, outdir, gen, compress):
     quality = 85 if compress else None
-    lock = th.Lock()
     outfile = pt.join(outdir, split + '.msgpack')
     with FileWriter(outfile, total=TOTAL[split]) as writer:
-        def write_image(item):
+        def __verify_inner(item):
             key, data, label = item
             data = verify_image(data, quality)
-            image = ImageClassificationData(data, label, key)
-            with lock:
-                writer.write(image)
+            return ImageClassificationData(data, label, key)
         pool = ThreadPool(min(8, cpu_count()))
-        pool.imap_unordered(write_image, gen)
+        for sample in pool.imap_unordered(__verify_inner, gen):
+            writer.write(sample)
 
 
 def write_sets(indir, outdir, compress=False):
     for split in ('val', 'train', ):
         tarpath = pt.join(indir, 'ILSVRC2012_img_%s.tar' % split)
         with tarfile.open(tarpath, bufsize=READ_SIZE) as tar:
-            gen = yield_samples(split, tar)
+            gen = yield_threaded(yield_samples(split, tar))
             write_set(split, outdir, gen, compress)
 
 
