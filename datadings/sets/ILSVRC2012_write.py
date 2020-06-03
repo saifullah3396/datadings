@@ -17,6 +17,7 @@ Please visit the website to download it.
 import os.path as pt
 import gzip
 import tarfile
+import io
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 
@@ -62,21 +63,44 @@ def yield_samples(split, tar):
         raise ValueError('test set not supported')
 
 
-def verify_image(data, quality=None, normal_size=3*375*500, long_side=500):
-    im = decode_jpeg(data)
-    _, _, colorspace, _ = decode_jpeg_header(data)
-    # if images are CMYK or encode quality is given and they are big enough
-    if colorspace == 'CMYK' or (quality is not None and im.size > 0.5*normal_size):
-        # for CMYK images, quality might not be given, so assume 99
+def verify_image(data, quality=None, short_side=375, long_side=500):
+    target_size = 3 * short_side * long_side
+
+    # try to decode data using simplejpeg
+    try:
+        h, w, colorspace, _ = decode_jpeg_header(data)
+        # decode images to match at least target size
+        im = decode_jpeg(
+            data,
+            min_width=short_side if w < h else long_side,
+            min_height=short_side if h < w else long_side
+        )
+        # encode quality is given
+        # and image is big enough to not suffer from re-encoding
+        compress = quality is not None and im.size > 0.5*target_size
+    # simplejpeg could not decode image, fall back to Pillow
+    # could be faulty JPEG or other image format, e.g. PNG
+    except ValueError:
+        bio = io.BytesIO(data)
+        im = np.array(Image.open(bio).convert('RGB'))
+        colorspace = 'RGB'  # converted to RGB guaranteed
+        compress = True  # force compression since simplejpeg failed
+
+    # if images are CMYK or
+    if colorspace == 'CMYK' or compress:
+        # for CMYK or non-JPEG images,
+        # quality might not be given, so assume 99
         if quality is None:
             quality = 99
         # default to subsampling 422
         # use full color resolution for small images
+        # or if compression is disabled,
+        # i.e. for CMYK images or if simplejpeg failed to decode
         colorsubsampling = '422'
-        if im.size <= 0.5*normal_size:
+        if not compress or im.size <= 0.5*target_size:
             colorsubsampling = '444'
         # downscale large images
-        if im.size > normal_size*1.5:
+        if im.size > target_size*1.5:
             h, w = im.shape[:2]
             s = max(h, w)
             r = long_side/s
