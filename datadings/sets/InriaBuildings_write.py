@@ -1,12 +1,13 @@
-"""Create InriaBuilding data set files.
+"""Create InriaBuildings data set files.
 
 The data set is described here:
     https://project.inria.fr/aerialimagelabeling/contest/
 
-This tool will look for the following files in the input directory
-and download them if necessary:
-    - https://project.inria.fr/aerialimagelabeling/contest/
+This tool will look for the unpacked "AerialImageDataset"
+directory in the input directory.
 
+Registration is required to download this dataset.
+Please visit the website to download it.
 """
 import numpy as np
 import os.path as pt
