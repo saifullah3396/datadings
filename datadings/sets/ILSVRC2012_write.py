@@ -3,14 +3,21 @@
 The data set is described here:
     http://image-net.org/challenges/LSVRC/2012/index
 
-The tar files need to be unpacked.
+Important:
+    For performance reasons shuffling is not available.
+    You can use datadings-shuffle to create a shuffled copy.
+
+This tool will look for the following files in the input directory:
+    - ILSVRC2012_img_train.tar
+    - ILSVRC2012_img_val.tar
+
+Registration is required to download this dataset.
+Please visit the website to download it.
 """
 import threading as th
-import os
 import os.path as pt
-import io
 import gzip
-import random
+import tarfile
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 
@@ -22,18 +29,35 @@ from simplejpeg import encode_jpeg as encode_jpeg
 
 from ..writer import FileWriter
 from . import ImageClassificationData
+from .ILSVRC2012_synsets import SYNSETS
 
 
-def __yield_ilsvrc2012_metadata(name, shuffle):
-    path = pt.join(pt.abspath(pt.dirname(__file__)),
-                   'ILSVRC2012_%s.txt.gz' % name)
+SET_ROOT = pt.abspath(pt.dirname(__file__))
+
+
+def yield_train(tar):
+    for synset in tar:
+        label = SYNSETS[pt.splitext(synset.name)[0]]
+        with tarfile.open(fileobj=tar.extractfile(synset)) as images:
+            for image in images:
+                yield image.name, images.extractfile(image).read(), label
+
+
+def yield_val(tar):
+    path = pt.join(SET_ROOT, 'ILSVRC2012_val.txt.gz')
     with gzip.open(path, 'rt', encoding='utf8') as f:
-        items = (l.strip('\n').split(' ', 1) for l in f)
-        if shuffle:
-            items = list(items)
-            random.shuffle(items)
-        for item in items:
-            yield item
+        labels = dict(l.strip('\n').split(' ', 1) for l in f)
+    for image in tar:
+        yield image.name, tar.extractfile(image).read(), labels[image.name]
+
+
+def yield_samples(split, tar):
+    if split == 'train':
+        return yield_train(tar)
+    elif split == 'val':
+        return yield_val(tar)
+    elif split == 'test':
+        raise ValueError('test set not supported')
 
 
 def verify_image(data, quality=None, normal_size=3*375*500, long_side=500):
@@ -65,31 +89,29 @@ def verify_image(data, quality=None, normal_size=3*375*500, long_side=500):
 TOTAL = {'train': 1280000, 'val': 50000, 'test': 100000}
 
 
-def write_sets(indir, outdir, shuffle=True, compress=False):
-    if not pt.exists(outdir):
-        os.makedirs(outdir)
+def write_set(split, outdir, gen, compress):
     quality = 85 if compress else None
-    for name in ('val', 'train', ):
-        datadir = pt.join(indir, name)
-        gen = __yield_ilsvrc2012_metadata(name, shuffle)
-        lock = th.Lock()
-        with FileWriter(pt.join(outdir, name + '.msgpack'), total=TOTAL[name]) as writer:
-            def write_image(item):
-                filename, label = item
-                path = pt.join(datadir, filename)
-                with io.FileIO(path) as f:
-                    data = verify_image(f.read(), quality)
-                    image = ImageClassificationData(
-                        data,
-                        int(label),
-                        filename,
-                    )
-                with lock:
-                    writer.write(image)
-            pool = ThreadPool(cpu_count()*4)
-            result = pool.map_async(write_image, gen)
-            while not result.ready():
-                result.wait(1000)
+    lock = th.Lock()
+    outfile = pt.join(outdir, split + '.msgpack')
+    with FileWriter(outfile, total=TOTAL[split]) as writer:
+        def write_image(item):
+            key, data, label = item
+            data = verify_image(data, quality)
+            image = ImageClassificationData(data, label, key)
+            with lock:
+                writer.write(image)
+        pool = ThreadPool(min(8 if compress else 1, cpu_count()))
+        result = pool.map_async(write_image, gen)
+        while not result.ready():
+            result.wait(1000)
+
+
+def write_sets(indir, outdir, compress=False):
+    for split in ('val', 'train', ):
+        tarpath = pt.join(indir, 'ILSVRC2012_img_%s.tar' % split)
+        with tarfile.open(tarpath) as tar:
+            gen = yield_samples(split, tar)
+            write_set(split, outdir, gen, compress)
 
 
 def main():
@@ -101,7 +123,7 @@ def main():
     parser.add_argument(
         'indir',
         metavar='INPATH',
-        help='directory that contains ILSRCV 2012 image directories and lists'
+        help='directory that contains ILSRCV 2012 tar files'
     )
     parser.add_argument(
         '-o', '--outdir',
