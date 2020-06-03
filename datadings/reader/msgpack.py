@@ -116,17 +116,6 @@ class MsgpackReader(Reader):
         return hashes[indexname] == hash_md5hex(self._path + '.index', read_size)
 
 
-def _load_index1(path, buffering):
-    with open(path + '.index', 'rb', buffering) as f:
-        pairs = unpack(f, object_hook=None, object_pairs_hook=list)
-        return [k for k, _ in pairs], [p for _, p in pairs]
-
-
-def _load_index2(path, buffering):
-    with open(path + '.index2', 'rb', buffering) as f:
-        return unpack(f, object_hook=None)
-
-
 def _load_index(path, buffering=4*1024*1024):
     """
     Load index as two lists of keys and positions.
@@ -134,10 +123,10 @@ def _load_index(path, buffering=4*1024*1024):
     @param path: path to dataset file
     @return: keys and positions lists of equal length
     """
-    if pt.exists(path + '.index2'):
-        return _load_index2(path, buffering)
-    elif pt.exists(path + '.index'):
-        return _load_index1(path, buffering)
+    if pt.exists(path + '.index'):
+        with open(path + '.index', 'rb', buffering) as f:
+            pairs = unpack(f, object_hook=None, object_pairs_hook=list)
+            return [k for k, _ in pairs], [p for _, p in pairs]
     else:
         raise IOError('index for %r not found' % path)
 

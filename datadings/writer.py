@@ -61,17 +61,14 @@ class Writer(object):
         """
         self._outfile.flush()
         self._outfile.close()
-        with open(self._path + '.index2', 'wb') as f:
-            indexdata = packb((
-                list(self._index.keys()),
-                list(self._index.values())
-            ))
+        with open(self._path + '.index', 'wb') as f:
+            indexdata = packb(self._index)
             f.write(indexdata)
             indexhash = hashlib.md5(indexdata).hexdigest()
         with open(self._path + '.md5', 'w', encoding='utf-8') as f:
             name = pt.basename(self._path)
             f.write('%s  %s\n' % (self._hash.hexdigest(), name))
-            f.write('%s  %s\n' % (indexhash, name + '.index2'))
+            f.write('%s  %s\n' % (indexhash, name + '.index'))
         self._printer.close()
         print('%d samples written' % self.written)
 
