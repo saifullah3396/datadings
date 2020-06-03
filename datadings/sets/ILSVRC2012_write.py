@@ -112,28 +112,28 @@ def verify_image(data, quality=None, short_side=375, long_side=500):
         return data
 
 
-TOTAL = {'train': 1280000, 'val': 50000, 'test': 100000}
+TOTAL = {'train': 1281167, 'val': 50000, 'test': 100000}
 
 
-def write_set(split, outdir, gen, compress):
-    quality = 85 if compress else None
+def write_set(split, outdir, gen, compress, quality, threads):
+    quality = quality if compress else None
     outfile = pt.join(outdir, split + '.msgpack')
     with FileWriter(outfile, total=TOTAL[split]) as writer:
         def __verify_inner(item):
             key, data, label = item
             data = verify_image(data, quality)
             return ImageClassificationData(data, label, key)
-        pool = ThreadPool(min(8, cpu_count()))
+        pool = ThreadPool(threads)
         for sample in pool.imap_unordered(__verify_inner, gen):
             writer.write(sample)
 
 
-def write_sets(indir, outdir, compress=False):
+def write_sets(indir, outdir, compress, quality, threads):
     for split in ('val', 'train', ):
         tarpath = pt.join(indir, 'ILSVRC2012_img_%s.tar' % split)
         with tarfile.open(tarpath, bufsize=READ_SIZE) as tar:
             gen = yield_threaded(yield_samples(split, tar))
-            write_set(split, outdir, gen, compress)
+            write_set(split, outdir, gen, compress, quality, threads)
 
 
 def main():
@@ -153,13 +153,33 @@ def main():
         help='output directory; defaults to indir'
     )
     parser.add_argument(
-        '--compress',
+        '-c', '--compress',
         action='store_true',
-        help='recompress images as JPEG with q=85 and 422 color subsampling'
+        help='recompress images as JPEG with q=85 and 422 color subsampling; '
+             'big images are resized to roughly fit 500x375; '
+             '444 color is used for very small images'
+    )
+    parser.add_argument(
+        '-q', '--quality',
+        default=85,
+        type=int,
+        action='store_true',
+        help='recompress images as JPEG with this quality'
+    )
+    parser.add_argument(
+        '-t', '--threads',
+        default=8,
+        type=int,
+        action='store_true',
+        help='number of threads used to verify images; '
+             'set t<=0 to use all available CPUs; '
+             'values greater than CPU count are capped'
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir, compress=args.compress)
+    threads = args.threads
+    threads = min(threads, cpu_count()) if threads > 0 else cpu_count()
+    write_sets(args.indir, outdir, args.compress, args.quality, threads)
 
 
 if __name__ == '__main__':
