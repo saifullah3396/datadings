@@ -151,13 +151,13 @@ def SegmentationDisparityData(
         key,
         image,
         label_image,
-        disparity_map
+        disparity_image
 ):
     return {
         'key': key,
         'image': image,
         'label_image': label_image,
-        'disparity_map': disparity_map
+        'disparity_image': disparity_image
     }
 
 
