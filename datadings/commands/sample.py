@@ -1,4 +1,3 @@
-#!python
 """Extract samples from a dataset.
 """
 import sys

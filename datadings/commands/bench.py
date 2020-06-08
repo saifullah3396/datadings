@@ -1,4 +1,3 @@
-#!python
 """Run a read benchmark on a given dataset file.
 """
 import time

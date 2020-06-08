@@ -1,4 +1,3 @@
-#!python
 """Splits one dataset into several smaller ones.
 
 For example two split positions A and B produce three output files:

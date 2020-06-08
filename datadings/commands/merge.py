@@ -1,4 +1,3 @@
-#!python
 """Merge two or more dataset files.
 
 Available strategies:

@@ -1,4 +1,3 @@
-#!python
 """Shuffle an existing dataset file.
 """
 import sys

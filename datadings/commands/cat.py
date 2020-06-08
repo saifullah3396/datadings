@@ -1,4 +1,3 @@
-#!python
 """Cat msgpack files.
 """
 import os.path as pt

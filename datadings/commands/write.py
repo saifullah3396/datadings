@@ -1,4 +1,3 @@
-#!python
 """Create dataset files.
 The following datasets are supported:
 
