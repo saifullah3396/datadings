@@ -58,15 +58,18 @@ package_data = {
 dependencies = read(PACKAGE_DIR, 'requirements.txt').splitlines()
 
 
-scripts = [
-    'bin/datadings-bench',
-    'bin/datadings-merge',
-    'bin/datadings-sample',
-    'bin/datadings-show',
-    'bin/datadings-shuffle',
-    'bin/datadings-write',
-    'bin/datadings-split',
-    'bin/datadings-cat'
+console_scripts = [
+    'datadings-{cmd}=datadings.commands.{cmd}:entry'.format(cmd=cmd)
+    for cmd in (
+        'bench',
+        'merge',
+        'sample',
+        'show',
+        'shuffle',
+        'write',
+        'split',
+        'cat'
+    )
 ]
 
 
@@ -96,7 +99,9 @@ setup(
     extras_require={
         "geo": ["GDAL>=2.4.0"],
     },
-    scripts=scripts,
+    entry_points={
+        'console_scripts': console_scripts,
+    },
     cmdclass={
         'build_py': build_py,
     },
