@@ -5,11 +5,15 @@ import time
 import os.path as pt
 
 from datadings.reader import MsgpackReader
+from datadings.reader import Shuffler
 from datadings.tools import make_printer
 
 
-def bench(infile, raw):
-    r = MsgpackReader(infile)
+def bench(infile, raw, shuffle, buffering):
+    kwargs = {'buffering': buffering} if buffering else {}
+    r = MsgpackReader(infile, **kwargs)
+    if shuffle:
+        r = Shuffler(r)
     printer = make_printer(desc='bench ' + pt.basename(infile), total=len(r))
     a = time.time()
     if raw:
@@ -28,22 +32,30 @@ def bench(infile, raw):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        'infile',
-        help='file to benchmark'
-    )
+    from datadings.argparse import make_parser
+    from datadings.argparse import argument_infile
+
+    parser = make_parser(__doc__)
+    argument_infile(parser)
     parser.add_argument(
         '-r', '--raw',
-        help='do not deserialize samples',
-        action='store_true'
+        help='Do not decode samples. '
+             'This is representative of performance in a multi-process '
+             'environment, where workers take over decoding.',
+        action='store_true',
+    )
+    parser.add_argument(
+        '-s', '--shuffle',
+        help='Shuffle the reader.',
+        action='store_true',
+    )
+    parser.add_argument(
+        '-b', '--buffering',
+        type=int,
+        help='Buffer size of reader.',
     )
     args, unknown = parser.parse_known_args()
-    bench(args.infile, args.raw)
+    bench(args.infile, args.raw, args.shuffle, args.buffering)
 
 
 if __name__ == '__main__':
