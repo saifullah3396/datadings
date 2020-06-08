@@ -1,13 +1,11 @@
-"""Create CAMVID data set files.
+"""Create Pascal VOC 2012 dataset files.
 
-The adaptation of the data set is described here:
-    https://github.com/alexgkendall/SegNet-Tutorial
+The dataset is described here:
+    http://host.robots.ox.ac.uk/pascal/VOC/voc2012/
 
 This tool will look for the following files in the input directory
 and download them if necessary:
-    - VOCtrainval_11-May-2012.tar from
-          http://host.robots.ox.ac.uk/pascal/VOC/voc2012/
-          VOCtrainval_11-May-2012.tar
+    - VOCtrainval_11-May-2012.tar
 """
 import os.path as pt
 import tarfile
@@ -166,26 +164,17 @@ def calculate_set_weights(indir):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        default='.',
-        help='directory that contains MIT1003 archives'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTPATH',
-        help='output directory; defaults to indir'
-    )
+    from datadings.argparse import make_parser
+    from datadings.argparse import argument_indir
+    from datadings.argparse import argument_outdir
+
+    parser = make_parser(__doc__)
+    argument_indir(parser)
+    argument_outdir(parser)
     parser.add_argument(
         '--calculate-weights',
         action='store_true',
-        help='calculate median-frequency class weights'
+        help='Calculate median-frequency class weights.'
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
