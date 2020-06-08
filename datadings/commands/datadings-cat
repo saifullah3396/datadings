@@ -32,10 +32,14 @@ def main():
     cat(infile, args.maxstring)
 
 
-if __name__ == '__main__':
+def entry():
     try:
         main()
     except KeyboardInterrupt:
         pass
     finally:
         print()
+
+
+if __name__ == '__main__':
+    entry()

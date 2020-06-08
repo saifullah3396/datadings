@@ -58,10 +58,14 @@ def main():
     bench(args.infile, args.raw, args.shuffle, args.buffering)
 
 
-if __name__ == '__main__':
+def entry():
     try:
         main()
     except KeyboardInterrupt:
         pass
     finally:
         print()
+
+
+if __name__ == '__main__':
+    entry()
