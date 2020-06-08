@@ -18,19 +18,13 @@ def shuffle(infile, outfile):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        'infile',
-        help='file to shuffle',
-    )
-    parser.add_argument(
-        'outfile',
-        help='output file; cannot be same as infile',
-    )
+    from datadings.argparse import make_parser
+    from datadings.argparse import argument_infile
+    from datadings.argparse import argument_outfile_positional
+
+    parser = make_parser(__doc__)
+    argument_infile(parser)
+    argument_outfile_positional(parser)
     args, unknown = parser.parse_known_args()
     infile = pt.abspath(args.infile)
     outfile = pt.abspath(args.outfile)

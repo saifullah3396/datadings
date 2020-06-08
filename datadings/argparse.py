@@ -86,6 +86,13 @@ argument_outfile = __make_argument(
 )
 
 
+argument_outfile_positional = __make_argument(
+        'outfile',
+        type=str,
+        help='Output file.',
+)
+
+
 argument_outfiles = __make_argument(
         '-o', '--outfiles',
         type=str,

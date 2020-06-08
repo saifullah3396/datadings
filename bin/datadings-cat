@@ -16,15 +16,11 @@ def cat(infile, maxstring):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        'infile',
-        help='file to cat',
-    )
+    from datadings.argparse import make_parser
+    from datadings.argparse import argument_infile
+
+    parser = make_parser(__doc__)
+    argument_infile(parser, help='File to cat.')
     parser.add_argument(
         '-s', '--maxstring',
         default=40,
