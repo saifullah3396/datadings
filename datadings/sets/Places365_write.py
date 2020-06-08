@@ -121,14 +121,17 @@ def get_files(challenge, low_res):
     return FILES[(low_res, challenge)]
 
 
-def _write_set(generator, data_cls, out_path, total):
-    with FileWriter(out_path, total=total) as writer:
-        for member, data, data_args in generator:
-            writer.write(data_cls(
-                data,
-                *data_args,
-                member.name
-            ))
+def _write_set(generator, data_cls, out_path, total, overwrite):
+    try:
+        with FileWriter(out_path, total=total, overwrite=overwrite) as writer:
+            for member, data, data_args in generator:
+                writer.write(data_cls(
+                    data,
+                    *data_args,
+                    member.name
+                ))
+    except FileExistsError:
+        pass
 
 
 def _yield_from_training_folder_structure(data_tar):
@@ -158,65 +161,62 @@ def _yield_from_meta_tar_files_list(data_tar, meta_tar, files_list_fn):
         yield member, data, label
 
 
-def _write_training_set(indir, outdir, challenge, low_res):
-    files = get_files(challenge, low_res)["training"]
+def _write_training_set(indir, outdir, args):
+    files = get_files(args.challenge, args.low_res)["training"]
     tar_path = pt.join(indir, files["path"])
     out_path = pt.join(outdir, "training.msgpack")
     with tarfile.open(tar_path, "r", bufsize=READ_SIZE) as tar:
         gen = yield_threaded(_yield_from_training_folder_structure(tar))
-        _write_set(gen, ImageClassificationData, out_path, files["total"])
+        _write_set(gen, ImageClassificationData, out_path, files["total"],
+                   args.no_confirm)
 
 
-def _write_validation_set(indir, outdir, meta_tar, challenge, low_res):
-    files = get_files(challenge, low_res)["validation"]
+def _write_validation_set(indir, outdir, meta_tar, args):
+    files = get_files(args.challenge, args.low_res)["validation"]
     tar_path = pt.join(indir, files["path"])
     out_path = pt.join(outdir, "validation.msgpack")
     with tarfile.open(tar_path, "r", bufsize=READ_SIZE) as data_tar:
         gen = yield_threaded(_yield_from_meta_tar_files_list(
             data_tar, meta_tar, "places365_val.txt"
         ))
-        _write_set(gen, ImageClassificationData, out_path, files["total"])
+        _write_set(gen, ImageClassificationData, out_path, files["total"],
+                   args.no_confirm)
 
 
-def _write_testing_set(indir, outdir, meta_tar, challenge, low_res):
-    files = get_files(challenge, low_res)["testing"]
+def _write_testing_set(indir, outdir, meta_tar, args):
+    files = get_files(args.challenge, args.low_res)["testing"]
     tar_path = pt.join(indir, files["path"])
     out_path = pt.join(outdir, "testing.msgpack")
     with tarfile.open(tar_path, "r", bufsize=READ_SIZE) as data_tar:
         gen = yield_threaded(_yield_from_meta_tar_files_list(
             data_tar, meta_tar, "places365_test.txt"
         ))
-        _write_set(gen, ImageData, out_path, files["total"])
+        _write_set(gen, ImageData, out_path, files["total"],
+                   args.no_confirm)
 
 
-def write_sets(indir, outdir, challenge, low_res, verification):
-    files = get_files(challenge, low_res)
+def write_sets(indir, outdir, args):
+    files = get_files(args.challenge, args.low_res)
     download_files_if_not_found(files, indir)
-    if verification:
+    if not args.skip_verification:
         verify_files(files, indir)
     meta_tar_path = pt.join(indir, files["meta"]["path"])
-    _write_training_set(indir, outdir, challenge, low_res)
+    _write_training_set(indir, outdir, args)
     with tarfile.open(meta_tar_path, "r", bufsize=READ_SIZE) as meta_tar:
-        _write_validation_set(indir, outdir, meta_tar, challenge, low_res)
-        _write_testing_set(indir, outdir, meta_tar, challenge, low_res)
+        _write_validation_set(indir, outdir, meta_tar, args)
+        _write_testing_set(indir, outdir, meta_tar, args)
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        "indir",
-        metavar="INPATH",
-        help="directory that contains ILSRCV 2012 image directories and lists"
-    )
-    parser.add_argument(
-        "-o", "--outdir",
-        metavar="OUTPATH",
-        help="output directory; defaults to indir"
-    )
+    from ..argparse import make_parser
+    from ..argparse import argument_indir
+    from ..argparse import argument_outdir
+    from ..argparse import argument_noconfirm
+    from ..argparse import argument_skip_verification
+
+    parser = make_parser(__doc__)
+    argument_indir(parser)
+    argument_outdir(parser)
     parser.add_argument(
         "-l", "--low-res",
         action="store_true",
@@ -230,20 +230,11 @@ def main():
         help="Download the extended challenge training dataset. Validation and "
              "testing are the same."
     )
-    parser.add_argument(
-        "-s", "--skip-verification",
-        action="store_true",
-        help="If you're feeling lucky."
-    )
+    argument_noconfirm(parser)
+    argument_skip_verification(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(
-        args.indir,
-        outdir,
-        args.challenge,
-        args.low_res,
-        not args.skip_verification,
-    )
+    write_sets(args.indir, outdir, args)
 
 
 if __name__ == "__main__":

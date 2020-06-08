@@ -102,3 +102,10 @@ argument_noconfirm = __make_argument(
     action='store_true',
     help='Don’t require user interaction.',
 )
+
+
+argument_skip_verification = __make_argument(
+    '-s', '--skip-verification',
+    action='store_true',
+    help='Skip verification of source files.'
+)
