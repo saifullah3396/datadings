@@ -1,5 +1,13 @@
 #!python
-"""Splits one dataset in several smaller ones
+"""Splits one dataset into several smaller ones.
+
+For example two split positions A and B produce three output files:
+
+    [.....file1.....|A|.....file2.....|B|.....file3.....]
+
+File 1 contains samples 0 to A-1.
+File 2 contains samples A to B-1.
+File 3 contains samples B to end of input.
 """
 import sys
 import os.path as pt
@@ -8,67 +16,69 @@ from datadings.reader import MsgpackReader
 from datadings.writer import RawWriter
 
 
-def split(infile, outfiles, splits):
+def split_dataset(infile, outfiles, splits, overwrite):
     reader = MsgpackReader(infile)
-    if splits[len(splits)-1] > len(reader):
-        print('max split = %d greater than %d = len(dataset)'
-              % (splits[len(splits)-1], len(reader)))
-    splits.append(len(reader))
-    iterations = zip(outfiles, splits)
+    if max(splits) >= len(reader):
+        print('max split = %d >= %d = len(dataset)' % (max(splits), len(reader)))
+        sys.exit(1)
+    splits = list(splits) + [len(reader)]
+    i = 1
     with reader:
-        outfile, split = iterations.pop(0)
-        writer = RawWriter(outfile)
-        try:
-            for i, (key, raw) in enumerate(reader.rawiter(yield_key=True)):
-                if i >= split:
-                    outfile, split = iterations.pop(0)
-                    writer.close()
-                    writer = RawWriter(outfile)
-                writer.write(key, raw)
-        finally:
-            writer.close()
+        for outfile, split in zip(outfiles, splits):
+            try:
+                with RawWriter(outfile, overwrite=overwrite) as writer:
+                    for i, (key, raw) in enumerate(reader.rawiter(yield_key=True), i):
+                        writer.write(key, raw)
+                        if i >= split:
+                            break
+            # user declined overwriting outfile
+            except FileExistsError:
+                pass
+            # seek to split position in case user declined overwriting
+            reader.seek(split)
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
+    from datadings.argparse import make_parser
+    from datadings.argparse import argument_infile
+    from datadings.argparse import argument_outfiles
+    from datadings.argparse import argument_noconfirm
+
+    parser = make_parser(__doc__)
+    argument_infile(parser, help='File to split.')
+    argument_outfiles(parser)
     parser.add_argument(
-        'infile',
-        help='file to split',
-    )
-    parser.add_argument(
-        'outfiles',
-        nargs = '+',
-        help='output files'
-    )
-    parser.add_argument(
-        '-s', '--splits',
+        'split',
         type=int,
         nargs='+',
-        metavar='natural number',
-        help='defines split points (len = len(outfiles)-1)',
+        help='Index where infile is split.',
     )
+    argument_noconfirm(parser)
     args, unknown = parser.parse_known_args()
+
     infile = pt.abspath(args.infile)
-    splits = args.splits
-    splits.sort()
-    outfiles = [pt.abspath(f) for f in args.outfiles]
+    splits = args.split
+    if sorted(splits) != splits:
+        parser.print_usage()
+        print('Splits positions must be in ascending order.')
+        sys.exit(1)
+    if min(splits) < 1:
+        parser.print_usage()
+        print('Split positions must be >= 1.')
+        sys.exit(1)
+
+    outfiles = args.outfiles
+    if outfiles is None:
+        root, ext = pt.splitext(infile)
+        outfiles = ['%s-%d%s' % (root, i, ext) for i in range(len(splits)+1)]
+    outfiles = [pt.abspath(f) for f in outfiles]
+
     if infile in outfiles:
         parser.print_usage()
-        print('Cannot write to input files.')
+        print('Cannot overwrite input files.')
         sys.exit(1)
-    if len(splits) != len(outfiles)-1:
-        parser.print_usage()
-        print('Splits must be len(outfiles)-1')
-        sys.exit(1)
-    if splits[0] < 0:
-        parser.print_usage()
-        print('Splits must be positives')
-        sys.exit(1)
-    split(infile, outfiles, splits)
+
+    split_dataset(infile, outfiles, splits, args.no_confirm)
 
 
 if __name__ == '__main__':
