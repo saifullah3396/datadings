@@ -14,10 +14,10 @@ from collections import OrderedDict
 
 
 def find_writers():
-    import datadings
+    from .. import sets
     return [
         mod.partition('_')[0]
-        for mod in os.listdir(pt.join(pt.dirname(datadings.__file__), 'sets'))
+        for mod in os.listdir(pt.dirname(sets.__file__))
         if mod.endswith('_write.py')
     ]
 
@@ -39,17 +39,37 @@ def main():
 
     writers = sorted(find_writers())
 
-    parser = make_parser(__doc__.format(datasets=format_writers(writers)))
+    parser = make_parser(
+        __doc__.format(datasets=format_writers(writers)),
+        add_help=False,
+    )
     parser.add_argument(
         'dataset',
+        nargs='?',
         choices=writers,
         metavar='dataset',
         help='Dataset to write.'
     )
+    parser.add_argument(
+        '-h', '--help',
+        action='store_true',
+        help='show this help message and exit'
+    )
     args, unknown = parser.parse_known_args()
 
+    if not args.dataset:
+        if args.help:
+            parser.print_help()
+            sys.exit(0)
+        else:
+            parser.print_usage()
+            sys.exit(1)
+
     sys.argv.pop(0)
-    writer = importlib.import_module('datadings.sets.' + args.dataset + '_write')
+    writer = importlib.import_module(
+        '.%s_write' % args.dataset,
+        'datadings.sets'
+    )
     writer.main()
 
 
