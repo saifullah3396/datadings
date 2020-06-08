@@ -14,9 +14,6 @@ import numpy as np
 import tqdm
 
 
-string_types = (type(b''), type(u''))
-
-
 # noinspection PyIncorrectDocstring
 def print_over(*args, **kwargs):
     """ Wrapper around print that replaces the current line.
@@ -255,3 +252,36 @@ def yield_threaded(gen):
                 pass
     finally:
         yielder.stop()
+
+
+def query_user(question, default='yes', answers=('yes', 'no', 'abort')):
+    """
+    Ask user a question via input() and return their answer.
+
+    Adapted from http://code.activestate.com/recipes/577097/
+
+    :param question: String that is presented to the user.
+    :param default: Presumed answer if the user just hits <Enter>.
+                    Must be one of ``prompts`` or ``None`` (meaning
+                    an answer is required of the user).
+    :param answers: answers the user can give
+    :returns: one of ``prompts``
+    """
+    if not(default is None or default in answers):
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    valid = {'': default}
+    for a in answers:
+        valid.update({a[:i]: a for i in range(1, len(a) + 1)})
+
+    prompt = '/'.join('%s' % (a[0].upper() if a == default else a[0])
+                      for a in answers)
+    prompt = question + ' [%s]' % (prompt + '/?')
+
+    while 1:
+        print(prompt, flush=True, end=' ')
+        answer = valid.get(input().lower())
+        if answer:
+            return answer
+        else:
+            print('You can choose', ', '.join(answers), flush=True)

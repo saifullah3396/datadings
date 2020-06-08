@@ -8,6 +8,7 @@ from abc import abstractmethod
 from .msgpack import make_packer
 from .msgpack import packb
 from .tools import make_printer
+from .tools import query_user
 
 
 class Writer(object):
@@ -30,15 +31,22 @@ class Writer(object):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, outfile, buffering=4*1024*1024, **kwargs):
+    def __init__(self, outfile, buffering=4*1024*1024, overwrite=False, **kwargs):
         """
         :param outfile: path to the dataset file
+        :param overwrite: if outfile exists, force overwriting
         :param kwargs: keyword arguments for datadings.tools.make_printer
         """
         self._path = outfile
         outdir = pt.dirname(outfile)
         if not pt.exists(outdir):
             os.makedirs(outdir)
+        if pt.exists(outfile) and not overwrite:
+            answer = query_user(pt.basename(outfile) + ' exists, overwrite?')
+            if answer == 'no':
+                raise FileExistsError(outfile)
+            elif answer == 'abort':
+                raise KeyboardInterrupt(outfile)
         self._outfile = open(outfile, 'wb', buffering)
         self._index = OrderedDict()
         self.written = 0
