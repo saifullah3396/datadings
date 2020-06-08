@@ -35,7 +35,7 @@ def format_writers(writers):
 
 
 def main():
-    from datadings.argparse import make_parser
+    from ..argparse import make_parser
 
     writers = sorted(find_writers())
 

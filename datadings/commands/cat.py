@@ -3,7 +3,7 @@
 import os.path as pt
 import reprlib
 
-from datadings.reader import MsgpackReader
+from ..reader import MsgpackReader
 
 
 def cat(infile, maxstring):
@@ -15,8 +15,8 @@ def cat(infile, maxstring):
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_infile
+    from ..argparse import make_parser
+    from ..argparse import argument_infile
 
     parser = make_parser(__doc__)
     argument_infile(parser, help='File to cat.')

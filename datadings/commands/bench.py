@@ -3,9 +3,9 @@
 import time
 import os.path as pt
 
-from datadings.reader import MsgpackReader
-from datadings.reader import Shuffler
-from datadings.tools import make_printer
+from ..reader import MsgpackReader
+from ..reader import Shuffler
+from ..tools import make_printer
 
 
 def bench(infile, raw, shuffle, buffering):
@@ -31,8 +31,8 @@ def bench(infile, raw, shuffle, buffering):
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_infile
+    from ..argparse import make_parser
+    from ..argparse import argument_infile
 
     parser = make_parser(__doc__)
     argument_infile(parser)

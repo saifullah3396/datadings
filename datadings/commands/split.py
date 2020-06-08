@@ -11,8 +11,8 @@ File 3 contains samples B to end of input.
 import sys
 import os.path as pt
 
-from datadings.reader import MsgpackReader
-from datadings.writer import RawWriter
+from ..reader import MsgpackReader
+from ..writer import RawWriter
 
 
 def split_dataset(infile, outfiles, splits, overwrite):
@@ -38,10 +38,10 @@ def split_dataset(infile, outfiles, splits, overwrite):
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_infile
-    from datadings.argparse import argument_outfiles
-    from datadings.argparse import argument_noconfirm
+    from ..argparse import make_parser
+    from ..argparse import argument_infile
+    from ..argparse import argument_outfiles
+    from ..argparse import argument_noconfirm
 
     parser = make_parser(__doc__)
     argument_infile(parser, help='File to split.')

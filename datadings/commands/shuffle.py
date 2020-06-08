@@ -3,9 +3,9 @@
 import sys
 import os.path as pt
 
-from datadings.reader import MsgpackReader
-from datadings.reader import Shuffler
-from datadings.writer import RawWriter
+from ..reader import MsgpackReader
+from ..reader import Shuffler
+from ..writer import RawWriter
 
 
 def shuffle(infile, outfile):
@@ -17,9 +17,9 @@ def shuffle(infile, outfile):
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_infile
-    from datadings.argparse import argument_outfile_positional
+    from ..argparse import make_parser
+    from ..argparse import argument_infile
+    from ..argparse import argument_outfile_positional
 
     parser = make_parser(__doc__)
     argument_infile(parser)
