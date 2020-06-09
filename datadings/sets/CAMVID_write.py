@@ -24,7 +24,6 @@ from .VOC2012 import median_frequency_weights
 from ..writer import FileWriter
 from ..tools import download_if_not_found
 from . import ImageSegmentationData
-from .CAMVID import CLASSES
 
 
 def imagedata_to_array(data):
@@ -98,27 +97,15 @@ def calculate_weights(indir):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        default='.',
-        help='directory that contains MIT1003 archives'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTPATH',
-        help='output directory; defaults to indir'
-    )
-    parser.add_argument(
-        '--calculate-weights',
-        action='store_true',
-        help='calculate median-frequency class weights'
-    )
+    from datadings.argparse import make_parser
+    from datadings.argparse import argument_indir
+    from datadings.argparse import argument_outdir
+    from datadings.argparse import argument_calculate_weights
+
+    parser = make_parser(__doc__)
+    argument_indir(parser)
+    argument_outdir(parser)
+    argument_calculate_weights(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     if args.calculate_weights:
