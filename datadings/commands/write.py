@@ -9,6 +9,7 @@ and possible options.
 import os
 import os.path as pt
 import sys
+import string
 import importlib
 from collections import OrderedDict
 
@@ -22,22 +23,52 @@ def find_writers():
     ]
 
 
+def tryfloat(o):
+    try:
+        return float(o)
+    except ValueError:
+        return o
+
+
+CHARSETS = (string.ascii_letters, string.digits, string.punctuation)
+CHARSET_MAP = {c: charset for charset in CHARSETS for c in charset}
+
+
+def split_charset_change(s):
+    a = 0
+    parts = []
+    for i, (c1, c2) in enumerate(zip(s[:-1], s[1:]), 1):
+        if CHARSET_MAP[c1] != CHARSET_MAP[c2]:
+            parts.append(s[a:i])
+            a = i
+    if a < len(s):
+        parts.append(s[a:])
+    return parts
+
+
+def sortkey(s):
+    try:
+        return tuple(map(tryfloat, split_charset_change(s)))
+    except ValueError:
+        return tuple(s)
+
+
 def format_writers(writers):
     order = OrderedDict()
     first_char = ''
     for w in writers:
-        if w.lower()[0] != first_char:
-            first_char = w.lower()[0]
+        if w.upper()[0] != first_char:
+            first_char = w.upper()[0]
             order[first_char] = []
         order[first_char].append(w)
-    return '\n'.join('%s:\n    %s' % (char.upper(), ', '.join(ws))
+    return '\n'.join('%s:\n    %s' % (char, ', '.join(ws))
                      for char, ws in order.items())
 
 
 def main():
     from ..argparse import make_parser
 
-    writers = sorted(find_writers())
+    writers = sorted(find_writers(), key=sortkey)
 
     parser = make_parser(
         __doc__.format(datasets=format_writers(writers)),
