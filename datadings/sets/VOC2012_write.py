@@ -17,10 +17,23 @@ import numpy as np
 
 from ..writer import FileWriter
 from ..tools import make_printer
-from ..tools import download_if_not_found
+from ..tools import download_files_if_not_found
+from ..tools import verify_files
 from . import ImageSegmentationData
-from .VOC2012 import CLASSES
 from .VOC2012 import COLORS
+
+
+FILES = {
+    'trainval': {
+        'url': 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',
+        'path': 'VOCtrainval_11-May-2012.tar',
+        'md5': '6cd6e144f989b92b3379bac3b3de84fd',
+    },
+}
+TOTAL = {
+    'train': 1464,
+    'val': 1449,
+}
 
 
 def imagedata_to_array(data):
@@ -81,12 +94,9 @@ def get_imageset(tar, path):
 
 
 def _prepare_indir(indir):
-    datapath = pt.join(indir, 'VOCtrainval_11-May-2012.tar')
-    download_if_not_found(
-        'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/'
-        'VOCtrainval_11-May-2012.tar',
-        datapath
-    )
+    download_files_if_not_found(FILES, indir)
+    verify_files(FILES, indir)
+    datapath = pt.join(indir, FILES['trainval']['path'])
     root_dir = pt.join('VOCdevkit', 'VOC2012')
     sets_dir = pt.join(root_dir, 'ImageSets', 'Segmentation')
     image_dir = pt.join(root_dir, 'JPEGImages')
@@ -94,21 +104,24 @@ def _prepare_indir(indir):
     return datapath, sets_dir, image_dir, seg_dir
 
 
-def write_sets(indir, outdir, shuffle=True):
+def write_sets(indir, outdir, no_confirm, shuffle=True):
     datapath, sets_dir, image_dir, seg_dir = _prepare_indir(indir)
     with tarfile.TarFile(datapath) as tar:
         for split in ('train', 'val'):
-            print(split)
-            outpath = pt.join(outdir, 'VOC2012_%s.msgpack' % split)
-            with FileWriter(outpath) as writer:
-                sets_path = pt.join(sets_dir, '%s.txt' % split)
-                images = get_imageset(tar, sets_path)
-                if shuffle:
-                    random.shuffle(images)
-                for name in images:
-                    im = extract(tar, pt.join(image_dir, name) + '.jpg')
-                    seg = extract(tar, pt.join(seg_dir, name) + '.png')
-                    write_image(writer, name, im, seg)
+            try:
+                outpath = pt.join(outdir, '%s.msgpack' % split)
+                with FileWriter(outpath, total=TOTAL[split],
+                                overwrite=no_confirm) as writer:
+                    sets_path = pt.join(sets_dir, '%s.txt' % split)
+                    images = get_imageset(tar, sets_path)
+                    if shuffle:
+                        random.shuffle(images)
+                    for name in images:
+                        im = extract(tar, pt.join(image_dir, name) + '.jpg')
+                        seg = extract(tar, pt.join(seg_dir, name) + '.png')
+                        write_image(writer, name, im, seg)
+            except FileExistsError:
+                pass
 
 
 def class_counts(gen):
@@ -164,18 +177,20 @@ def main():
     from datadings.argparse import make_parser
     from datadings.argparse import argument_indir
     from datadings.argparse import argument_outdir
+    from datadings.argparse import argument_no_confirm
     from datadings.argparse import argument_calculate_weights
 
     parser = make_parser(__doc__)
     argument_indir(parser)
     argument_outdir(parser)
+    argument_no_confirm(parser)
     argument_calculate_weights(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     if args.calculate_weights:
         calculate_set_weights(args.indir)
     else:
-        write_sets(args.indir, outdir)
+        write_sets(args.indir, outdir, args.no_confirm)
 
 
 if __name__ == '__main__':
