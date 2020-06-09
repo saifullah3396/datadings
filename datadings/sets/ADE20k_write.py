@@ -149,15 +149,12 @@ def main():
     from datadings.argparse import make_parser
     from datadings.argparse import argument_indir
     from datadings.argparse import argument_outdir
+    from datadings.argparse import argument_calculate_weights
 
     parser = make_parser(__doc__)
     argument_indir(parser)
     argument_outdir(parser)
-    parser.add_argument(
-        '--calculate-weights',
-        action='store_true',
-        help='calculate median-frequency class weights'
-    )
+    argument_calculate_weights(parser)
     parser.add_argument(
         '--scenelabels',
         action='store_true',

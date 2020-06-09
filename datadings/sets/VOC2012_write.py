@@ -164,15 +164,12 @@ def main():
     from datadings.argparse import make_parser
     from datadings.argparse import argument_indir
     from datadings.argparse import argument_outdir
+    from datadings.argparse import argument_calculate_weights
 
     parser = make_parser(__doc__)
     argument_indir(parser)
     argument_outdir(parser)
-    parser.add_argument(
-        '--calculate-weights',
-        action='store_true',
-        help='Calculate median-frequency class weights.'
-    )
+    argument_calculate_weights(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     if args.calculate_weights:
