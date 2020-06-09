@@ -2,16 +2,16 @@
 
 
 def ANP460Data(
+        key,
         image,
         experiments,
-        key,
         anp,
         type
 ):
     return {
+        'key': key,
         'image': image,
         'experiments': experiments,
-        'key': key,
         'anp': anp,
         'type': type
     }
@@ -31,109 +31,123 @@ def ANP460Experiment(
     }
 
 
-def CIFAR100Data(
+def ImageClassificationData(
+        key,
         image,
-        label,
-        coarse_label,
-        key
+        label
 ):
     return {
+        'key': key,
         'image': image,
-        'label': label,
-        'coarse_label': coarse_label,
-        'key': key
+        'label': label
     }
 
 
-def ImageClassificationData(
+def ImageCoarseClassificationData(
+        key,
         image,
         label,
-        key
+        coarse_label
 ):
     return {
+        'key': key,
         'image': image,
         'label': label,
-        'key': key
+        'coarse_label': coarse_label
     }
 
 
 def ImageData(
-        image,
-        key
+        key,
+        image
 ):
     return {
+        'key': key,
+        'image': image
+    }
+
+
+def ImageDisparitySegmentationData(
+        key,
+        image,
+        label_image,
+        disparity_image
+):
+    return {
+        'key': key,
         'image': image,
-        'key': key
+        'label_image': label_image,
+        'disparity_image': disparity_image
+    }
+
+
+def ImageInstanceSegmentationData(
+        key,
+        image,
+        label_image,
+        instance_image
+):
+    return {
+        'key': key,
+        'image': image,
+        'label_image': label_image,
+        'instance_image': instance_image
     }
 
 
 def ImageSegmentationData(
-        image,
-        target_image,
         key,
-        classes,
-        class_weights
+        image,
+        label_image
 ):
     return {
-        'image': image,
-        'target_image': target_image,
         'key': key,
-        'classes': classes,
-        'class_weights': class_weights
+        'image': image,
+        'label_image': label_image
     }
 
 
 def MaskedImageSegmentationData(
+        key,
         image,
         label_image,
-        mask,
-        key,
-        classes,
-        class_weights
+        mask
 ):
     return {
+        'key': key,
         'image': image,
         'label_image': label_image,
-        'mask': mask,
-        'key': key,
-        'classes': classes,
-        'class_weights': class_weights
+        'mask': mask
     }
 
 
 def Places2017Data(
-        image,
-        tasks,
         key,
-        classes
-):
-    return {
-        'image': image,
-        'tasks': tasks,
-        'key': key,
-        'classes': classes
-    }
-
-
-def Places2017Task(
+        image,
+        label,
         label_image,
-        class_weights
+        instance_image,
+        boundary
 ):
     return {
+        'key': key,
+        'image': image,
+        'label': label,
         'label_image': label_image,
-        'class_weights': class_weights
+        'instance_image': instance_image,
+        'boundary': boundary
     }
 
 
 def SaliencyData(
+        key,
         image,
-        experiments,
-        key
+        experiments
 ):
     return {
+        'key': key,
         'image': image,
-        'experiments': experiments,
-        'key': key
+        'experiments': experiments
     }
 
 
@@ -158,18 +172,4 @@ def SaliencyTimeseriesExperiment(
         'map': map,
         'timestamps': timestamps,
         'fixations': fixations
-    }
-
-
-def SegmentationDisparityData(
-        key,
-        image,
-        label_image,
-        disparity_image
-):
-    return {
-        'key': key,
-        'image': image,
-        'label_image': label_image,
-        'disparity_image': disparity_image
     }

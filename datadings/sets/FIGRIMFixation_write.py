@@ -56,7 +56,7 @@ def write_images(imagezip, names, locations, writer, shuffle):
             # some images don't have fixation data
             # print(datapath, 'not found')
             continue
-        item = SaliencyData(jpegdata, experiments, path)
+        item = SaliencyData(path, jpegdata, experiments)
         writer.write(item)
 
 

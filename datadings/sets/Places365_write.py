@@ -126,9 +126,9 @@ def _write_set(generator, data_cls, out_path, total, overwrite):
         with FileWriter(out_path, total=total, overwrite=overwrite) as writer:
             for member, data, data_args in generator:
                 writer.write(data_cls(
+                    member.name,
                     data,
                     *data_args,
-                    member.name
                 ))
     except FileExistsError:
         pass

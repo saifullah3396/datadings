@@ -13,15 +13,14 @@ import random
 
 from ..writer import FileWriter
 from ..tools import download_if_not_found
-from . import SaliencyData
+from . import ImageData
 
 
 def write_image(imagezip, stimuluspath, writer):
     stimulusdata = imagezip.read(stimuluspath)
-    item = SaliencyData(
-        stimulusdata,
-        None,
+    item = ImageData(
         stimuluspath,
+        stimulusdata
     )
     writer.write(item)
 

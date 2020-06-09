@@ -88,9 +88,9 @@ def write_image(imagezip, stimuluspath, writer):
         locations = None
     filename = os.sep.join(stimuluspath.split(os.sep)[-2:])
     item = SaliencyData(
+        filename,
         stimulusdata,
         [SaliencyExperiment(locations, None)],
-        filename,
     )
     writer.write(item)
 

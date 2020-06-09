@@ -137,27 +137,19 @@ def _reverse(l):
 
 def write_set(
         imagetar, classtar, instancetar, boundarytar,
-        outdir, name, members,
-        classes, class_weights, scenes
+        outdir, name, members, scenes
 ):
     scenes_indices = dict(map(_reverse, enumerate(SCENELABELS)))
     scenes = {f: scenes_indices[s] for f, s in scenes.items()}
     with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(members)) as writer:
         for m in members:
             writer.write(Places2017Data(
-                extractmember(imagetar, m),
-                [
-                    Places2017Task(
-                        extract_class(classtar, m.name), class_weights),
-                    Places2017Task(
-                        extract_instance(instancetar, m.name), class_weights),
-                    Places2017Task(
-                        extract_boundary(boundarytar, m.name), None),
-                    Places2017Task(
-                        extract_scene(scenes, m.name), None),
-                ],
                 pt.basename(m.name),
-                classes,
+                extractmember(imagetar, m),
+                extract_scene(scenes, m.name),
+                extract_class(classtar, m.name),
+                extract_instance(instancetar, m.name),
+                extract_boundary(boundarytar, m.name),
             ))
 
 
@@ -190,7 +182,7 @@ def write_sets(indir, ade20kdir, outdir, shuffle=True):
                             random.shuffle(members)
                         write_set(
                             imagetar, classtar, instancetar, boundarytar,
-                            outdir, name, members, CLASSES, WEIGHTS, scenes
+                            outdir, name, members, scenes
                         )
 
 

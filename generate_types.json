@@ -1,47 +1,61 @@
 {
+  "ImageData": [
+    "key",
+    "image"
+  ],
   "ImageClassificationData": [
+    "key",
+    "image",
+    "label"
+  ],
+  "ImageCoarseClassificationData": [
+    "key",
     "image",
     "label",
-    "key"
+    "coarse_label"
   ],
   "ImageSegmentationData": [
-    "image",
-    "target_image",
     "key",
-    "classes",
-    "class_weights"
+    "image",
+    "label_image"
   ],
-  "MaskedImageSegmentationData": [
+  "ImageInstanceSegmentationData": [
+    "key",
     "image",
     "label_image",
-    "mask",
-    "key",
-    "classes",
-    "class_weights"
+    "instance_image"
   ],
-  "SegmentationDisparityData": [
+  "MaskedImageSegmentationData": [
+    "key",
+    "image",
+    "label_image",
+    "mask"
+  ],
+  "ImageDisparitySegmentationData": [
     "key",
     "image",
     "label_image",
     "disparity_image"
   ],
   "SaliencyData": [
+    "key",
     "image",
-    "experiments",
-    "key"
+    "experiments"
   ],
   "SaliencyExperiment": [
     "locations",
     "map"
   ],
-  "ImageData": [
-    "image",
-    "key"
+  "SaliencyTimeseriesExperiment": [
+    "locations",
+    "map",
+    "timestamps",
+    "fixations"
   ],
   "ANP460Data": [
+    "key",
     "image",
     "experiments",
-    "key",
     "anp",
     "type"
   ],
@@ -51,26 +65,12 @@
     "answer",
     "duration"
   ],
-  "CIFAR100Data": [
+  "Places2017Data": [
+    "key",
     "image",
     "label",
-    "coarse_label",
-    "key"
-  ],
-  "SaliencyTimeseriesExperiment": [
-    "locations",
-    "map",
-    "timestamps",
-    "fixations"
-  ],
-  "Places2017Data": [
-    "image",
-    "tasks",
-    "key",
-    "classes"
-  ],
-  "Places2017Task": [
     "label_image",
-    "class_weights"
+    "instance_image",
+    "boundary"
   ]
 }

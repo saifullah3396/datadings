@@ -47,9 +47,9 @@ def write_image(imagezip, datazip, mat_files, stimuluspath, writer):
     ]
     filename = os.sep.join(stimuluspath.split(os.sep)[-2:])
     item = SaliencyData(
+        filename,
         stimulusdata,
         experiments,
-        filename,
     )
     writer.write(item)
 

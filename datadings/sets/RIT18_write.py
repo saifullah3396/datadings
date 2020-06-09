@@ -14,22 +14,18 @@ import numpy as np
 from ..writer import FileWriter
 from ..tools import download_if_not_found
 from . import MaskedImageSegmentationData
-from .RIT18 import CLASSES
 from .RIT18 import CROP_SIZE
 from ..matlab import loadmat
 from ..tools import split_array
 
 
-def write(writer, img, labels, mask, filename=""):
-    item = MaskedImageSegmentationData(
+def write(writer, img, labels, mask, filename):
+    writer.write(MaskedImageSegmentationData(
+        filename,
         img,
         labels,
         mask,
-        filename,
-        CLASSES,
-        [1] * len(CLASSES),
-    )
-    writer.write(item)
+    ))
 
 
 def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):

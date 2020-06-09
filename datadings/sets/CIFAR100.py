@@ -1,6 +1,3 @@
-from . import CIFAR100Data
-
-
 CLASSES = (
     'apple',
     'aquarium_fish',

@@ -16,7 +16,7 @@ import zipfile
 
 from ..writer import FileWriter
 from ..tools import yield_threaded
-from . import SegmentationDisparityData
+from . import ImageDisparitySegmentationData
 
 
 LEFT = 'leftImg8bit_trainvaltest.zip'
@@ -43,7 +43,7 @@ def write_set(outdir, split, gen, total):
     outpath = pt.join(outdir, split + '.msgpack')
     with FileWriter(outpath, total=total) as writer:
         for sample in gen:
-            writer.write(SegmentationDisparityData(*sample))
+            writer.write(ImageDisparitySegmentationData(*sample))
 
 
 def write_sets(indir, outdir):

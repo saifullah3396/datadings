@@ -44,9 +44,9 @@ def __write_sets(outdir, train_names, test_names, shuffle):
         with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(files)) as writer:
             for data, label, filename in gen:
                 writer.write(ImageClassificationData(
+                    filename,
                     data,
                     int(label),
-                    filename,
                 ))
 
 

@@ -24,14 +24,11 @@ from ..tools import tiff_to_nd_array
 
 
 def write(writer, img, labels, filename=""):
-    item = ImageSegmentationData(
+    writer.write(ImageSegmentationData(
+        filename,
         img,
         labels,
-        filename,
-        CLASSES,
-        [1] * len(CLASSES),
-    )
-    writer.write(item)
+    ))
 
 
 def images_and_labels_iter(img_dir, label_dir, locations, ids):

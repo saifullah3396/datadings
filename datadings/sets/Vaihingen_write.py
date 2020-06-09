@@ -20,16 +20,13 @@ from ..tools import split_array
 from ..tools import tiff_to_nd_array
 
 
-def write(writer, img, labels, mask, filename=""):
-    item = MaskedImageSegmentationData(
+def write(writer, img, labels, mask, filename):
+    writer.write(MaskedImageSegmentationData(
+        filename,
         img,
         labels,
         mask,
-        filename,
-        CLASSES,
-        [1] * len(CLASSES),
-    )
-    writer.write(item)
+    ))
 
 
 def map_color_values_to_class_indices(img):

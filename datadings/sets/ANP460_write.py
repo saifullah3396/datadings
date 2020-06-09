@@ -55,9 +55,9 @@ def write_image(imagezip, datazip, anp_list, txt_files, stimuluspath, writer):
     ]
     filename = os.sep.join(stimuluspath.split(os.sep)[-2:])
     item = ANP460Data(
+        filename,
         stimulusdata,
         experiments,
-        filename,
         anp,
         stimulustype
     )

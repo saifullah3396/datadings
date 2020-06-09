@@ -50,11 +50,9 @@ def write_image(imagezip, writer, inpath, outpath):
     outdata = imagezip.read(outpath)
     filename = pt.basename(inpath)
     item = ImageSegmentationData(
+        filename,
         indata,
         outdata,
-        filename,
-        CLASSES,
-        [1]*len(CLASSES),
     )
     writer.write(item)
 

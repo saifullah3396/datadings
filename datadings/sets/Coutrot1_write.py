@@ -165,9 +165,9 @@ def write_video(name_prefix, frame_gen, experiments, writer,
             continue
         jpegdata = arr.tostring()
         item = SaliencyData(
+            pt.join('ERB3_Stimuli', name_prefix + '_%06d' % key),
             jpegdata,
             tracked_experiments,
-            pt.join('ERB3_Stimuli', name_prefix + '_%06d' % key),
         )
         writer.write(item)
         last_written = key

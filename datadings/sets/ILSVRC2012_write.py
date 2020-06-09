@@ -139,7 +139,7 @@ def write_set(split, outdir, gen, quality, subsampling, threads):
         def __verify_inner(item):
             key, data, label = item
             data = verify_image(data, quality, colorsubsampling=subsampling)
-            return ImageClassificationData(data, label, key)
+            return ImageClassificationData(key, data, label)
         pool = ThreadPool(threads)
         for sample in pool.imap_unordered(__verify_inner, gen):
             writer.write(sample)

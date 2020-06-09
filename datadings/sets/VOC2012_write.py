@@ -59,16 +59,13 @@ def map_color_image(im):
 
 def write_image(writer, filename, im, seg):
     seg = imagedata_to_array(seg)
-    seg = map_color_image(seg, )
+    seg = map_color_image(seg)
     seg = array_to_imagedata(seg, 'PNG')
-    item = ImageSegmentationData(
+    writer.write(ImageSegmentationData(
+        filename,
         im,
         seg,
-        filename,
-        CLASSES,
-        [1]*len(CLASSES),
-    )
-    writer.write(item)
+    ))
 
 
 def extract(tar, path):

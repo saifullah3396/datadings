@@ -49,7 +49,7 @@ def yield_samples(keys, imagezip, fixationzip):
             ]
         else:
             experiments = []
-        yield SaliencyData(img, experiments, key)
+        yield SaliencyData(key, img, experiments)
 
 
 def write_set(split, gen, outdir, total):

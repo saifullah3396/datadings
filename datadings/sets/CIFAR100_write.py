@@ -10,7 +10,7 @@ from pickle import load
 
 from ..tools import download_if_not_found
 from ..writer import FileWriter
-from .CIFAR100 import CIFAR100Data
+from . import ImageCoarseClassificationData
 from .CIFAR10_write import get_files
 from .CIFAR10_write import row2image
 
@@ -35,11 +35,11 @@ def __write_sets(outdir, train_names, test_names, shuffle):
             random.shuffle(gen)
         with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(files)) as writer:
             for data, label, coarse_label, filename in gen:
-                writer.write(CIFAR100Data(
+                writer.write(ImageCoarseClassificationData(
+                    filename,
                     data,
                     int(label),
                     int(coarse_label),
-                    filename,
                 ))
 
 

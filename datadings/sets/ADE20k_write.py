@@ -85,7 +85,7 @@ def yield_images(names):
         yield p + '.jpg', p + '_seg.png', parts
 
 
-def write_set(imagezip, outdir, name, classes, class_weights):
+def write_set(imagezip, outdir, name):
     names = [p for p in imagezip.namelist()
              if name in p and p.endswith('.jpg')]
     writer = FileWriter(
@@ -98,11 +98,9 @@ def write_set(imagezip, outdir, name, classes, class_weights):
             segdata = imagezip.read(seg)
             # partsdata = [imagezip.read(p) for p in parts]
             writer.write(ImageSegmentationData(
+                pt.basename(im),
                 imdata,
                 imagedata_to_segpng(segdata),
-                pt.basename(im),
-                classes,
-                class_weights
             ))
 
 
@@ -113,7 +111,7 @@ def write_sets(indir, outdir):
         index = load_index(imagezip)
         classes = get_classes(index)
         for name in ('training', 'validation'):
-            write_set(imagezip, outdir, name, classes, WEIGHTS)
+            write_set(imagezip, outdir, name)
 
 
 def _segmap(imagezip, path):
