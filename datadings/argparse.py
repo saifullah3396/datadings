@@ -104,7 +104,7 @@ argument_outfiles = __make_argument(
 )
 
 
-argument_noconfirm = __make_argument(
+argument_no_confirm = __make_argument(
     '-y', '--no-confirm',
     dest='no_confirm',
     action='store_true',
