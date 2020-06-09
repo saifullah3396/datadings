@@ -19,7 +19,6 @@ import gzip
 import tarfile
 import io
 from multiprocessing.dummy import Pool as ThreadPool
-from multiprocessing import cpu_count
 
 import numpy as np
 from PIL import Image
@@ -156,28 +155,18 @@ def write_sets(indir, outdir, quality, subsampling, threads, verification):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
+    from datadings.argparse import make_parser
+    from datadings.argparse import argument_indir
+    from datadings.argparse import argument_outdir
+    from datadings.argparse import argument_skip_verification
+    from datadings.argparse import argument_threads
+
+    parser = make_parser(__doc__)
+    argument_indir(parser)
+    argument_outdir(parser)
+    argument_skip_verification(parser)
     parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        help='directory that contains ILSRCV 2012 tar files'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTDIR',
-        help='output directory; defaults to indir'
-    )
-    parser.add_argument(
-        "-s", "--skip-verification",
-        action="store_true",
-        help="If you're feeling lucky."
-    )
-    parser.add_argument(
-        '-c', '--compress',
+        '--compress',
         nargs='?',
         default=None,
         const=85,
@@ -190,34 +179,21 @@ def main():
              '444 color is forced for very small images'
     )
     parser.add_argument(
-        '-s', '--subsampling',
+        '--subsampling',
         default='422',
         choices=('444', '422', '420', '440', '411', 'Gray'),
         type=str,
         help='color subsampling factor used with compress option'
     )
-    cpus = cpu_count()
-    default_cpu = min(8, cpus)
-    parser.add_argument(
-        '-t', '--threads',
-        default=default_cpu,
-        choices=range(cpus+1),
-        metavar='0-%d' % cpus,
-        type=int,
-        help='number of threads used to verify images; '
-             '0 uses all available CPUs; '
-             'default is %d' % default_cpu
-    )
+    argument_threads(parser, default=8)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    threads = args.threads
-    threads = min(threads, cpus) if threads > 0 else cpus
     write_sets(
         args.indir,
         outdir,
         args.compress,
         args.subsampling,
-        threads,
+        args.threads,
         not args.skip_verification,
     )
 

@@ -1,10 +1,11 @@
-import argparse as __argparse
-from functools import partial as __partial
+import argparse
+from functools import partial
+from multiprocessing import cpu_count
 
 
 def make_parser(
         description,
-        formatter_class=__argparse.RawDescriptionHelpFormatter,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         **kwargs
 ):
     """
@@ -16,7 +17,7 @@ def make_parser(
     :param kwargs: kwargs given to ``ArgumentParser``.
     :return:
     """
-    return __argparse.ArgumentParser(
+    return argparse.ArgumentParser(
         description=description,
         formatter_class=formatter_class,
         **kwargs,
@@ -30,7 +31,7 @@ def __add_argument(parser_pos, *args, **kwargs):
 
 
 def __make_argument(*args, **kwargs):
-    p = __partial(__add_argument, len(args), *args, **kwargs)
+    p = partial(__add_argument, len(args), *args, **kwargs)
     p.__doc__ = \
         """Add the following argument to the given ``ArgumentParser``:
 
@@ -123,3 +124,43 @@ argument_calculate_weights = __make_argument(
     action='store_true',
     help='Calculate median-frequency class weights.'
 )
+
+
+class ThreadAction(argparse.Action):
+    max_threads = None
+
+    def __call__(self, parser, namespace, threads, option_string=None):
+        threads = max(1, threads or self.max_threads)
+        threads = min(threads, self.max_threads)
+        setattr(namespace, self.dest, threads)
+
+
+def argument_threads(parser, default=1, max_threads=0):
+    """
+    Add threads argument to parser.
+
+    :param parser: Argument is added here.
+    :param default: Default number of threads.
+    :param max_threads: Maximum number of threads.
+                        If >0, use given number.
+                        If 0 use ``cpu_count()``.
+                        if <0, use ``-max_threads*cpu_count()``
+    """
+    if max_threads < 0:
+        cpus = cpu_count() * -max_threads
+    else:
+        cpus = max_threads or cpu_count()
+
+    class MaxThreadAction(ThreadAction):
+        max_threads = cpus
+
+    default = min(default, cpus)
+    parser.add_argument(
+        '-t', '--threads',
+        default=default,
+        metavar='0-%d' % cpus,
+        type=int,
+        action=MaxThreadAction,
+        help='Number of threads for conversion. '
+             '0 uses all available CPUs (default %d).' % default
+    )
