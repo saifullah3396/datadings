@@ -117,6 +117,7 @@ argument_skip_verification = __make_argument(
     help='Skip verification of source files.'
 )
 
+
 argument_calculate_weights = __make_argument(
     '--calculate-weights',
     action='store_true',
