@@ -24,7 +24,6 @@ from ..matlab import iter_fields
 from .VOC2012_write import imagedata_to_array
 from .VOC2012_write import class_counts
 from .VOC2012_write import sorted_values
-from .ADE20k import WEIGHTS
 
 
 DATASET_URL = 'http://groups.csail.mit.edu/vision/datasets/' \
@@ -147,22 +146,13 @@ def extract_scenelabels(indir, outdir):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        default='.',
-        help='directory that contains Vaihingen Dataset files'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTPATH',
-        help='output directory; defaults to indir'
-    )
+    from datadings.argparse import make_parser
+    from datadings.argparse import argument_indir
+    from datadings.argparse import argument_outdir
+
+    parser = make_parser(__doc__)
+    argument_indir(parser)
+    argument_outdir(parser)
     parser.add_argument(
         '--calculate-weights',
         action='store_true',
