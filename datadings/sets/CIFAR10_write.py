@@ -71,21 +71,13 @@ def write_sets(indir, outdir, shuffle=True):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        help='directory that contains ILSRCV 2012 image directories and lists'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTPATH',
-        help='output directory; defaults to indir'
-    )
+    from datadings.argparse import make_parser
+    from datadings.argparse import argument_indir
+    from datadings.argparse import argument_outdir
+
+    parser = make_parser(__doc__)
+    argument_indir(parser)
+    argument_outdir(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     write_sets(args.indir, outdir)
