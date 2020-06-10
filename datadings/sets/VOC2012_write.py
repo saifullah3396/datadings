@@ -23,9 +23,10 @@ from . import ImageSegmentationData
 from .VOC2012 import COLORS
 
 
+BASE_URL = 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/'
 FILES = {
     'trainval': {
-        'url': 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar',
+        'url': BASE_URL+'VOCtrainval_11-May-2012.tar',
         'path': 'VOCtrainval_11-May-2012.tar',
         'md5': '6cd6e144f989b92b3379bac3b3de84fd',
     },
