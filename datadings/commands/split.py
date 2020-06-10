@@ -41,7 +41,7 @@ def main():
     from ..argparse import make_parser
     from ..argparse import argument_infile
     from ..argparse import argument_outfiles
-    from ..argparse import argument_noconfirm
+    from ..argparse import argument_no_confirm
 
     parser = make_parser(__doc__)
     argument_infile(parser, help='File to split.')
@@ -52,7 +52,7 @@ def main():
         nargs='+',
         help='Index where infile is split.',
     )
-    argument_noconfirm(parser)
+    argument_no_confirm(parser)
     args, unknown = parser.parse_known_args()
 
     infile = pt.abspath(args.infile)
