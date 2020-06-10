@@ -52,6 +52,13 @@
     "timestamps",
     "fixations"
   ],
+  "ADE20kData": [
+    "key",
+    "image",
+    "label",
+    "label_image",
+    "parts_images"
+  ],
   "ANP460Data": [
     "key",
     "image",

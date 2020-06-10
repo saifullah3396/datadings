@@ -1,6 +1,22 @@
 # AUTO-GENERATED FILE! DO NOT EDIT!
 
 
+def ADE20kData(
+        key,
+        image,
+        label,
+        label_image,
+        parts_images
+):
+    return {
+        'key': key,
+        'image': image,
+        'label': label,
+        'label_image': label_image,
+        'parts_images': parts_images
+    }
+
+
 def ANP460Data(
         key,
         image,

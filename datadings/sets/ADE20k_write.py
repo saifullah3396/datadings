@@ -1,7 +1,7 @@
 """Create ADE20k data set files.
 
 The data set is described here:
-    http://groups.csail.mit.edu/vision/datasets/ADE20K/ADE20K_2016_07_26.zip
+    http://groups.csail.mit.edu/vision/datasets/ADE20K
 
 This tool will look for the following files in the input directory
 and download them if necessary:
@@ -12,13 +12,19 @@ import os.path as pt
 import zipfile
 import io
 import json
+from multiprocessing.dummy import Pool as ThreadPool
+from collections import Counter
+import itertools as it
 
 import numpy as np
 from PIL import Image
 
-from . import ImageSegmentationData
+from . import ADE20kData
 from ..writer import FileWriter
-from ..tools import download_if_not_found
+from ..tools import download_files_if_not_found
+from ..tools import verify_files
+from ..tools import locate_files
+from ..tools import yield_threaded
 from ..matlab import loadmat
 from ..matlab import iter_fields
 from .VOC2012_write import imagedata_to_array
@@ -26,19 +32,36 @@ from .VOC2012_write import class_counts
 from .VOC2012_write import sorted_values
 
 
-DATASET_URL = 'http://groups.csail.mit.edu/vision/datasets/' \
-              'ADE20K/ADE20K_2016_07_26.zip'
-DATASET_FILE = 'ADE20K_2016_07_26.zip'
+BASE_URL = 'http://groups.csail.mit.edu/vision/datasets/ADE20K/'
+FILES = {
+    'trainval': {
+        'url': BASE_URL+'ADE20K_2016_07_26.zip',
+        'path': 'ADE20K_2016_07_26.zip',
+        'md5': '5d125f9457b1a3990adb96de45d03f60',
+    },
+}
 
 
-def load_index(imagezip):
+def __array2list(a):
+    c = Counter(i.dtype.kind for i in a[:50])
+    kind, _ = c.most_common(1)[0]
+    if kind == 'U':
+        return [i.item() if i.size else '' for i in a]
+    elif kind == 'O':
+        return [__array2list(i.reshape(-1)) if i.size else [] for i in a]
+    else:
+        return a
+
+
+def load_index(imagezip, *keys):
     data = imagezip.read(pt.join('ADE20K_2016_07_26', 'index_ade20k.mat'))
     index = loadmat(data)['index']
-    return dict(iter_fields(index))
-
-
-def get_classes(index):
-    return np.concatenate(index['objectnames'][0, 0].flatten()).tolist()
+    index = {k: __array2list(v[0, 0].reshape(-1))
+             for k, v in iter_fields(index) if not keys or k in keys}
+    if keys:
+        return [index[k] for k in keys]
+    else:
+        return index
 
 
 def array_to_image(array, format, dtype, mode):
@@ -72,57 +95,71 @@ def instance_map(im):
 
 
 def yield_images(names):
+    allparts = set(n for n in names if '_parts_' in n and n.endswith('.png'))
     prefixes = (n.rstrip('.jpg') for n in names if n.endswith('.jpg'))
     for p in prefixes:
         parts = []
-        i = 0
-        part = p + 'parts_%d.png' % i
-        while part in names:
+        for i in it.count(1):
+            part = p + '_parts_%d.png' % i
+            if part not in allparts:
+                break
             parts.append(part)
-            i += 1
-            part = p + 'parts_%d.png' % i
         yield p + '.jpg', p + '_seg.png', parts
 
 
-def write_set(imagezip, outdir, name):
-    names = [p for p in imagezip.namelist()
-             if name in p and p.endswith('.jpg')]
-    writer = FileWriter(
-        pt.join(outdir, name + '.msgpack'),
-        total=len(names),
-    )
-    with writer:
-        for im, seg, parts in yield_images(names):
-            imdata = imagezip.read(im)
-            segdata = imagezip.read(seg)
-            # partsdata = [imagezip.read(p) for p in parts]
-            writer.write(ImageSegmentationData(
-                pt.basename(im),
-                imdata,
-                imagedata_to_segpng(segdata),
-            ))
+def write_set(imagezip, outdir, split, scenelabels, threads, no_confirm):
+    names = [n for n in imagezip.namelist() if split in n]
+    jpegs = [n for n in names if n.endswith('.jpg')]
+    outfile = pt.join(outdir, split + '.msgpack')
+    with FileWriter(outfile, total=len(jpegs), overwrite=no_confirm) as writer:
+        gen = yield_threaded(
+            (
+                pt.basename(path),
+                imagezip.read(path),
+                imagezip.read(segpath),
+                [imagezip.read(p) for p in parts]
+            )
+            for path, segpath, parts in yield_images(names)
+        )
+
+        def __inner(item):
+            key, data, segdata, parts = item
+            segdata = imagedata_to_segpng(segdata)
+            parts = [imagedata_to_segpng(part) for part in parts]
+            return key, data, scenelabels[key], segdata, parts
+
+        pool = ThreadPool(threads)
+        for sample in pool.imap_unordered(__inner, gen):
+            writer.write(ADE20kData(*sample))
 
 
-def write_sets(indir, outdir):
-    datapath = pt.join(indir, DATASET_FILE)
-    download_if_not_found(DATASET_URL, datapath)
+def write_sets(indir, outdir, args):
+    download_files_if_not_found(FILES, indir)
+    if not args.skip_verification:
+        verify_files(FILES, indir)
+    datapath = locate_files(FILES, indir)['trainval']['path']
     with zipfile.ZipFile(datapath) as imagezip:
-        index = load_index(imagezip)
-        classes = get_classes(index)
-        for name in ('training', 'validation'):
-            write_set(imagezip, outdir, name)
+        filenames, scenes = load_index(imagezip, 'filename', 'scene')
+        scenelabels = {l: i for i, l in enumerate(sorted(set(scenes)))}
+        scenelabels = {pt.basename(im): scenelabels[l]
+                       for im, l in zip(filenames, scenes)}
+        del filenames, scenes
+        for split in ('training', 'validation'):
+            write_set(imagezip, outdir, split, scenelabels,
+                      args.threads, args.no_confirm)
 
 
-def _segmap(imagezip, path):
-    return segmentation_map(imagedata_to_array(imagezip.read(path)))
+def _segmap(segdata):
+    return segmentation_map(imagedata_to_array(segdata))
 
 
 def calculate_weights(indir, outdir):
-    datapath = pt.join(indir, DATASET_FILE)
-    download_if_not_found(DATASET_URL, datapath)
+    download_files_if_not_found(FILES, indir)
+    verify_files(FILES, indir)
+    datapath = locate_files(FILES, indir)['trainval']['path']
     with zipfile.ZipFile(datapath) as imagezip:
-        gen = (
-            _segmap(imagezip, path)
+        gen = yield_threaded(
+            _segmap(imagezip.read(path))
             for _, seg, parts in yield_images(imagezip.namelist())
             if 'training' in seg
             for path in parts + [seg]
@@ -136,11 +173,11 @@ def calculate_weights(indir, outdir):
 
 
 def extract_scenelabels(indir, outdir):
-    datapath = pt.join(indir, DATASET_FILE)
-    download_if_not_found(DATASET_URL, datapath)
+    download_files_if_not_found(FILES, indir)
+    verify_files(FILES, indir)
+    datapath = locate_files(FILES, indir)['trainval']['path']
     with zipfile.ZipFile(datapath) as imagezip:
-        index = load_index(imagezip)
-        scenes = sorted(set(np.concatenate(index['scene'][0, 0][0])))
+        scenes = sorted(set(load_index(imagezip, 'scene')['scene']))
     with open(pt.join(outdir, 'ADE20k_scenelabels.json'), 'w') as f:
         json.dump(scenes, f)
 
@@ -149,17 +186,23 @@ def main():
     from datadings.argparse import make_parser
     from datadings.argparse import argument_indir
     from datadings.argparse import argument_outdir
+    from datadings.argparse import argument_no_confirm
     from datadings.argparse import argument_calculate_weights
+    from datadings.argparse import argument_threads
+    from datadings.argparse import argument_skip_verification
 
     parser = make_parser(__doc__)
     argument_indir(parser)
     argument_outdir(parser)
+    argument_no_confirm(parser)
+    argument_threads(parser, default=8)
     argument_calculate_weights(parser)
     parser.add_argument(
         '--scenelabels',
         action='store_true',
         help='extract list of scene labels'
     )
+    argument_skip_verification(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     if args.calculate_weights:
@@ -167,7 +210,7 @@ def main():
     elif args.scenelabels:
         extract_scenelabels(args.indir, outdir)
     else:
-        write_sets(args.indir, outdir)
+        write_sets(args.indir, outdir, args)
 
 
 if __name__ == '__main__':
