@@ -183,6 +183,11 @@ def verify_files(files, indir):
         verify_file(meta, indir)
 
 
+def locate_files(files, indir):
+    return {name: dict(meta, path=pt.join(indir, meta['path']))
+            for name, meta in files.items()}
+
+
 def split_array(img, h_pixels, v_pixels, indices=(1, 2)):
     i_ = np.arange(img.shape[indices[0]]) // v_pixels
     j_ = np.arange(img.shape[indices[1]]) // h_pixels
