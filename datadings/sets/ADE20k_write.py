@@ -145,8 +145,11 @@ def write_sets(indir, outdir, args):
                        for im, l in zip(filenames, scenes)}
         del filenames, scenes
         for split in ('training', 'validation'):
-            write_set(imagezip, outdir, split, scenelabels,
-                      args.threads, args.no_confirm)
+            try:
+                write_set(imagezip, outdir, split, scenelabels,
+                          args.threads, args.no_confirm)
+            except FileExistsError:
+                pass
 
 
 def _segmap(segdata):
@@ -183,18 +186,11 @@ def extract_scenelabels(indir, outdir):
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_indir
-    from datadings.argparse import argument_outdir
-    from datadings.argparse import argument_no_confirm
-    from datadings.argparse import argument_calculate_weights
-    from datadings.argparse import argument_threads
-    from datadings.argparse import argument_skip_verification
+    from ..argparse import make_parser
+    from ..argparse import argument_calculate_weights
+    from ..argparse import argument_threads
 
     parser = make_parser(__doc__)
-    argument_indir(parser)
-    argument_outdir(parser)
-    argument_no_confirm(parser)
     argument_threads(parser, default=8)
     argument_calculate_weights(parser)
     parser.add_argument(
@@ -202,7 +198,6 @@ def main():
         action='store_true',
         help='extract list of scene labels'
     )
-    argument_skip_verification(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     if args.calculate_weights:
