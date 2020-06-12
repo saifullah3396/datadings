@@ -8,8 +8,8 @@ from ..reader import Shuffler
 from ..writer import RawWriter
 
 
-def shuffle(infile, outfile):
-    r = MsgpackReader(infile, buffering=32*1024)
+def shuffle(infile, outfile, buffering=32*1024):
+    r = MsgpackReader(infile, buffering=buffering)
     shuffler = Shuffler(r)
     with RawWriter(outfile, total=len(r)) as writer:
         for key, raw in shuffler.rawiter(yield_key=True):
