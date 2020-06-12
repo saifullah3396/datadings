@@ -5,23 +5,43 @@ from multiprocessing import cpu_count
 
 def make_parser(
         description,
+        indir=True,
+        outdir=True,
+        no_confirm=True,
+        skip_verification=True,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         **kwargs
 ):
     """
     Create an ``ArgumentParser``.
 
-    :param description: Description text displayed before arguments.
-                        Usually ``__doc__`` is fine.
-    :param formatter_class: Description formatter, defaults to raw.
-    :param kwargs: kwargs given to ``ArgumentParser``.
-    :return:
+    Parameters:
+        description: Description text displayed before arguments.
+                     Usually ``__doc__`` is fine.
+        indir: if True, add indir argument
+        outdir: if True, add outdir argument
+        no_confirm: if True, add no_confirm argument
+        skip_verification: if True, add skip_verification argument
+        formatter_class: Description formatter, defaults to raw.
+        kwargs: kwargs given to ``ArgumentParser``.
+
+    Returns:
+        ``ArgumentParser``.
     """
-    return argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
         description=description,
         formatter_class=formatter_class,
         **kwargs,
     )
+    if indir:
+        argument_indir(parser)
+    if outdir:
+        argument_outdir(parser)
+    if no_confirm:
+        argument_no_confirm(parser)
+    if skip_verification:
+        argument_skip_verification(parser)
+    return parser
 
 
 def __add_argument(parser_pos, *args, **kwargs):
@@ -139,12 +159,13 @@ def argument_threads(parser, default=1, max_threads=0):
     """
     Add threads argument to parser.
 
-    :param parser: Argument is added here.
-    :param default: Default number of threads.
-    :param max_threads: Maximum number of threads.
-                        If >0, use given number.
-                        If 0 use ``cpu_count()``.
-                        if <0, use ``-max_threads*cpu_count()``
+    Parameters:
+        parser: Argument is added here.
+        default: Default number of threads.
+        max_threads: Maximum number of threads.
+                     If >0, use given number.
+                     If 0 use ``cpu_count()``.
+                     if <0, use ``-max_threads*cpu_count()``
     """
     if max_threads < 0:
         cpus = cpu_count() * -max_threads
