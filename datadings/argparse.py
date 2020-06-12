@@ -63,6 +63,31 @@ def make_parser(
     return parser
 
 
+def make_parser_simple(
+        description,
+        indir=False,
+        outdir=False,
+        no_confirm=False,
+        skip_verification=False,
+        shuffle=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        **kwargs
+):
+    """
+    Same as :py:func:`make_parser`, but add no arguments by default.
+    """
+    return make_parser(
+        description,
+        indir=indir,
+        outdir=outdir,
+        no_confirm=no_confirm,
+        skip_verification=skip_verification,
+        shuffle=shuffle,
+        formatter_class=formatter_class,
+        **kwargs
+    )
+
+
 def __add_argument(parser_pos, *args, **kwargs):
     parser = args[parser_pos]
     args = args[:parser_pos] + args[parser_pos+1:]

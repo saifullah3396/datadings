@@ -31,10 +31,10 @@ def bench(infile, raw, shuffle, buffering):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..argparse import make_parser_simple
     from ..argparse import argument_infile
 
-    parser = make_parser(__doc__)
+    parser = make_parser_simple(__doc__)
     argument_infile(parser)
     parser.add_argument(
         '-r', '--raw',

@@ -38,12 +38,12 @@ def split_dataset(infile, outfiles, splits, overwrite):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..argparse import make_parser_simple
     from ..argparse import argument_infile
     from ..argparse import argument_outfiles
     from ..argparse import argument_no_confirm
 
-    parser = make_parser(__doc__)
+    parser = make_parser_simple(__doc__)
     argument_infile(parser, help='File to split.')
     argument_outfiles(parser)
     parser.add_argument(

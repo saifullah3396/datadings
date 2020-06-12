@@ -66,11 +66,11 @@ def format_writers(writers):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..argparse import make_parser_simple
 
     writers = sorted(find_writers(), key=sortkey)
 
-    parser = make_parser(
+    parser = make_parser_simple(
         __doc__.format(datasets=format_writers(writers)),
         add_help=False,
     )

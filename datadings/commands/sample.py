@@ -24,11 +24,11 @@ def sample(infile, outfile, number, strategy):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..argparse import make_parser_simple
     from ..argparse import argument_infile
     from ..argparse import argument_outfile_positional
 
-    parser = make_parser(__doc__)
+    parser = make_parser_simple(__doc__)
     argument_infile(parser)
     argument_outfile_positional(parser)
     parser.add_argument(
