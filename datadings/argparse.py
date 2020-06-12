@@ -3,12 +3,28 @@ from functools import partial
 from multiprocessing import cpu_count
 
 
+class YesNoAction(argparse.Action):
+    def __call__(self, parser, namespace, yesno, option_string=None):
+        setattr(namespace, self.dest, yesno == 'yes')
+
+
+class MinMaxAction(argparse.Action):
+    min_value = None
+    max_value = None
+
+    def __call__(self, parser, namespace, value, option_string=None):
+        value = max(self.min_value, value or self.max_value)
+        value = min(value, self.max_value)
+        setattr(namespace, self.dest, value)
+
+
 def make_parser(
         description,
         indir=True,
         outdir=True,
         no_confirm=True,
         skip_verification=True,
+        shuffle=True,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         **kwargs
 ):
@@ -18,10 +34,11 @@ def make_parser(
     Parameters:
         description: Description text displayed before arguments.
                      Usually ``__doc__`` is fine.
-        indir: if True, add indir argument
-        outdir: if True, add outdir argument
-        no_confirm: if True, add no_confirm argument
-        skip_verification: if True, add skip_verification argument
+        indir: if True, add ``indir`` argument
+        outdir: if True, add ``outdir`` argument
+        no_confirm: if True, add ``no_confirm`` argument
+        skip_verification: if True, add ``skip_verification`` argument
+        shuffle: if True, add ``shuffle`` argument
         formatter_class: Description formatter, defaults to raw.
         kwargs: kwargs given to ``ArgumentParser``.
 
@@ -41,6 +58,8 @@ def make_parser(
         argument_no_confirm(parser)
     if skip_verification:
         argument_skip_verification(parser)
+    if shuffle:
+        argument_shuffle(parser)
     return parser
 
 
@@ -139,20 +158,20 @@ argument_skip_verification = __make_argument(
 )
 
 
+argument_shuffle = __make_argument(
+    '--shuffle',
+    default='yes',
+    choices=['yes', 'no'],
+    action=YesNoAction,
+    help='Write samples in random order. (default: yes)'
+)
+
+
 argument_calculate_weights = __make_argument(
     '--calculate-weights',
     action='store_true',
     help='Calculate median-frequency class weights.'
 )
-
-
-class ThreadAction(argparse.Action):
-    max_threads = None
-
-    def __call__(self, parser, namespace, threads, option_string=None):
-        threads = max(1, threads or self.max_threads)
-        threads = min(threads, self.max_threads)
-        setattr(namespace, self.dest, threads)
 
 
 def argument_threads(parser, default=1, max_threads=0):
@@ -172,8 +191,9 @@ def argument_threads(parser, default=1, max_threads=0):
     else:
         cpus = max_threads or cpu_count()
 
-    class MaxThreadAction(ThreadAction):
-        max_threads = cpus
+    class Action(MinMaxAction):
+        min_value = 1
+        max_value = cpus
 
     default = min(default, cpus)
     parser.add_argument(
@@ -181,7 +201,7 @@ def argument_threads(parser, default=1, max_threads=0):
         default=default,
         metavar='0-%d' % cpus,
         type=int,
-        action=MaxThreadAction,
+        action=Action,
         help='Number of threads for conversion. '
              '0 uses all available CPUs (default %d).' % default
     )
