@@ -110,27 +110,28 @@ def write_set(imagezip, outdir, split, scenelabels, args):
     total = len([1 for n in names if n.endswith('.jpg')])
     if args.shuffle:
         random.shuffle(names)
+
+    gen = yield_threaded(
+        (
+            pt.basename(path),
+            imagezip.read(path),
+            imagezip.read(segpath),
+            [imagezip.read(p) for p in parts]
+        )
+        for path, segpath, parts in yield_images(names)
+    )
+
+    def __inner(item):
+        key, data, segdata, parts = item
+        segdata = imagedata_to_segpng(segdata)
+        parts = [imagedata_to_segpng(part) for part in parts]
+        return ADE20kData(key, data, scenelabels[key], segdata, parts)
+
     outfile = pt.join(outdir, split + '.msgpack')
     with FileWriter(outfile, total=total, overwrite=args.no_confirm) as writer:
-        gen = yield_threaded(
-            (
-                pt.basename(path),
-                imagezip.read(path),
-                imagezip.read(segpath),
-                [imagezip.read(p) for p in parts]
-            )
-            for path, segpath, parts in yield_images(names)
-        )
-
-        def __inner(item):
-            key, data, segdata, parts = item
-            segdata = imagedata_to_segpng(segdata)
-            parts = [imagedata_to_segpng(part) for part in parts]
-            return key, data, scenelabels[key], segdata, parts
-
         pool = ThreadPool(args.threads)
         for sample in pool.imap_unordered(__inner, gen):
-            writer.write(ADE20kData(*sample))
+            writer.write(sample)
 
 
 def write_sets(files, outdir, args):
