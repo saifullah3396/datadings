@@ -13,15 +13,27 @@ Please visit the website to download it.
 """
 import os.path as pt
 import zipfile
+import random
 
 from ..writer import FileWriter
 from ..tools import yield_threaded
 from . import ImageDisparitySegmentationData
 
 
-LEFT = 'leftImg8bit_trainvaltest.zip'
-DISPARITY = 'disparity_trainvaltest.zip'
-GT = 'gtFine_trainvaltest.zip'
+FILES = {
+    'left': {
+        'path': 'leftImg8bit_trainvaltest.zip',
+        'md5': '0a6e97e94b616a514066c9e2adb0c97f',
+    },
+    'disparity': {
+        'path': 'disparity_trainvaltest.zip',
+        'md5': '2c8272766993c983321f34c73daada5c',
+    },
+    'gt': {
+        'path': 'gtFine_trainvaltest.zip',
+        'md5': '4237c19de34c8a376e9ba46b495d6f66',
+    },
+}
 
 
 def get_keys(leftzip, split):
@@ -46,27 +58,31 @@ def write_set(outdir, split, gen, total):
             writer.write(ImageDisparitySegmentationData(*sample))
 
 
-def write_sets(indir, outdir):
-    def z(path):
-        return zipfile.ZipFile(pt.join(indir, path))
-    with z(LEFT) as left, z(DISPARITY) as disparity, z(GT) as gt:
+def write_sets(files, outdir, args):
+    def z(file):
+        return zipfile.ZipFile(files[file]['path'])
+    with z('left') as left, z('disparity') as disparity, z('gt') as gt:
         for split in ('train', 'val', 'test'):
             keys = get_keys(left, split)
+            if args.shuffle:
+                random.shuffle(keys)
             gen = yield_threaded(yield_samples(keys, left, disparity, gt))
             write_set(outdir, split, gen, len(keys))
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_indir
-    from datadings.argparse import argument_outdir
+    from ..argparse import make_parser
+    from ..argparse import argument_threads
+    from ..tools import prepare_indir
 
     parser = make_parser(__doc__)
-    argument_indir(parser)
-    argument_outdir(parser)
+    argument_threads(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+
+    files = prepare_indir(FILES, args)
+
+    write_sets(files, outdir, args)
 
 
 if __name__ == '__main__':
