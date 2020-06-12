@@ -2,20 +2,35 @@
 
 The data set is described here:
     https://www.cs.toronto.edu/~kriz/cifar.html
+
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - cifar-100-python.tar.gz
 """
 import tarfile
 import os.path as pt
 import random
 from pickle import load
+from collections import defaultdict
 
-from ..tools import download_if_not_found
 from ..writer import FileWriter
 from . import ImageCoarseClassificationData
 from .CIFAR10_write import get_files
 from .CIFAR10_write import row2image
 
 
+BASE_URL = 'https://www.cs.toronto.edu/~kriz/'
+FILES = {
+    'all': {
+        'path': 'cifar-100-python.tar.gz',
+        'url': BASE_URL+'cifar-100-python.tar.gz',
+        'md5': 'eb9058c3a382ffc7106e4002c42a8d85',
+    }
+}
+
+
 def yield_rows(files):
+    seen = defaultdict(lambda: 0)
     for f in files:
         d = load(f, encoding='bytes')
         for row, label, coarse_label, filename in zip(
@@ -23,53 +38,53 @@ def yield_rows(files):
                 d[b'coarse_labels'], d[b'filenames']
         ):
             filename = filename.decode('utf-8')
+            seen[filename] += 1
+            # apparently some files occur multiple times...
+            if seen[filename] > 1:
+                filename += str(seen[filename])
             image = row2image(row)
             yield image, label, coarse_label, filename
 
 
-def __write_sets(outdir, train_names, test_names, shuffle):
-    for name, files in (('train', train_names), ('test', test_names)):
-        gen = yield_rows(files)
-        if shuffle:
-            gen = list(gen)
-            random.shuffle(gen)
-        with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(files)) as writer:
-            for data, label, coarse_label, filename in gen:
-                writer.write(ImageCoarseClassificationData(
-                    filename,
-                    data,
-                    int(label),
-                    int(coarse_label),
-                ))
+def write_set(tar, outdir, split, args):
+    files = get_files(tar, 'cifar-100-python', [split])
+
+    gen = yield_rows(files)
+    if args.shuffle:
+        gen = list(gen)
+        random.shuffle(gen)
+
+    outfile = pt.join(outdir, split + '.msgpack')
+    with FileWriter(outfile, total=len(files), overwrite=args.no_confirm) as writer:
+        for data, label, coarse_label, filename in gen:
+            writer.write(ImageCoarseClassificationData(
+                filename,
+                data,
+                int(label),
+                int(coarse_label),
+            ))
 
 
-def write_sets(indir, outdir, shuffle=True):
-    download_if_not_found(
-        'https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz',
-        pt.join(indir, 'cifar-100-python.tar.gz')
-    )
-    train_names = ['train']
-    test_names = ['test']
-    with tarfile.open(pt.join(indir, 'cifar-100-python.tar.gz'), 'r:gz') as tar:
-        __write_sets(
-            outdir,
-            get_files(tar, 'cifar-100-python', train_names),
-            get_files(tar, 'cifar-100-python', test_names),
-            shuffle
-        )
+def write_sets(files, outdir, args):
+    with tarfile.open(files['all']['path'], 'r:gz') as tar:
+        for split in ('train', 'test'):
+            try:
+                write_set(tar, outdir, split, args)
+            except FileExistsError:
+                pass
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_indir
-    from datadings.argparse import argument_outdir
+    from ..argparse import make_parser
+    from ..tools import prepare_indir
 
     parser = make_parser(__doc__)
-    argument_indir(parser)
-    argument_outdir(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+
+    files = prepare_indir(FILES, args)
+
+    write_sets(files, outdir, args)
 
 
 if __name__ == '__main__':

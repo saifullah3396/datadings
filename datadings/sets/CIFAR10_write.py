@@ -2,6 +2,10 @@
 
 The data set is described here:
     https://www.cs.toronto.edu/~kriz/cifar.html
+
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - cifar-10-python.tar.gz
 """
 import io
 import os.path as pt
@@ -11,9 +15,18 @@ from pickle import load
 
 from PIL import Image
 
-from ..tools import download_if_not_found
 from ..writer import FileWriter
 from . import ImageClassificationData
+
+
+BASE_URL = 'https://www.cs.toronto.edu/~kriz/'
+FILES = {
+    'all': {
+        'path': 'cifar-10-python.tar.gz',
+        'url': BASE_URL+'cifar-10-python.tar.gz',
+        'md5': 'c58f30108f718f92721af3b95e74349a',
+    }
+}
 
 
 def row2image(row):
@@ -24,7 +37,7 @@ def row2image(row):
     return bio.getvalue()
 
 
-def __yield_rows(files):
+def yield_rows(files):
     for f in files:
         d = load(f, encoding='bytes')
         for row, label, filename in zip(
@@ -35,52 +48,52 @@ def __yield_rows(files):
             yield image, label, filename
 
 
-def __write_sets(outdir, train_names, test_names, shuffle):
-    for name, files in (('train', train_names), ('test', test_names)):
-        gen = __yield_rows(files)
-        if shuffle:
-            gen = list(gen)
-            random.shuffle(gen)
-        with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(files)) as writer:
-            for data, label, filename in gen:
-                writer.write(ImageClassificationData(
-                    filename,
-                    data,
-                    int(label),
-                ))
-
-
 def get_files(tar, prefix, names):
     return [tar.extractfile(pt.join(prefix, n)) for n in names]
 
 
-def write_sets(indir, outdir, shuffle=True):
-    download_if_not_found(
-        'https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz',
-        pt.join(indir, 'cifar-10-python.tar.gz')
-    )
-    train_names = ['data_batch_%d' % i for i in range(1, 6)]
-    test_names = ['test_batch']
-    with tarfile.open(pt.join(indir, 'cifar-10-python.tar.gz'), 'r:gz') as tar:
-        __write_sets(
-            outdir,
-            get_files(tar, 'cifar-10-batches-py', train_names),
-            get_files(tar, 'cifar-10-batches-py', test_names),
-            shuffle
-        )
+def write_set(tar, outdir, split, args):
+    filenames = {
+        'train': ['data_batch_%d' % i for i in range(1, 6)],
+        'test': ['test_batch'],
+    }
+    files = get_files(tar, 'cifar-10-batches-py', filenames[split])
+
+    gen = yield_rows(files)
+    if args.shuffle:
+        gen = list(gen)
+        random.shuffle(gen)
+
+    outfile = pt.join(outdir, split + '.msgpack')
+    with FileWriter(outfile, total=len(files), overwrite=args.no_confirm) as writer:
+        for data, label, filename in gen:
+            writer.write(ImageClassificationData(
+                filename,
+                data,
+                int(label),
+            ))
+
+
+def write_sets(files, outdir, args):
+    with tarfile.open(files['all']['path'], 'r:gz') as tar:
+        for split in ('train', 'test'):
+            try:
+                write_set(tar, outdir, split, args)
+            except FileExistsError:
+                pass
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_indir
-    from datadings.argparse import argument_outdir
+    from ..argparse import make_parser
+    from ..tools import prepare_indir
 
     parser = make_parser(__doc__)
-    argument_indir(parser)
-    argument_outdir(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+
+    files = prepare_indir(FILES, args)
+
+    write_sets(files, outdir, args)
 
 
 if __name__ == '__main__':
