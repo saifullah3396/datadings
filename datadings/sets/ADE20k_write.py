@@ -15,15 +15,14 @@ import json
 from multiprocessing.dummy import Pool as ThreadPool
 from collections import Counter
 import itertools as it
+import random
 
 import numpy as np
 from PIL import Image
 
 from . import ADE20kData
 from ..writer import FileWriter
-from ..tools import download_files_if_not_found
-from ..tools import verify_files
-from ..tools import locate_files
+from ..tools import prepare_indir
 from ..tools import yield_threaded
 from ..matlab import loadmat
 from ..matlab import iter_fields
@@ -34,7 +33,7 @@ from .VOC2012_write import sorted_values
 
 BASE_URL = 'http://groups.csail.mit.edu/vision/datasets/ADE20K/'
 FILES = {
-    'trainval': {
+    'all': {
         'url': BASE_URL+'ADE20K_2016_07_26.zip',
         'path': 'ADE20K_2016_07_26.zip',
         'md5': '5d125f9457b1a3990adb96de45d03f60',
@@ -107,11 +106,13 @@ def yield_images(names):
         yield p + '.jpg', p + '_seg.png', parts
 
 
-def write_set(imagezip, outdir, split, scenelabels, threads, no_confirm):
+def write_set(imagezip, outdir, split, scenelabels, args):
     names = [n for n in imagezip.namelist() if split in n]
-    jpegs = [n for n in names if n.endswith('.jpg')]
+    total = len([1 for n in names if n.endswith('.jpg')])
+    if args.shuffle:
+        random.shuffle(names)
     outfile = pt.join(outdir, split + '.msgpack')
-    with FileWriter(outfile, total=len(jpegs), overwrite=no_confirm) as writer:
+    with FileWriter(outfile, total=total, overwrite=args.no_confirm) as writer:
         gen = yield_threaded(
             (
                 pt.basename(path),
@@ -128,17 +129,13 @@ def write_set(imagezip, outdir, split, scenelabels, threads, no_confirm):
             parts = [imagedata_to_segpng(part) for part in parts]
             return key, data, scenelabels[key], segdata, parts
 
-        pool = ThreadPool(threads)
+        pool = ThreadPool(args.threads)
         for sample in pool.imap_unordered(__inner, gen):
             writer.write(ADE20kData(*sample))
 
 
-def write_sets(indir, outdir, args):
-    download_files_if_not_found(FILES, indir)
-    if not args.skip_verification:
-        verify_files(FILES, indir)
-    datapath = locate_files(FILES, indir)['trainval']['path']
-    with zipfile.ZipFile(datapath) as imagezip:
+def write_sets(files, outdir, args):
+    with zipfile.ZipFile(files['all']['path']) as imagezip:
         filenames, scenes = load_index(imagezip, 'filename', 'scene')
         scenelabels = {l: i for i, l in enumerate(sorted(set(scenes)))}
         scenelabels = {pt.basename(im): scenelabels[l]
@@ -146,8 +143,7 @@ def write_sets(indir, outdir, args):
         del filenames, scenes
         for split in ('training', 'validation'):
             try:
-                write_set(imagezip, outdir, split, scenelabels,
-                          args.threads, args.no_confirm)
+                write_set(imagezip, outdir, split, scenelabels, args)
             except FileExistsError:
                 pass
 
@@ -156,11 +152,8 @@ def _segmap(segdata):
     return segmentation_map(imagedata_to_array(segdata))
 
 
-def calculate_weights(indir, outdir):
-    download_files_if_not_found(FILES, indir)
-    verify_files(FILES, indir)
-    datapath = locate_files(FILES, indir)['trainval']['path']
-    with zipfile.ZipFile(datapath) as imagezip:
+def calculate_weights(files, outdir):
+    with zipfile.ZipFile(files['all']['path']) as imagezip:
         gen = yield_threaded(
             _segmap(imagezip.read(path))
             for _, seg, parts in yield_images(imagezip.namelist())
@@ -175,11 +168,8 @@ def calculate_weights(indir, outdir):
         }, f)
 
 
-def extract_scenelabels(indir, outdir):
-    download_files_if_not_found(FILES, indir)
-    verify_files(FILES, indir)
-    datapath = locate_files(FILES, indir)['trainval']['path']
-    with zipfile.ZipFile(datapath) as imagezip:
+def extract_scenelabels(files, outdir):
+    with zipfile.ZipFile(files['all']['path']) as imagezip:
         scenes = sorted(set(load_index(imagezip, 'scene')['scene']))
     with open(pt.join(outdir, 'ADE20k_scenelabels.json'), 'w') as f:
         json.dump(scenes, f)
@@ -200,12 +190,15 @@ def main():
     )
     args = parser.parse_args()
     outdir = args.outdir or args.indir
+
+    files = prepare_indir(FILES, args)
+
     if args.calculate_weights:
-        calculate_weights(args.indir, outdir)
+        calculate_weights(files, outdir)
     elif args.scenelabels:
-        extract_scenelabels(args.indir, outdir)
+        extract_scenelabels(files, outdir)
     else:
-        write_sets(args.indir, outdir, args)
+        write_sets(files, outdir, args)
 
 
 if __name__ == '__main__':
