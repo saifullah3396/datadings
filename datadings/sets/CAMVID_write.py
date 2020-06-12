@@ -22,7 +22,6 @@ from .VOC2012_write import sorted_values
 from .VOC2012_write import print_values
 from .VOC2012 import median_frequency_weights
 from ..writer import FileWriter
-from ..tools import prepare_indir
 from . import ImageSegmentationData
 
 
@@ -104,6 +103,7 @@ def calculate_weights(files):
 def main():
     from datadings.argparse import make_parser
     from datadings.argparse import argument_calculate_weights
+    from ..tools import prepare_indir
 
     parser = make_parser(__doc__)
     argument_calculate_weights(parser)
