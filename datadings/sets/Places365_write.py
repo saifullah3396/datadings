@@ -209,14 +209,8 @@ def write_sets(indir, outdir, args):
 
 def main():
     from ..argparse import make_parser
-    from ..argparse import argument_indir
-    from ..argparse import argument_outdir
-    from ..argparse import argument_no_confirm
-    from ..argparse import argument_skip_verification
 
-    parser = make_parser(__doc__)
-    argument_indir(parser)
-    argument_outdir(parser)
+    parser = make_parser(__doc__, shuffle=False)
     parser.add_argument(
         "-l", "--low-res",
         action="store_true",
@@ -230,8 +224,6 @@ def main():
         help="Download the extended challenge training dataset. Validation and "
              "testing are the same."
     )
-    argument_no_confirm(parser)
-    argument_skip_verification(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     write_sets(args.indir, outdir, args)
