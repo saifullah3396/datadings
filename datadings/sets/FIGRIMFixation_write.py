@@ -20,7 +20,34 @@ from ..writer import FileWriter
 from . import SaliencyData
 from . import SaliencyExperiment
 from ..matlab import loadmat
-from ..tools import download_if_not_found
+
+
+BASE_URL_MIT = 'http://figrim.mit.edu/'
+BASE_URL_GIT = 'https://github.com/cvzoya/figrim/raw/master/'
+FILES_TARGET = {
+    'mat': {
+        'path': 'allImages_release.mat',
+        'url': BASE_URL_GIT+'targetData/allImages_release.mat',
+        'md5': 'c72843b05e95ab27594c1d11c849c897',
+    },
+    'zip': {
+        'path': 'Targets.zip',
+        'url': BASE_URL_MIT+'Targets.zip',
+        'md5': '2ad3a42ebc377efe4b39064405568201',
+    }
+}
+FILES_FILLER = {
+    'mat': {
+        'path': 'allImages_fillers.mat',
+        'url': BASE_URL_GIT+'fillerData/allImages_fillers.mat',
+        'md5': 'ce4f8b4961005d62f7a21191a64cab5e',
+    },
+    'zip': {
+        'path': 'Fillers.zip',
+        'url': BASE_URL_MIT+'Fillers.zip',
+        'md5': 'dc0bc9561b5bc90e158ec32074dd1060',
+    }
+}
 
 
 def __load_mat_file(mat_file):
@@ -45,52 +72,46 @@ def __get_experiments(subjects):
     return experiments
 
 
-def write_images(imagezip, names, locations, writer, shuffle):
-    if shuffle:
-        random.shuffle(names)
-    for path in names:
-        jpegdata = imagezip.read(path)
+def write_set(split, files, outdir, args):
+    locations = __load_mat_file(files['mat']['path'])
+    with zipfile.ZipFile(files['zip']['path']) as imagezip:
+        names = [f for f in imagezip.namelist() if f.endswith('.jpg')]
+        if args.shuffle:
+            random.shuffle(names)
+        outfile = pt.join(outdir, split+'.msgpack')
+        with FileWriter(outfile, total=len(names),
+                        overwrite=args.no_confirm) as writer:
+            for path in names:
+                jpegdata = imagezip.read(path)
+                try:
+                    experiments = __get_experiments(locations[path])
+                except KeyError:
+                    # some images don't have fixation data
+                    continue
+                item = SaliencyData(path, jpegdata, experiments)
+                writer.write(item)
+
+
+def write_sets(files_target, files_filler, outdir, args):
+    for split, files in (('target', files_target), ('filler', files_filler)):
         try:
-            experiments = __get_experiments(locations[path])
-        except KeyError:
-            # some images don't have fixation data
-            # print(datapath, 'not found')
-            continue
-        item = SaliencyData(path, jpegdata, experiments)
-        writer.write(item)
-
-
-def write_sets(indir, outdir, shuffle=True):
-    u = 'http://figrim.mit.edu/'
-    g = 'https://github.com/cvzoya/figrim/raw/master/'
-    target = 'Targets', 'release', g + 'targetData/allImages_release.mat'
-    filler = 'Fillers', 'fillers', g + 'fillerData/allImages_fillers.mat'
-    for name, mat_name, mat_url in (target, filler):
-        print(name)
-        imagepath = pt.join(indir, name + '.zip')
-        dataname = 'allImages_%s.mat' % mat_name
-        datapath = pt.join(indir, dataname)
-        outpath = pt.join(outdir, name.lower() + '.msgpack')
-        download_if_not_found(u + name + '.zip', imagepath)
-        download_if_not_found(mat_url, datapath)
-        locations = __load_mat_file(datapath)
-        with zipfile.ZipFile(imagepath) as imagezip:
-            names = [f for f in imagezip.namelist() if f.endswith('.jpg')]
-            with FileWriter(outpath, total=len(names)) as writer:
-                write_images(imagezip, names, locations, writer, shuffle)
+            write_set(split, files, outdir, args)
+        except FileExistsError:
+            pass
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_indir
-    from datadings.argparse import argument_outdir
+    from ..argparse import make_parser
+    from ..tools import prepare_indir
 
     parser = make_parser(__doc__)
-    argument_indir(parser)
-    argument_outdir(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+
+    files_target = prepare_indir(FILES_TARGET, args)
+    files_filler = prepare_indir(FILES_FILLER, args)
+
+    write_sets(files_target, files_filler, outdir, args)
 
 
 if __name__ == '__main__':
