@@ -14,7 +14,6 @@ import os.path as pt
 
 from ..writer import FileWriter
 from . import ImageSegmentationData
-from .InriaBuildings import CLASSES
 from .InriaBuildings import CROP_SIZE
 from .InriaBuildings import TRAIN_MSG_FILE
 from .InriaBuildings import VAL_MSG_FILE
@@ -104,22 +103,10 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        default='.',
-        help='directory that contains In InriaBuilding files'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTPATH',
-        help='output directory; defaults to indir'
-    )
+    from ..argparse import make_parser_simple
+
+    parser = make_parser_simple(__doc__, indir=True, outdir=True)
+
     args = parser.parse_args()
     outdir = args.outdir or args.indir
     write_sets(args.indir, outdir)
