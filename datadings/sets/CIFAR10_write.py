@@ -33,7 +33,7 @@ def row2image(row):
     arr = row.reshape((3, 32, 32)).transpose((1, 2, 0))
     im = Image.fromarray(arr, 'RGB')
     bio = io.BytesIO()
-    im.save(bio, 'PNG')
+    im.save(bio, 'PNG', optimize=True)
     return bio.getvalue()
 
 

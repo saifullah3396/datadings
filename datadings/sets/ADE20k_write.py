@@ -62,15 +62,15 @@ def load_index(imagezip, *keys):
         return index
 
 
-def array_to_image(array, format, dtype, mode):
+def array_to_image(array, format, dtype, mode, **kwargs):
     im = Image.fromarray(array.astype(dtype), mode)
     bio = io.BytesIO()
-    im.save(bio, format=format)
+    im.save(bio, format=format, **kwargs)
     return bio.getvalue()
 
 
 def array_to_png16(array):
-    return array_to_image(array, 'png', np.int32, 'I')
+    return array_to_image(array, 'png', np.int32, 'I', optimize=True)
 
 
 def segmentation_map(im):
