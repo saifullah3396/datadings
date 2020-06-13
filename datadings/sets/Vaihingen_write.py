@@ -13,7 +13,6 @@ import os.path as pt
 
 from ..writer import FileWriter
 from . import MaskedImageSegmentationData
-from .Vaihingen import CLASSES
 from .Vaihingen import CROP_SIZE
 from .Vaihingen import COLOR_TO_CLASS_MAP
 from ..tools import split_array
