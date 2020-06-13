@@ -9,7 +9,7 @@ and download them if necessary:
     - fixations.zip
 """
 import os.path as pt
-import zipfile
+from zipfile import ZipFile
 import random
 
 import numpy as np
@@ -17,13 +17,23 @@ import numpy as np
 from ..writer import FileWriter
 from . import SaliencyData
 from . import SaliencyTimeseriesExperiment
-from ..tools import download_if_not_found
 from ..tools import yield_threaded
 from ..matlab import loadmat
 
 
-IMAGE_URL = 'https://drive.google.com/uc?id=1g8j-hTT-51IG1UFwP0xTGhLdgIUCW5e5&export=download'
-FIXATIONS_URL = 'https://drive.google.com/uc?id=0B2hsWbciDVedWHFiMUVVWFRZTE0&export=download'
+BASE_URL = 'https://drive.google.com/uc?id='
+FILES = {
+    'images': {
+        'path': 'image.zip',
+        'url': BASE_URL+'1g8j-hTT-51IG1UFwP0xTGhLdgIUCW5e5&export=download',
+        'md5': 'eb2a1bb706633d1b31fc2e01422c5757',
+    },
+    'fixations': {
+        'path': 'fixations.zip',
+        'url': BASE_URL+'0B2hsWbciDVedWHFiMUVVWFRZTE0&export=download',
+        'md5': '9a22db9d718200fb90252e5010c004c4',
+    }
+}
 
 
 def get_keys(imagezip, split):
@@ -58,47 +68,31 @@ def write_set(split, gen, outdir, total):
             writer.write(sample)
 
 
-def write_sets(indir, outdir, shuffle=True):
-    def z(path):
-        return zipfile.ZipFile(path)
-    imagepath = pt.join(indir, 'image.zip')
-    fixationpath = pt.join(indir, 'fixations.zip')
-    download_if_not_found(IMAGE_URL, imagepath)
-    download_if_not_found(FIXATIONS_URL, fixationpath)
-    with z(imagepath) as imagezip, z(fixationpath) as fixationzip:
+def write_sets(files, outdir, args):
+    with ZipFile(files['images']['path']) as imagezip, \
+            ZipFile(files['fixations']['path']) as fixationzip:
         for split in ('train', 'val', 'test'):
-            print(split)
             keys = get_keys(imagezip, split)
-            if shuffle:
+            if args.shuffle:
                 random.shuffle(keys)
             gen = yield_threaded(yield_samples(keys, imagezip, fixationzip))
-            write_set(split, gen, outdir, len(keys))
+            try:
+                write_set(split, gen, outdir, len(keys))
+            except FileExistsError:
+                pass
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        help='directory that contains SALICON files'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTPATH',
-        help='output directory; defaults to indir'
-    )
-    parser.add_argument(
-        '--no-shuffle',
-        action='store_true',
-        help='disable shuffling'
-    )
+    from ..argparse import make_parser
+    from ..tools import prepare_indir
+
+    parser = make_parser(__doc__)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir, not args.no_shuffle)
+
+    files = prepare_indir(FILES, args)
+
+    write_sets(files, outdir, args)
 
 
 if __name__ == '__main__':
