@@ -96,15 +96,15 @@ FILES = {
 }
 
 
-def array_to_image(array, format, dtype, mode):
+def array_to_image(array, format, dtype, mode, **kwargs):
     im = Image.fromarray(array.astype(dtype), mode)
     bio = io.BytesIO()
-    im.save(bio, format=format)
+    im.save(bio, format=format, **kwargs)
     return bio.getvalue()
 
 
 def array_to_png(array):
-    return array_to_image(array, 'png', np.uint8, 'L')
+    return array_to_image(array, 'png', np.uint8, 'L', optimize=True)
 
 
 def find_sets(tarfp):
@@ -150,9 +150,11 @@ def extract_scene(scenes, name):
 
 def write_set(
         imagetar, classtar, instancetar, boundarytar,
-        outdir, name, members, scenes
+        outdir, name, members, scenes, overwrite
 ):
-    with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(members)) as writer:
+    outfile = pt.join(outdir, name + '.msgpack')
+    with FileWriter(outfile, total=len(members),
+                    overwrite=overwrite) as writer:
         for m in members:
             writer.write(Places2017Data(
                 pt.basename(m.name),
@@ -172,7 +174,6 @@ def load_scenelabels():
 
 def write_sets(files, outdir, args):
     scenes = load_scenelabels()
-    # write actual data set
     with TarFile(files['images']['path']) as imagetar, \
             TarFile(files['classes']['path']) as classtar, \
             TarFile(files['instances']['path']) as instancetar, \
@@ -184,7 +185,7 @@ def write_sets(files, outdir, args):
             try:
                 write_set(
                     imagetar, classtar, instancetar, boundarytar,
-                    outdir, name, members, scenes
+                    outdir, name, members, scenes, args.no_confirm
                 )
             except FileExistsError:
                 pass
