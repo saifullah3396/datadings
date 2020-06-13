@@ -27,7 +27,6 @@ from simplejpeg import decode_jpeg_header
 from simplejpeg import encode_jpeg as encode_jpeg
 
 from ..writer import FileWriter
-from ..tools import verify_files
 from ..tools import yield_threaded
 from . import ImageClassificationData
 from .ILSVRC2012_synsets import SYNSETS
@@ -132,39 +131,34 @@ def verify_image(
 TOTAL = {'train': 1281167, 'val': 50000, 'test': 100000}
 
 
-def write_set(split, outdir, gen, quality, subsampling, threads):
+def write_set(split, outdir, gen, args):
     outfile = pt.join(outdir, split + '.msgpack')
+
+    def __verify_inner(item):
+        key, data, label = item
+        data = verify_image(data, args.quality, colorsubsampling=args.subsampling)
+        return ImageClassificationData(key, data, label)
+
+    pool = ThreadPool(args.threads)
     with FileWriter(outfile, total=TOTAL[split]) as writer:
-        def __verify_inner(item):
-            key, data, label = item
-            data = verify_image(data, quality, colorsubsampling=subsampling)
-            return ImageClassificationData(key, data, label)
-        pool = ThreadPool(threads)
         for sample in pool.imap_unordered(__verify_inner, gen):
             writer.write(sample)
 
 
-def write_sets(indir, outdir, quality, subsampling, threads, verification):
-    if verification:
-        verify_files(FILES, indir)
+def write_sets(files, outdir, args):
     for split in ('train', 'val'):
-        tarpath = pt.join(indir, 'ILSVRC2012_img_%s.tar' % split)
-        with tarfile.open(tarpath, bufsize=READ_SIZE) as tar:
+        with tarfile.open(files[split]['path'], bufsize=READ_SIZE) as tar:
             gen = yield_threaded(yield_samples(split, tar))
-            write_set(split, outdir, gen, quality, subsampling, threads)
+            write_set(split, outdir, gen, args)
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_indir
-    from datadings.argparse import argument_outdir
-    from datadings.argparse import argument_skip_verification
-    from datadings.argparse import argument_threads
+    from ..argparse import make_parser
+    from ..argparse import argument_threads
+    from ..tools import prepare_indir
 
-    parser = make_parser(__doc__)
-    argument_indir(parser)
-    argument_outdir(parser)
-    argument_skip_verification(parser)
+    parser = make_parser(__doc__, shuffle=False)
+    argument_threads(parser, default=8)
     parser.add_argument(
         '--compress',
         nargs='?',
@@ -173,29 +167,24 @@ def main():
         choices=range(101),
         metavar='quality 0-100',
         type=int,
-        help='use JPEG compression with optional quality; '
-             'default quality is 85; '
-             'big images are resized to roughly fit 500x375; '
-             '444 color is forced for very small images'
+        help='Use JPEG compression with optional quality. '
+             'Default quality is 85. '
+             'Big images are resized to roughly fit 500x375. '
     )
     parser.add_argument(
         '--subsampling',
         default='422',
         choices=('444', '422', '420', '440', '411', 'Gray'),
         type=str,
-        help='color subsampling factor used with compress option'
+        help='Color subsampling factor used with compress option. '
+             '444 is forced for small images to preserve details.'
     )
-    argument_threads(parser, default=8)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(
-        args.indir,
-        outdir,
-        args.compress,
-        args.subsampling,
-        args.threads,
-        not args.skip_verification,
-    )
+
+    files = prepare_indir(FILES, args)
+
+    write_sets(files, outdir, args)
 
 
 if __name__ == '__main__':
