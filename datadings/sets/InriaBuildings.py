@@ -1,11 +1,8 @@
 NUM_INPUT_CHANNELS = 3
+IMAGE_SIZE = 5000
 CROP_SIZE = 384
 
 CLASSES = [
-    '0. Building',
-    '1. Background'
+    'background',
+    'building',
 ]
-
-TRAIN_MSG_FILE = 'InriaBuildings_train.msgpack'
-VAL_MSG_FILE = 'InriaBuildings_val.msgpack'
-TEST_MSG_FILE = 'InriaBuildings_test.msgpack'

@@ -3,31 +3,53 @@
 The data set is described here:
     https://project.inria.fr/aerialimagelabeling/contest/
 
+Registration is required to download this dataset.
+Please visit the website and follow the instructions to download
+and decompress it.
+
 This tool will look for the unpacked "AerialImageDataset"
 directory in the input directory.
 
-Registration is required to download this dataset.
-Please visit the website to download it.
+Note: the dataset is NOT SHUFFLED!
 """
-import numpy as np
 import os.path as pt
+import io
+
+import numpy as np
+from simplejpeg import encode_jpeg
+from PIL import Image
 
 from ..writer import FileWriter
+from . import ImageData
 from . import ImageSegmentationData
 from .InriaBuildings import CROP_SIZE
-from .InriaBuildings import TRAIN_MSG_FILE
-from .InriaBuildings import VAL_MSG_FILE
-from .InriaBuildings import TEST_MSG_FILE
 from ..tools import split_array
 from ..tools import tiff_to_nd_array
 
 
+def array2imagedata(array):
+    if array.dtype == np.bool:
+        bio = io.BytesIO()
+        img = Image.fromarray(array, '1')
+        img.save(bio, 'PNG', optimize=True)
+        return bio.getvalue()
+    else:
+        array = np.ascontiguousarray(array.transpose((1, 2, 0)))
+        return encode_jpeg(array, quality=95)
+
+
 def write(writer, img, labels, filename=""):
-    writer.write(ImageSegmentationData(
-        filename,
-        img,
-        labels,
-    ))
+    if labels is not None:
+        writer.write(ImageSegmentationData(
+            filename,
+            array2imagedata(img),
+            array2imagedata(labels),
+        ))
+    else:
+        writer.write(ImageData(
+            filename,
+            array2imagedata(img),
+        ))
 
 
 def images_and_labels_iter(img_dir, label_dir, locations, ids):
@@ -35,19 +57,17 @@ def images_and_labels_iter(img_dir, label_dir, locations, ids):
         for id in ids:
             filename = "%s%s.tif" % (location, id)
             img_path = pt.join(img_dir, filename)
-            img = tiff_to_nd_array(img_path)
-            train_img = img.astype(np.uint8)
+            train_img = tiff_to_nd_array(img_path, type=np.uint8)
 
             labels = None
             if label_dir is not None:
                 label_path = pt.join(label_dir, filename)
-                labels = tiff_to_nd_array(label_path, type=np.int64)
-                labels = labels[0]
-                labels[labels == 255] = 1  # set correct class label
+                labels = tiff_to_nd_array(label_path, type=np.uint8)
+                labels = labels[0] == 255
             yield filename, train_img, labels
 
 
-def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
+def write_sets(indir, outdir, args, crop_size=(CROP_SIZE, CROP_SIZE)):
     dataset_dir = pt.join(indir, 'AerialImageDataset')
     train_dir = pt.join(dataset_dir, 'train')
     test_dir = pt.join(dataset_dir, 'test')
@@ -60,56 +80,71 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
                       "sfo", "tyrol-e"]
 
     # Training-Split -> give whole image
-    train_file = pt.join(outdir, TRAIN_MSG_FILE)
-    with FileWriter(train_file) as writer:
-        for fn, train_img, labels in images_and_labels_iter(train_img_dir,
-                                                            train_gt_dir,
-                                                            train_locations,
-                                                            range(6, 37)):
-            write(writer, train_img, labels, fn)
+    ids = range(6, 37)
+    total = len(train_locations) * len(ids)
+    train_file = pt.join(outdir, 'train.msgpack')
+    try:
+        with FileWriter(train_file, total=total, overwrite=args.no_confirm) as writer:
+            for fn, img, labels in images_and_labels_iter(
+                    train_img_dir, train_gt_dir, train_locations, ids
+            ):
+                write(writer, img, labels, fn)
+    except FileExistsError:
+        pass
 
     # Put first 5 images into the validation set, as in the paper
     # https://hal.inria.fr/hal-01468452/document
     # Validation-Split -> give splitted images
-    val_file = pt.join(outdir, VAL_MSG_FILE)
-    with FileWriter(val_file) as writer:
-        for fn, train_img, labels in images_and_labels_iter(train_img_dir,
-                                                            train_gt_dir,
-                                                            train_locations,
-                                                            range(1, 6)):
-            train_labels = np.expand_dims(labels, axis=0)
-            for idx, (sub_img, sub_label) in \
-                    enumerate(zip(split_array(train_img, *crop_size),
-                                  split_array(train_labels, *crop_size))):
-
-                sub_img = np.array(sub_img).astype(np.uint8)
-                sub_label = np.array(sub_label[0]).astype(np.int64)
-                _, w, h = sub_img.shape
-                if 8 in [w, h]:  # reject very small patches
-                    continue
-                write(writer, sub_img, sub_label, "%s_%s" % (fn, idx))
+    test_file = pt.join(outdir, 'val.msgpack')
+    ids = range(1, 6)
+    crop_h, crop_w = crop_size
+    crops = (5000 // crop_h) * (5000 // crop_w)
+    total = len(train_locations) * len(ids) * crops
+    try:
+        with FileWriter(test_file, total=total, overwrite=args.no_confirm) as writer:
+            for fn, img, labels in images_and_labels_iter(
+                    train_img_dir, train_gt_dir, train_locations, ids
+            ):
+                labels = np.expand_dims(labels, axis=0)
+                gen = enumerate(zip(
+                    split_array(img, *crop_size),
+                    split_array(labels, *crop_size)
+                ))
+                for idx, (sub_img, sub_label) in gen:
+                    _, w, h = sub_img.shape
+                    if w < crop_w or h < crop_h:  # reject small patches
+                        continue
+                    write(writer, sub_img, sub_label[0], "%s_%s" % (fn, idx))
+    except FileExistsError:
+        pass
 
     # Test-Split -> give splitted images without labels
-    val_file = pt.join(outdir, TEST_MSG_FILE)
-    with FileWriter(val_file) as writer:
-        for fn, train_img, labels in images_and_labels_iter(test_img_dir,
-                                                            None,
-                                                            test_locations,
-                                                            range(1, 37)):
-            for idx, sub_img in enumerate(split_array(train_img, *crop_size)):
-                sub_img = np.array(sub_img).astype(np.uint8)
-                sub_label = np.array([])
-                write(writer, sub_img, sub_label, "%s_%s" % (fn, idx))
+    test_file = pt.join(outdir, 'test.msgpack')
+    ids = range(1, 37)
+    crops = (5000 // crop_h) * (5000 // crop_w)
+    total = len(test_locations) * len(ids) * crops
+    try:
+        with FileWriter(test_file, total=total, overwrite=args.no_confirm) as writer:
+            for fn, img, labels in images_and_labels_iter(
+                    test_img_dir, None, test_locations, ids
+            ):
+                gen = enumerate(split_array(img, *crop_size))
+                for idx, sub_img in gen:
+                    _, w, h = sub_img.shape
+                    if w < crop_w or h < crop_h:  # reject small patches
+                        continue
+                    write(writer, sub_img, None, "%s_%s" % (fn, idx))
+    except FileExistsError:
+        pass
 
 
 def main():
-    from ..argparse import make_parser_simple
+    from ..argparse import make_parser
 
-    parser = make_parser_simple(__doc__, indir=True, outdir=True)
-
+    parser = make_parser(__doc__, skip_verification=False, shuffle=False)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+    write_sets(args.indir, outdir, args)
 
 
 if __name__ == '__main__':
