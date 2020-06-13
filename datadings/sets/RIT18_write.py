@@ -12,11 +12,19 @@ import os.path as pt
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import download_if_not_found
 from . import MaskedImageSegmentationData
 from .RIT18 import CROP_SIZE
 from ..matlab import loadmat
 from ..tools import split_array
+
+
+FILES = {
+    'mat': {
+        'path': 'rit18_data.mat',
+        'url': 'http://www.cis.rit.edu/~rmk6217/rit18_data.mat',
+        'md5': '783ffe651310352e9c09b8ac389876c7',
+    }
+}
 
 
 def write(writer, img, labels, mask, filename):
@@ -28,13 +36,8 @@ def write(writer, img, labels, mask, filename):
     ))
 
 
-def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
-    imagepath = pt.join(indir, 'rit18_data.mat')
-    download_if_not_found(
-        'http://www.cis.rit.edu/~rmk6217/rit18_data.mat',
-        imagepath
-    )
-    dataset = loadmat(imagepath)
+def write_sets(files, outdir, args, crop_size=(CROP_SIZE, CROP_SIZE)):
+    dataset = loadmat(files['mat']['path'])
 
     # Training-Split -> give whole image
     train_labels = dataset['train_labels'].astype(np.int64)
@@ -42,24 +45,24 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
     train_mask = train_data[-1].astype(np.uint8)
     train_img = train_data[:6].astype(np.uint16)
 
-    with FileWriter(pt.join(outdir, 'RIT18_train.msgpack')) as writer:
+    outfile = pt.join(outdir, 'train.msgpack')
+    with FileWriter(outfile, total=1, overwrite=args.no_confirm) as writer:
         write(writer, train_img, train_labels, train_mask, "train")
 
     # Validation & Test-Split -> give splitted images
-    for split in ("val", ):
-        file = pt.join(outdir, 'RIT18_%s.msgpack' % (split,))
-        with FileWriter(file) as writer:
+    for split in ("val",):
+        data = dataset['%s_data' % (split,)]
+        if split == "val":
+            labels = dataset['val_labels']
+        else:
+            labels = np.zeros(np.array(data).shape)
+        labels = np.expand_dims(labels, axis=0)
+        gen = enumerate(zip(split_array(data, *crop_size),
+                            split_array(labels, *crop_size)))
 
-            data = dataset['%s_data' % (split,)]
-            if split == "val":
-                labels = dataset['val_labels']
-            else:
-                labels = np.zeros(np.array(data).shape)
-
-            labels = np.expand_dims(labels, axis=0)
-            for idx, (sub_data, sub_label) in \
-                    enumerate(zip(split_array(data, *crop_size),
-                                  split_array(labels, *crop_size))):
+        outfile = pt.join(outdir, split+'.msgpack')
+        with FileWriter(outfile, overwrite=args.no_confirm) as writer:
+            for idx, (sub_data, sub_label) in gen:
                 sub_label = np.array(sub_label[0]).astype(np.int64)  # squeeze again!
                 sub_mask = np.array(sub_data[-1]).astype(np.uint8)
                 sub_img = np.array(sub_data[:6]).astype(np.uint16)
@@ -67,25 +70,16 @@ def write_sets(indir, outdir, crop_size=(CROP_SIZE, CROP_SIZE)):
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        default='.',
-        help='directory that contains RIT18.mat file'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTPATH',
-        help='output directory; defaults to indir'
-    )
+    from ..argparse import make_parser
+    from ..tools import prepare_indir
+
+    parser = make_parser(__doc__, shuffle=False)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+
+    files = prepare_indir(FILES, args)
+
+    write_sets(files, outdir, args)
 
 
 if __name__ == '__main__':
