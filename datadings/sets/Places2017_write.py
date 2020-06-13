@@ -3,28 +3,30 @@
 The data set is described here:
     https://github.com/CSAILVision/placeschallenge
 
-This tool will look for the following files in the input directory
-and download them if necessary:
+This tool will look for all or parts of the following files in the input
+directory, depending on the given command, and download them if necessary:
     - images.tar
     - sceneparsing.tar
     - annotations_instance.tar
     - boundaries.tar
-
-May also look for/download, depending on options:
     - objectInfo150.txt
     - color150.mat
+
+Additionally, ADE20K_2016_07_26.zip from the ADE20k dataset is required
+to extract scene labels with the --scenelabels option.
 """
 import csv
 import os
 import os.path as pt
-import zipfile
-import tarfile
+from zipfile import ZipFile
+from tarfile import TarFile
 import json
 from collections import defaultdict
 from itertools import chain
 from itertools import zip_longest
 import io
 import random
+import gzip
 
 import numpy as np
 from PIL import Image
@@ -43,7 +45,6 @@ If you are unsure how to install OpenCV you can use pip:
     sys.exit(1)
 
 from ..writer import FileWriter
-from ..tools import download_if_not_found
 from ..matlab import loadmat
 from .VOC2012_write import imagedata_to_array
 from .VOC2012_write import class_counts
@@ -51,32 +52,48 @@ from .VOC2012_write import sorted_values
 from .VOC2012_write import print_values
 from .VOC2012_write import extractmember
 from .VOC2012_write import extract
-from .ADE20k_write import DATASET_URL as ADE20K_URL
-from .ADE20k_write import DATASET_FILE as ADE20K_FILE
+from .ADE20k_write import FILES as FILES_ADE20k
 from .ADE20k_write import load_index
 from .ADE20k import SCENELABELS
-from .Places2017 import Places2017Data
-from .Places2017 import Places2017Task
-from .Places2017 import WEIGHTS
-from .Places2017 import CLASSES
+from . import Places2017Data
 
 
-TAR_PREFIX = 'http://placeschallenge.csail.mit.edu/data/ChallengeData2017/'
-IMAGE_FILE = 'images.tar'
-IMAGE_TAR = TAR_PREFIX + IMAGE_FILE
-CLASS_FILE = 'sceneparsing.tar'
-CLASS_TAR = TAR_PREFIX + CLASS_FILE
-INSTANCE_FILE = 'annotations_instance.tar'
-INSTANCE_TAR = TAR_PREFIX + INSTANCE_FILE
-BOUNDARY_FILE = 'boundaries.tar'
-BOUNDARY_TAR = TAR_PREFIX + BOUNDARY_FILE
+BASE_URL = 'http://placeschallenge.csail.mit.edu/data/ChallengeData2017/'
 COMMIT_PREFIX = 'https://raw.githubusercontent.com/CSAILVision/' \
             'placeschallenge/69bbf9dc82621bd4b4f981ac47659ba8d74e8a27/' \
             'sceneparsing/'
-CLASSES_FILE = 'objectInfo150.txt'
-CLASSES_DEF = COMMIT_PREFIX + CLASSES_FILE
-COLORS_FILE = 'color150.mat'
-COLORS_DEF = COMMIT_PREFIX + 'visualizationCode/' + COLORS_FILE
+FILES = {
+    'images': {
+        'path': 'images.tar',
+        'url': BASE_URL+'images.tar',
+        'md5': '5c55d03495a7541407cb940a3be07d32',
+    },
+    'classes': {
+        'path': 'sceneparsing.tar',
+        'url': BASE_URL+'sceneparsing.tar',
+        'md5': '6556305fe8a1ac817d5d426ff4cb35f3',
+    },
+    'instances': {
+        'path': 'annotations_instance.tar',
+        'url': BASE_URL+'annotations_instance.tar',
+        'md5': '4d6628c4d17f68dc36efb6a79fce30a9',
+    },
+    'boundaries': {
+        'path': 'boundaries.tar',
+        'url': BASE_URL+'boundaries.tar',
+        'md5': '7cd81ad176aad64eff1dbca02ab0550a',
+    },
+    'class_info': {
+        'path': 'objectInfo150.txt',
+        'url': COMMIT_PREFIX+'objectInfo150.txt',
+        'md5': '4fb6ef9f025e48ad9cdf451e2b96c510',
+    },
+    'colors': {
+        'path': 'color150.mat',
+        'url': COMMIT_PREFIX+'visualizationCode/color150.mat',
+        'md5': '851aba69b499726c2b8ff5da1e147d02',
+    },
+}
 
 
 def array_to_image(array, format, dtype, mode):
@@ -131,72 +148,57 @@ def extract_scene(scenes, name):
     return scenes[pt.basename(name)]
 
 
-def _reverse(l):
-    return l[::-1]
-
-
 def write_set(
         imagetar, classtar, instancetar, boundarytar,
         outdir, name, members, scenes
 ):
-    scenes_indices = dict(map(_reverse, enumerate(SCENELABELS)))
-    scenes = {f: scenes_indices[s] for f, s in scenes.items()}
     with FileWriter(pt.join(outdir, name + '.msgpack'), total=len(members)) as writer:
         for m in members:
             writer.write(Places2017Data(
                 pt.basename(m.name),
                 extractmember(imagetar, m),
-                extract_scene(scenes, m.name),
                 extract_class(classtar, m.name),
+                extract_scene(scenes, m.name),
                 extract_instance(instancetar, m.name),
                 extract_boundary(boundarytar, m.name),
             ))
 
 
-def write_sets(indir, ade20kdir, outdir, shuffle=True):
-    imagepath = pt.join(indir, 'images.tar')
-    download_if_not_found(IMAGE_TAR, imagepath)
-    classpath = pt.join(indir, CLASS_FILE)
-    download_if_not_found(CLASS_TAR, classpath)
-    instancepath = pt.join(indir, INSTANCE_FILE)
-    download_if_not_found(INSTANCE_TAR, instancepath)
-    boundarypath = pt.join(indir, BOUNDARY_FILE)
-    download_if_not_found(BOUNDARY_TAR, boundarypath)
-    ade20kpath = pt.join(ade20kdir, ADE20K_FILE)
-    download_if_not_found(ADE20K_URL, ade20kpath)
-    # get index
-    with zipfile.ZipFile(ade20kpath) as imagezip:
-        index = load_index(imagezip)
-        scenes = dict(zip(
-            np.concatenate(index['filename'][0, 0][0]),
-            np.concatenate(index['scene'][0, 0][0]),
-        ))
+def load_scenelabels():
+    path = pt.join(pt.dirname(__file__), 'Places2017_scenelabels.json.gz')
+    with gzip.open(path, 'rt', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def write_sets(files, outdir, args):
+    scenes = load_scenelabels()
     # write actual data set
-    with tarfile.TarFile(imagepath) as imagetar:
+    with TarFile(files['images']['path']) as imagetar, \
+            TarFile(files['classes']['path']) as classtar, \
+            TarFile(files['instances']['path']) as instancetar, \
+            TarFile(files['boundaries']['path']) as boundarytar:
         sets = find_sets(imagetar)
-        with tarfile.TarFile(classpath) as classtar:
-            with tarfile.TarFile(instancepath) as instancetar:
-                with tarfile.TarFile(boundarypath) as boundarytar:
-                    for name, members in sets.items():
-                        if shuffle:
-                            random.shuffle(members)
-                        write_set(
-                            imagetar, classtar, instancetar, boundarytar,
-                            outdir, name, members, scenes
-                        )
+        for name, members in sets.items():
+            if args.shuffle:
+                random.shuffle(members)
+            try:
+                write_set(
+                    imagetar, classtar, instancetar, boundarytar,
+                    outdir, name, members, scenes
+                )
+            except FileExistsError:
+                pass
 
 
 def _segmap(segtar, member):
     return imagedata_to_array(extractmember(segtar, member))
 
 
-def create_counts(indir, outdir):
-    segpath = pt.join(indir, 'sceneparsing.tar')
-    download_if_not_found(CLASS_TAR, segpath)
-    with tarfile.TarFile(segpath) as segtar:
+def create_counts(files, outdir):
+    with TarFile(files['classes']['path']) as segtar:
         members = find_sets(segtar)['training']
         gen = (_segmap(segtar, m) for m in members)
-        counts = class_counts(gen)
+        counts = class_counts(gen, total=len(members))
     with open(pt.join(outdir, 'Places2017_counts.json'), 'w') as f:
         json.dump({
             'INDEXES': sorted(counts.keys()),
@@ -204,20 +206,16 @@ def create_counts(indir, outdir):
         }, f)
 
 
-def create_color_map(indir, outdir):
-    colorpath = pt.join(indir, COLORS_FILE)
-    download_if_not_found(COLORS_DEF, colorpath)
-    colors = loadmat(colorpath)['colors']
+def create_color_map(files, outdir):
+    colors = loadmat(files['colors']['path'])['colors']
     # RGB -> BGR
     colors[..., 0], colors[..., 2] = colors[..., 2], colors[..., 0]
     with open(pt.join(outdir, 'Places2017_colors.json'), 'w') as f:
         json.dump([[0, 0, 0]] + colors.tolist(), f)
 
 
-def print_classes(indir):
-    classpath = pt.join(indir, CLASSES_FILE)
-    download_if_not_found(CLASSES_DEF, classpath)
-    with open(classpath) as f:
+def print_classes(files):
+    with open(files['class_info']['path']) as f:
         cs = [
             l['Name'].split(', ')[0]
             for l in csv.DictReader(f, dialect='excel-tab')
@@ -230,56 +228,65 @@ def print_classes(indir):
     print_values('CLASSES', cs)
 
 
+def extract_scenelabels(files, outdir):
+    with ZipFile(files['all']['path']) as imagezip:
+        index = load_index(imagezip)
+    int_labels = {label: i for i, label in enumerate(SCENELABELS)}
+    scenes = {
+        name: int_labels[scene]
+        for name, scene in zip(index['filename'], index['scene'])
+    }
+    outfile = pt.join(outdir, 'Places2017_scenelabels.json')
+    with open(outfile, 'w', encoding='utf-8') as f:
+        json.dump(scenes, f)
+
+
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
+    from ..argparse import make_parser
+    from ..tools import prepare_indir
+
+    parser = make_parser(__doc__)
     parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        default='.',
-        help='directory that contains Places2017 files'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTPATH',
-        help='output directory; defaults to indir'
-    )
-    parser.add_argument(
-        '-a', '--ade20k-dir',
-        metavar='PATH',
-        help='path to full ADE20K data set; defaults to indir'
-    )
-    parser.add_argument(
-        '--calculate-counts',
+        '--class-counts',
         action='store_true',
-        help='count pixels per class; '
-             'creates Places2017_counts.json'
+        help='Count pixels per class and write to Places2017_counts.json.'
     )
     parser.add_argument(
         '--color-map',
         action='store_true',
-        help='create color map; '
-             'creates Places2017_colors.json'
+        help='Create color map and write to Places2017_colors.json.'
     )
     parser.add_argument(
         '--classes',
         action='store_true',
-        help='print the class list'
+        help='Print the class list.'
+    )
+    parser.add_argument(
+        '--scenelabels',
+        action='store_true',
+        help='Extract the scene labels from ADE20k dataset '
+             'and write to Places2017_scenelabels.json. '
+             'This will look for ADE20K_2016_07_26.zip '
+             'in indir and download if necessary.'
     )
     args = parser.parse_args()
-    ade20kdir = args.ade20k_dir or args.indir
     outdir = args.outdir or args.indir
-    if args.calculate_counts:
-        create_counts(args.indir, outdir)
+
+    if args.class_counts:
+        files = prepare_indir({'classes': FILES['classes']}, args)
+        create_counts(files, outdir)
     elif args.color_map:
-        create_color_map(args.indir, outdir)
+        files = prepare_indir({'colors': FILES['colors']}, args)
+        create_color_map(files, outdir)
     elif args.classes:
-        print_classes(args.indir)
+        files = prepare_indir({'class_info': FILES['class_info']}, args)
+        print_classes(files)
+    elif args.scenelabels:
+        files = prepare_indir(FILES_ADE20k, args)
+        extract_scenelabels(files, outdir)
     else:
-        write_sets(args.indir, ade20kdir, outdir)
+        files = prepare_indir(FILES, args)
+        write_sets(files, outdir, args)
 
 
 if __name__ == '__main__':

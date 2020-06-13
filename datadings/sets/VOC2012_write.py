@@ -125,20 +125,20 @@ def write_sets(indir, outdir, no_confirm, shuffle=True):
                 pass
 
 
-def class_counts(gen):
+def class_counts(gen, **kwargs):
     counts = np.float64([])
-    printer = make_printer(desc='class counts')
-    for segmap in gen:
-        printer()
-        cs = np.bincount(segmap.flatten()).astype(np.float64) / segmap.size
-        if len(cs) <= len(counts):
-            counts[:len(cs)] += cs
-        else:
-            cs[:len(counts)] += counts
-            counts = cs
-    printer.close()
+    printer = make_printer(desc='class counts', **kwargs)
+    with printer:
+        for segmap in gen:
+            printer()
+            cs = np.bincount(segmap.ravel()).astype(np.float64) / segmap.size
+            if len(cs) <= len(counts):
+                counts[:len(cs)] += cs
+            else:
+                cs[:len(counts)] += counts
+                counts = cs
     print('%d samples analyzed' % printer.n)
-    counts = {c: counts[c] for c in np.nonzero(counts)[0]}
+    counts = {int(c): float(counts[c]) for c in np.nonzero(counts)[0]}
     return counts
 
 

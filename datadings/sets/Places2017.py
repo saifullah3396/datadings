@@ -7,8 +7,6 @@ import numpy as np
 from .VOC2012 import median_frequency_weights
 from .ADE20k import load_statistics
 from .ADE20k import SCENELABELS
-from . import Places2017Data
-from . import Places2017Task
 
 
 ROOT_DIR = pt.abspath(pt.dirname(__file__))
