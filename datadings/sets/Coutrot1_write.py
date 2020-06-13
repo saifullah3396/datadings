@@ -3,15 +3,22 @@
 The data set is described here:
     http://antoinecoutrot.magix.net/public/databases.html
 
-Download video ZIP-file and Matlab files manually.
-Video files must be unzipped.
-Note that samples are NOT SHUFFLED!
+This tool will look for the following files in the input directory
+and download them if necessary:
+    - coutrot_database1.mat
+
+The video ZIP-file must be downloaded manually as it is hosted on mega.nz.
+This tool will look for ERB3_Stimuli.zip in the input directory.
+
+Note: samples are NOT SHUFFLED!
 """
 import os
 import os.path as pt
 from math import floor
 from math import log
+import zipfile
 from collections import defaultdict
+from simplejpeg import encode_jpeg
 
 try:
     import cv2
@@ -37,6 +44,18 @@ from ..matlab import iter_fields
 
 
 THRESHOLD_GOOD = 1.
+BASE_URL = 'http://antoinecoutrot.magix.net/public/assets/'
+FILES = {
+    'mat': {
+        'path': 'coutrot_database1.mat',
+        'url': BASE_URL+'coutrot_database1.mat',
+        'md5': 'e32e408d4970e74607234df4133a4ae2',
+    },
+    'videos': {
+        'path': 'ERB3_Stimuli.zip',
+        'md5': 'e0007237c8e4cdae81f31e84ad9fb241',
+    }
+}
 
 
 def _max_level(params, frame):
@@ -139,7 +158,6 @@ def write_video(name_prefix, frame_gen, experiments, writer,
                 min_fixpoints=30, write_delta=10, max_fixpoint_age=60):
     tracker = LucasKanade()
     last_written = 0
-    jpeg_options = int(cv2.IMWRITE_JPEG_QUALITY), 95
     for key, frame in frame_gen:
         for s, experiment in enumerate(experiments):
             try:
@@ -160,10 +178,7 @@ def write_video(name_prefix, frame_gen, experiments, writer,
         ]
         if not tracked_experiments:
             continue
-        success, arr = cv2.imencode('.jpg', frame, jpeg_options)
-        if not success:
-            continue
-        jpegdata = arr.tostring()
+        jpegdata = encode_jpeg(frame, quality=95)
         item = SaliencyData(
             pt.join('ERB3_Stimuli', name_prefix + '_%06d' % key),
             jpegdata,
@@ -173,34 +188,44 @@ def write_video(name_prefix, frame_gen, experiments, writer,
         last_written = key
 
 
-def write_sets(indir, outdir, shuffle=False):
-    mat = loadmat(pt.join(indir, 'coutrot_database1.mat'))
+def write_sets(files, indir, outdir, args):
+    mat = loadmat(files['mat']['path'])
     clip_data = __parse_mat(mat['Coutrot_Database1'])
-    with FileWriter(pt.join(outdir, 'Coutrot1.msgpack')) as writer:
-        for path in os.listdir(pt.join(indir, 'ERB3_Stimuli')):
-            path = pt.join(indir, 'ERB3_Stimuli', path)
-            # TODO shuffle if possible
-            if not path.endswith('.avi'):
+    writer = FileWriter(pt.join(outdir, 'Coutrot1.msgpack'),
+                        overwrite=args.no_confirm)
+    videozip = zipfile.ZipFile(files['videos']['path'])
+    with videozip, writer:
+        for name in videozip.namelist():
+            if not name.endswith('.avi'):
                 continue
-            name = path.split(os.sep)[-1].split('.')[0]
-            print_over('\r' + name)
-            clip = name.split('.')[0]
-            experiments = clip_data[clip]
+            # extract the video file
+            videozip.extract(name, path=indir)
+
+            path = pt.join(indir, name)
+            key = pt.splitext(pt.basename(name))[0]
+            print_over('\r' + key)
+            experiments = clip_data[key]
             frame_gen = iter_video_frames_opencv(path)
             write_video(name, frame_gen, experiments, writer)
 
+            # video is done, delete file
+            os.remove(path)
+
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_indir
-    from datadings.argparse import argument_outdir
+    from ..argparse import make_parser
+    from ..tools import prepare_indir
 
-    parser = make_parser(__doc__)
-    argument_indir(parser)
-    argument_outdir(parser)
+    parser = make_parser(__doc__, shuffle=False)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+
+    files = prepare_indir(FILES, args)
+
+    try:
+        write_sets(files, args.indir, outdir, args)
+    except FileExistsError:
+        pass
 
 
 if __name__ == '__main__':
