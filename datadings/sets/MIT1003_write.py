@@ -11,17 +11,31 @@ and download them if necessary:
 import io
 import os
 import os.path as pt
-import zipfile
+from zipfile import ZipFile
 import random
 from collections import defaultdict
 
 import numpy as np
 
 from ..writer import FileWriter
-from ..tools import download_if_not_found
 from ..matlab import loadmat
 from . import SaliencyData
 from . import SaliencyExperiment
+
+
+BASE_URL = 'http://people.csail.mit.edu/tjudd/WherePeopleLook/'
+FILES = {
+    'stimuli': {
+        'path': 'ALLSTIMULI.zip',
+        'url': BASE_URL+'ALLSTIMULI.zip',
+        'md5': '0d7df8b954ecba69b6796e77b9afe4b6',
+    },
+    'data': {
+        'path': 'DATA.zip',
+        'url': BASE_URL+'DATA.zip',
+        'md5': 'ea19d74ad0a0144428c53e9d75c2d71c',
+    }
+}
 
 
 def __iter_fixpoints(datazip, mat_files, stimuluspath):
@@ -64,48 +78,33 @@ def __find_all_experiments(datazip):
     return mapping
 
 
-def write_sets(indir, outdir, shuffle=True):
-    imagepath = pt.join(indir, 'ALLSTIMULI.zip')
-    download_if_not_found(
-        'http://people.csail.mit.edu/tjudd/WherePeopleLook/ALLSTIMULI.zip',
-        imagepath
-    )
-    datapath = pt.join(indir, 'DATA.zip')
-    download_if_not_found(
-        'http://people.csail.mit.edu/tjudd/WherePeopleLook/DATA.zip',
-        datapath
-    )
-    with zipfile.ZipFile(imagepath) as imagezip:
-        with zipfile.ZipFile(datapath) as datazip:
-            experiments = __find_all_experiments(datazip)
-            names = [f for f in imagezip.namelist() if f.endswith('.jpeg')]
-            with FileWriter(pt.join(outdir, 'MIT1003.msgpack'), total=len(names)) as writer:
-                if shuffle:
-                    random.shuffle(names)
-                for path in names:
-                    write_image(imagezip, datazip, experiments, path, writer)
+def write_sets(files, outdir, args):
+    with ZipFile(files['stimuli']['path']) as imagezip, \
+            ZipFile(files['data']['path']) as datazip:
+        experiments = __find_all_experiments(datazip)
+        names = [f for f in imagezip.namelist() if f.endswith('.jpeg')]
+        with FileWriter(pt.join(outdir, 'MIT1003.msgpack'),
+                        total=len(names), overwrite=args.no_confirm) as writer:
+            if args.shuffle:
+                random.shuffle(names)
+            for path in names:
+                write_image(imagezip, datazip, experiments, path, writer)
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        default='.',
-        help='directory that contains MIT1003 archives'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTPATH',
-        help='output directory; defaults to indir'
-    )
+    from ..argparse import make_parser
+    from ..tools import prepare_indir
+
+    parser = make_parser(__doc__)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+
+    files = prepare_indir(FILES, args)
+
+    try:
+        write_sets(files, outdir, args)
+    except FileExistsError:
+        pass
 
 
 if __name__ == '__main__':
