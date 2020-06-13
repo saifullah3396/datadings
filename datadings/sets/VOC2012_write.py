@@ -17,8 +17,6 @@ import numpy as np
 
 from ..writer import FileWriter
 from ..tools import make_printer
-from ..tools import download_files_if_not_found
-from ..tools import verify_files
 from . import ImageSegmentationData
 from .VOC2012 import COLORS
 
@@ -74,7 +72,7 @@ def map_color_image(im):
 def write_image(writer, filename, im, seg):
     seg = imagedata_to_array(seg)
     seg = map_color_image(seg)
-    seg = array_to_imagedata(seg, 'PNG')
+    seg = array_to_imagedata(seg, 'PNG', optimize=True)
     writer.write(ImageSegmentationData(
         filename,
         im,
@@ -94,33 +92,34 @@ def get_imageset(tar, path):
     return extract(tar, path).decode('utf-8').strip('\n').split('\n')
 
 
-def _prepare_indir(indir):
-    download_files_if_not_found(FILES, indir)
-    verify_files(FILES, indir)
-    datapath = pt.join(indir, FILES['trainval']['path'])
+def _prepare_indir():
     root_dir = pt.join('VOCdevkit', 'VOC2012')
     sets_dir = pt.join(root_dir, 'ImageSets', 'Segmentation')
     image_dir = pt.join(root_dir, 'JPEGImages')
     seg_dir = pt.join(root_dir, 'SegmentationClass')
-    return datapath, sets_dir, image_dir, seg_dir
+    return sets_dir, image_dir, seg_dir
 
 
-def write_sets(indir, outdir, no_confirm, shuffle=True):
-    datapath, sets_dir, image_dir, seg_dir = _prepare_indir(indir)
-    with tarfile.TarFile(datapath) as tar:
+def write_set(tar, split, outdir, args):
+    sets_dir, image_dir, seg_dir = _prepare_indir()
+    outpath = pt.join(outdir, split+'.msgpack')
+    with FileWriter(outpath, total=TOTAL[split],
+                    overwrite=args.no_confirm) as writer:
+        sets_path = pt.join(sets_dir, '%s.txt' % split)
+        images = get_imageset(tar, sets_path)
+        if args.shuffle:
+            random.shuffle(images)
+        for name in images:
+            im = extract(tar, pt.join(image_dir, name) + '.jpg')
+            seg = extract(tar, pt.join(seg_dir, name) + '.png')
+            write_image(writer, name, im, seg)
+
+
+def write_sets(files, outdir, args):
+    with tarfile.TarFile(files['trainval']['path']) as tar:
         for split in ('train', 'val'):
             try:
-                outpath = pt.join(outdir, '%s.msgpack' % split)
-                with FileWriter(outpath, total=TOTAL[split],
-                                overwrite=no_confirm) as writer:
-                    sets_path = pt.join(sets_dir, '%s.txt' % split)
-                    images = get_imageset(tar, sets_path)
-                    if shuffle:
-                        random.shuffle(images)
-                    for name in images:
-                        im = extract(tar, pt.join(image_dir, name) + '.jpg')
-                        seg = extract(tar, pt.join(seg_dir, name) + '.png')
-                        write_image(writer, name, im, seg)
+                write_set(tar, split, outdir, args)
             except FileExistsError:
                 pass
 
@@ -161,9 +160,9 @@ def _segmap(tar, seg_dir, name):
     )
 
 
-def calculate_set_weights(indir):
-    datapath, sets_dir, _, seg_dir = _prepare_indir(indir)
-    with tarfile.TarFile(datapath) as tar:
+def calculate_set_weights(files):
+    sets_dir, _, seg_dir = _prepare_indir()
+    with tarfile.TarFile(files['trainval']['path']) as tar:
         for split in ('train', 'val'):
             print(split, 'weights')
             sets_path = pt.join(sets_dir, '%s.txt' % split)
@@ -175,23 +174,21 @@ def calculate_set_weights(indir):
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_indir
-    from datadings.argparse import argument_outdir
-    from datadings.argparse import argument_no_confirm
-    from datadings.argparse import argument_calculate_weights
+    from ..argparse import make_parser
+    from ..argparse import argument_calculate_weights
+    from ..tools import prepare_indir
 
     parser = make_parser(__doc__)
-    argument_indir(parser)
-    argument_outdir(parser)
-    argument_no_confirm(parser)
     argument_calculate_weights(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
+
+    files = prepare_indir(FILES, args)
+
     if args.calculate_weights:
-        calculate_set_weights(args.indir)
+        calculate_set_weights(files)
     else:
-        write_sets(args.indir, outdir, args.no_confirm)
+        write_sets(files, outdir, args)
 
 
 if __name__ == '__main__':
