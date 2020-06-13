@@ -8,12 +8,20 @@ and download them if necessary:
     - BenchmarkIMAGES.zip
 """
 import os.path as pt
-import zipfile
+from zipfile import ZipFile
 import random
 
 from ..writer import FileWriter
-from ..tools import download_if_not_found
 from . import ImageData
+
+
+FILES = {
+    'zip': {
+        'path': 'BenchmarkIMAGES.zip',
+        'url': 'http://saliency.mit.edu/BenchmarkIMAGES.zip',
+        'md5': '03ed32bdf5e4289950cd28df89451260',
+    }
+}
 
 
 def write_image(imagezip, stimuluspath, writer):
@@ -29,40 +37,31 @@ def _isimage(f):
     return f.endswith('.jpg') and 'SM' not in f and not f.startswith('__')
 
 
-def write_sets(indir, outdir, shuffle=True):
-    imagepath = pt.join(indir, 'BenchmarkIMAGES.zip')
-    download_if_not_found(
-        'http://saliency.mit.edu/BenchmarkIMAGES.zip',
-        imagepath
-    )
-    with zipfile.ZipFile(imagepath) as imagezip:
+def write_sets(files, outdir, args):
+    with ZipFile(files['zip']['path']) as imagezip:
         names = [f for f in imagezip.namelist() if _isimage(f)]
-        with FileWriter(pt.join(outdir, 'MIT300.msgpack'), total=len(names)) as writer:
-            if shuffle:
+        with FileWriter(pt.join(outdir, 'MIT300.msgpack'),
+                        total=len(names), overwrite=args.no_confirm) as writer:
+            if args.shuffle:
                 random.shuffle(names)
             for path in names:
                 write_image(imagezip, path, writer)
 
 
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        'indir',
-        metavar='INPATH',
-        help='directory that contains MIT300 files'
-    )
-    parser.add_argument(
-        '-o', '--outdir',
-        metavar='OUTPATH',
-        help='output directory; defaults to indir'
-    )
+    from ..argparse import make_parser
+    from ..tools import prepare_indir
+
+    parser = make_parser(__doc__)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
-    write_sets(args.indir, outdir)
+
+    files = prepare_indir(FILES, args)
+
+    try:
+        write_sets(files, outdir, args)
+    except FileExistsError:
+        pass
 
 
 if __name__ == '__main__':
