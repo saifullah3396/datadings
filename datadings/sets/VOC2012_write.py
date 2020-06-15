@@ -1,11 +1,12 @@
 """Create Pascal VOC 2012 dataset files.
 
-The dataset is described here:
-    http://host.robots.ox.ac.uk/pascal/VOC/voc2012/
-
 This tool will look for the following files in the input directory
 and download them if necessary:
+
     - VOCtrainval_11-May-2012.tar
+
+See also:
+    http://host.robots.ox.ac.uk/pascal/VOC/voc2012/
 """
 import os.path as pt
 import tarfile

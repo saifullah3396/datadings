@@ -1,11 +1,12 @@
 """Create CIFAR 100 data set files.
 
-The data set is described here:
-    https://www.cs.toronto.edu/~kriz/cifar.html
-
 This tool will look for the following files in the input directory
 and download them if necessary:
+
     - cifar-100-python.tar.gz
+
+See also:
+    https://www.cs.toronto.edu/~kriz/cifar.html
 """
 import tarfile
 import os.path as pt

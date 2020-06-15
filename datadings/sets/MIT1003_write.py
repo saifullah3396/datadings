@@ -1,12 +1,13 @@
 """Create MIT1003 data set files.
 
-The data set is described here:
-    http://people.csail.mit.edu/tjudd/WherePeopleLook/index.html
-
 This tool will look for the following files in the input directory
 and download them if necessary:
+
     - ALLSTIMULI.zip
     - DATA.zip
+
+See also:
+    http://people.csail.mit.edu/tjudd/WherePeopleLook/index.html
 """
 import io
 import os

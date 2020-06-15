@@ -1,12 +1,12 @@
 """Create ADE20k data set files.
 
-The data set is described here:
-    http://groups.csail.mit.edu/vision/datasets/ADE20K
-
 This tool will look for the following files in the input directory
 and download them if necessary:
+
     - ADE20K_2016_07_26.zip
 
+See also:
+    http://groups.csail.mit.edu/vision/datasets/ADE20K
 """
 import os.path as pt
 import zipfile

@@ -1,12 +1,13 @@
 """Create SALICON 2015 challenge data set files.
 
-The data set is described here:
-    http://salicon.net/challenge-2017/
-
 This tool will look for the following files in the input directory
 and download them if necessary:
+
     - image.zip
     - fixations.zip
+
+See also:
+    http://salicon.net/challenge-2017/
 """
 from . import SALICON2015_write
 

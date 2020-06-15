@@ -1,11 +1,12 @@
 """Create RIT18 data set files.
 
-The data set is described here:
-    https://github.com/rmkemker/RIT-18
-
 This tool will look for the following files in the input directory
 and download them if necessary:
+
     - rit18_data.mat
+
+See also:
+    https://github.com/rmkemker/RIT-18
 
 """
 import os.path as pt

@@ -1,16 +1,18 @@
 """Create InriaBuildings data set files.
 
-The data set is described here:
-    https://project.inria.fr/aerialimagelabeling/contest/
-
-Registration is required to download this dataset.
-Please visit the website and follow the instructions to download
-and decompress it.
-
 This tool will look for the unpacked "AerialImageDataset"
 directory in the input directory.
 
-Note: the dataset is NOT SHUFFLED!
+See also:
+    https://project.inria.fr/aerialimagelabeling/contest/
+
+Note:
+    Registration is required to download this dataset. Please visit the
+    website and follow the instructions to download and decompress it.
+
+Important:
+    Samples are NOT SHUFFLED! It is recommended to use the datadings-shuffle
+    command to create a shuffled copy.
 """
 import os.path as pt
 import io

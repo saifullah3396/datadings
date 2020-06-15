@@ -27,7 +27,7 @@ CLASSES = [
     'refrigerator', 'grandstand', 'path', 'stairs', 'runway',
     'case', 'pool table', 'pillow', 'screen door', 'stairway',
     'river', 'bridge', 'bookcase', 'blind', 'coffee table',
-    'toilet', 'flower', 'book', 'hill', 'bench',
+    'toilet', 'flower', 'book', 'hill', 'bench_msgpack',
     'countertop', 'stove', 'palm', 'kitchen island', 'computer',
     'swivel chair', 'boat', 'bar', 'arcade machine', 'hovel',
     'bus', 'towel', 'light', 'truck', 'tower',

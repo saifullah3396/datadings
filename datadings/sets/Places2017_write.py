@@ -1,10 +1,8 @@
 """Create Places2017 data set files.
 
-The data set is described here:
-    https://github.com/CSAILVision/placeschallenge
-
 This tool will look for all or parts of the following files in the input
 directory, depending on the given command, and download them if necessary:
+
     - images.tar
     - sceneparsing.tar
     - annotations_instance.tar
@@ -13,7 +11,10 @@ directory, depending on the given command, and download them if necessary:
     - color150.mat
 
 Additionally, ADE20K_2016_07_26.zip from the ADE20k dataset is required
-to extract scene labels with the --scenelabels option.
+to extract scene labels with the ``--scenelabels`` option.
+
+See also:
+    https://github.com/CSAILVision/placeschallenge
 """
 import csv
 import os

@@ -1,16 +1,21 @@
 """Create Coutrot 1 data set files.
 
-The data set is described here:
-    http://antoinecoutrot.magix.net/public/databases.html
-
 This tool will look for the following files in the input directory
 and download them if necessary:
+
     - coutrot_database1.mat
+    - ERB3_Stimuli.zip
 
-The video ZIP-file must be downloaded manually as it is hosted on mega.nz.
-This tool will look for ERB3_Stimuli.zip in the input directory.
+See also:
+    http://antoinecoutrot.magix.net/public/databases.html
 
-Note: samples are NOT SHUFFLED!
+Note:
+    ERB3_Stimuli.zip must be downloaded manually as it is hosted on mega.nz.
+
+Important:
+    Samples are extracted from video frames and thus NOT SHUFFLED!
+    If this is not desirable the datadings-shuffle command can be used to
+    create a shuffled copy.
 """
 import os
 import os.path as pt

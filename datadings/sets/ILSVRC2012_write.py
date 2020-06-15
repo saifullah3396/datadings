@@ -1,18 +1,21 @@
-"""Create ILSVRC 2012 data set files.
-
-The data set is described here:
-    http://image-net.org/challenges/LSVRC/2012/index
-
-Important:
-    For performance reasons shuffling is not available.
-    You can use datadings-shuffle to create a shuffled copy.
+"""Create ILSVRC 2012 challenge data set files.
 
 This tool will look for the following files in the input directory:
+
     - ILSVRC2012_img_train.tar
     - ILSVRC2012_img_val.tar
 
-Registration is required to download this dataset.
-Please visit the website to download it.
+See also:
+    http://image-net.org/challenges/LSVRC/2012/index
+
+Note:
+    Registration is required to download this dataset.
+    Please visit the website to download it.
+
+Important:
+    For performance reasons samples are read in same order as they are stored
+    in the source tar files. It is recommended to use the datadings-shuffle
+    command to create a shuffled copy.
 """
 import os.path as pt
 import gzip

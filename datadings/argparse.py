@@ -4,11 +4,24 @@ from multiprocessing import cpu_count
 
 
 class YesNoAction(argparse.Action):
+    """
+    Action like ``store_true`` that checks if ``value == yes``.
+    """
     def __call__(self, parser, namespace, yesno, option_string=None):
         setattr(namespace, self.dest, yesno == 'yes')
 
 
 class MinMaxAction(argparse.Action):
+    """
+    Action to clamp value between given min and max values.
+    Create subclass to set ``min_value`` and ``max_value``::
+
+        class Action(MinMaxAction):
+            min_value = 1
+            max_value = 7
+
+        parser.add_argument('onetoseven', action=Action)
+    """
     min_value = None
     max_value = None
 
@@ -27,9 +40,9 @@ def make_parser(
         shuffle=True,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         **kwargs
-):
+) -> argparse.ArgumentParser:
     """
-    Create an ``ArgumentParser``.
+    Create an ``ArgumentParser`` with a set of common arguments.
 
     Parameters:
         description: Description text displayed before arguments.
@@ -72,7 +85,7 @@ def make_parser_simple(
         shuffle=False,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         **kwargs
-):
+) -> argparse.ArgumentParser:
     """
     Same as :py:func:`make_parser`, but add no arguments by default.
     """
@@ -100,6 +113,7 @@ def __make_argument(*args, **kwargs):
         """Add the following argument to the given ``ArgumentParser``:
 
 .. code-block::
+
     parser.add_argument(
         {args},
         {kwargs}

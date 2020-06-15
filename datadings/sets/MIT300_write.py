@@ -1,11 +1,12 @@
 """Create MIT300 data set files.
 
-The data set is described here:
-    http://saliency.mit.edu/results_mit300.html
-
 This tool will look for the following files in the input directory
 and download them if necessary:
+
     - BenchmarkIMAGES.zip
+
+See also:
+    http://saliency.mit.edu/results_mit300.html
 """
 import os.path as pt
 from zipfile import ZipFile

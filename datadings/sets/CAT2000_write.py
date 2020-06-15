@@ -1,12 +1,13 @@
 """Create CAT2000 data set files.
 
-The data set is described here:
-    http://saliency.mit.edu/results_cat2000.html
-
 This tool will look for the following files in the input directory
 and download them if necessary:
+
     - trainSet.zip
     - testSet.zip
+
+See also:
+    http://saliency.mit.edu/results_cat2000.html
 """
 import os
 import os.path as pt

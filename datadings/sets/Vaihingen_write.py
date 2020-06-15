@@ -1,14 +1,14 @@
 """Create Vaihingen data set files.
 
-The data set is described here:
-    http://www2.isprs.org/commissions/comm3/wg4/detection-and-reconstruction.html
-
-Requests to download the dataset can be made by filling out the a form on
-the website.
-
 This tool will look for the ISPRS_semantic_labeling_Vaihingen directory in the
 input directory.
 
+See also:
+    http://www2.isprs.org/commissions/comm3/wg4/detection-and-reconstruction.html
+
+Note:
+    Requests to download the dataset can be made by filling out the form on
+    the website.
 """
 import numpy as np
 import os.path as pt

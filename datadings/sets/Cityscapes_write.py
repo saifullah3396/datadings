@@ -1,15 +1,17 @@
 """Create CityScapes data set files.
 
-The data set is described here:
-    https://www.cityscapes-dataset.com/
-
 This tool will look for the following files in the input directory:
+
     - disparity_trainvaltest.zip
     - gtFine_trainvaltest.zip
     - leftImg8bit_trainvaltest.zip
 
-An account is required to download this dataset.
-Please visit the website to download it.
+Note:
+    Registration is required to download this dataset.
+    Please visit the website to download it.
+
+See also:
+    https://www.cityscapes-dataset.com/
 """
 import os.path as pt
 import zipfile

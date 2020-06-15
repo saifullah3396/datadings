@@ -1,0 +1,9 @@
+/* Logo spacing */
+.wy-side-nav-search>a.icon img.logo, .wy-side-nav-search .wy-dropdown>a.icon img.logo {
+    margin-top: -0.5em;
+    margin-bottom: -1em;
+}
+/* Logo size */
+.wy-side-nav-search>a img.logo, .wy-side-nav-search .wy-dropdown>a img.logo {
+    max-width: 70%;
+}
