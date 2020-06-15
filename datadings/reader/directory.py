@@ -75,8 +75,10 @@ class DirectoryReader(ListReader):
             include=(),
             exclude=(),
             labels=None,
+            root_dir='',
     ):
-        samples = list(yield_directory(patterns, separator))
-        samples = [{'key': k, 'label': l, 'path': p} for k, p, l in samples
+        samples = yield_directory(patterns, separator)
+        samples = [{'key': k, 'label': l, 'path': pt.join(root_dir, p)}
+                   for k, p, l in samples
                    if check_included(p, include, exclude)]
         ListReader.__init__(self, samples, labels, convertfun, load_binary)
