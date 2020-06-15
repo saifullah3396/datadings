@@ -82,9 +82,9 @@ def main():
         help='Buffer size of reader.',
     )
     args, unknown = parser.parse_known_args()
-    if args.infiles.endswith('.msgpack'):
+    if args.infile.endswith('.msgpack'):
         bench_msgpack(args)
-    elif args.infiles.endswith('.zip'):
+    elif args.infile.endswith('.zip'):
         raise NotImplementedError('ZIP benchmark not implemented yet')
     else:
         bench_directory(args)
