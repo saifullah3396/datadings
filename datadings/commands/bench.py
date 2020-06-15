@@ -67,19 +67,33 @@ def main():
     parser.add_argument(
         '-b', '--buffering',
         type=int,
-        help='Buffer size of reader.',
+        help='MsgpackReader only: Buffer size of reader.',
     )
     parser.add_argument(
         '--separator',
         type=str,
         default='\t',
-        help='Buffer size of reader.',
+        help='DirectoryReader only: separator for file input mode.',
     )
     parser.add_argument(
         '--root-dir',
         type=str,
         default=None,
-        help='Buffer size of reader.',
+        help='DirectoryReader only: root directory for file input mode.',
+    )
+    parser.add_argument(
+        '--include',
+        nargs='+',
+        type=str,
+        default=(),
+        help='DirectoryReader only: Include patterns.',
+    )
+    parser.add_argument(
+        '--exclude',
+        nargs='+',
+        type=str,
+        default=(),
+        help='DirectoryReader only: Exclude patterns.',
     )
     args, unknown = parser.parse_known_args()
     if args.infile.endswith('.msgpack'):
