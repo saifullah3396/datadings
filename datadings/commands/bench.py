@@ -1,4 +1,14 @@
-"""Run a read benchmark on a given dataset file.
+"""Run a read benchmark on a given dataset.
+
+Support reading from msgpack files or directory trees.
+
+Note:
+    For directory trees, please refer to the DirectoryReader
+    documentation for details on how to specify the dataset structure.
+
+Note:
+    File size is not supported for directory trees, so throughput
+    will be reported as 0 MB/s.
 """
 import time
 import os.path as pt
@@ -9,10 +19,17 @@ from ..reader import Shuffler
 from ..tools import make_printer
 
 
-def bench(reader, args, num_bytes):
-    printer = make_printer(desc='bench ' + pt.basename(args.infile), total=len(reader))
+def bench(readerfun, args):
+    # measure setup time
+    a = time.time()
+    reader, num_bytes = readerfun(args)
     if args.shuffle:
         reader = Shuffler(reader)
+    d = time.time() - a
+    print('setup time:', d, 'seconds')
+
+    # the actual benchmark
+    printer = make_printer(desc='bench ' + pt.basename(args.infile), total=len(reader))
     a = time.time()
     if args.raw:
         for _ in reader.rawiter():
@@ -29,21 +46,19 @@ def bench(reader, args, num_bytes):
           % (n, d, s, b), end='')
 
 
-def bench_msgpack(args):
+def reader_msgpack(args):
     kwargs = {'buffering': args.buffering} if args.buffering else {}
-    r = MsgpackReader(args.infile, **kwargs)
-    bench(r, args, pt.getsize(args.infile))
+    return MsgpackReader(args.infile, **kwargs), pt.getsize(args.infile)
 
 
-def bench_directory(args):
-    r = DirectoryReader(
+def reader_directory(args):
+    return DirectoryReader(
         args.infile,
         separator=args.separator,
         include=tuple(args.include),
         exclude=tuple(args.exclude),
         root_dir=args.root_dir,
-    )
-    bench(r, args, 0)
+    ), 0  # TODO total file size for directory
 
 
 def main():
@@ -97,11 +112,11 @@ def main():
     )
     args, unknown = parser.parse_known_args()
     if args.infile.endswith('.msgpack'):
-        bench_msgpack(args)
+        bench(reader_msgpack, args)
     elif args.infile.endswith('.zip'):
         raise NotImplementedError('ZIP benchmark not implemented yet')
     else:
-        bench_directory(args)
+        bench(reader_directory, args)
 
 
 def entry():
