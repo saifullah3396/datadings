@@ -3,6 +3,7 @@ import os.path as pt
 import itertools as it
 import glob
 from fnmatch import fnmatch
+from pathlib import Path
 
 from .list import ListReader
 from .list import identity
@@ -77,6 +78,9 @@ class DirectoryReader(ListReader):
             labels=None,
             root_dir='',
     ):
+        # single patterns must be wrapped in tuple
+        if isinstance(patterns, (str, Path)):
+            patterns = patterns,
         samples = yield_directory(patterns, separator)
         samples = [{'key': k, 'label': l, 'path': pt.join(root_dir, p)}
                    for k, p, l in samples
