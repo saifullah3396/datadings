@@ -5,10 +5,6 @@ Support reading from msgpack files or directory trees.
 Note:
     For directory trees, please refer to the DirectoryReader
     documentation for details on how to specify the dataset structure.
-
-Note:
-    File size is not supported for directory trees, so throughput
-    will be reported as 0 MB/s.
 """
 import time
 import os.path as pt
@@ -40,6 +36,8 @@ def bench(readerfun, args):
     d = time.time() - a
     n = printer.n
     s = n / d
+    if not num_bytes and hasattr(reader, 'bytes_read'):
+        num_bytes = reader.bytes_read
     b = num_bytes / d / 1024 / 1024
     printer.close()
     print('%s samples read in %.2f seconds, %.2f samples/s, %.2f MB/s'

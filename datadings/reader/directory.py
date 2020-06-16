@@ -25,11 +25,6 @@ def yield_file(infile, prefix, separator):
             yield path.replace(prefix, ''), path, label
 
 
-def load_binary(sample):
-    with open(sample['path'], 'rb') as f:
-        return f.read()
-
-
 def glob_pattern(pattern, prefix):
     parts = pattern.split(os.sep)
     label_index = None
@@ -85,4 +80,11 @@ class DirectoryReader(ListReader):
         samples = [{'key': k, 'label': l, 'path': pt.join(root_dir, p)}
                    for k, p, l in samples
                    if check_included(p, include, exclude)]
-        ListReader.__init__(self, samples, labels, convertfun, load_binary)
+        ListReader.__init__(self, samples, labels, convertfun, self.load_binary)
+        self.bytes_read = 0
+
+    def load_binary(self, sample):
+        with open(sample['path'], 'rb') as f:
+            data = f.read()
+            self.bytes_read += len(data)
+            return data
