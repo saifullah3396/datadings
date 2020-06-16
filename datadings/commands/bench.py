@@ -93,7 +93,7 @@ def main():
     parser.add_argument(
         '--root-dir',
         type=str,
-        default=None,
+        default='',
         help='DirectoryReader only: root directory for file input mode.',
     )
     parser.add_argument(
