@@ -17,11 +17,12 @@ fast and easy.
 One command lets you download all necessary files and convert them to
 the datadings format.
 And since it's based on the excellent
-`msgpack <http://msgpack.org>`_, it's space-efficient, blazingly fast,
-does not require schema, and you can use it with any of the over 50
-supported languages.
-As long as you use Python, datadings does also not care what kind of
-learning framework you are going to use.
+`msgpack <http://msgpack.org>`_, a JSON-like format thet supports
+binary data.
+It's space-efficient, blazingly fast, does not use schema, and has
+support for over 50 programming languages and environments.
+You are also not limited to any specific learning framework, only
+Python if you want to use additional tools provided by datadings.
 
 
 
@@ -48,9 +49,8 @@ To top it all off, it also takes over 7 seconds to start reading from
 the directory tree, whereas is takes less than 0.7 seconds to start
 reading from msgpack files.
 This makes debugging a breeze.
-Check out the
-:ref:`file format description<file-format>`
-if you want to know more.
+Check out the :ref:`file format description<file-format>` description
+if you want to know how this is possible.
 
 
 
