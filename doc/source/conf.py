@@ -10,12 +10,16 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-from pathlib import Path
+import os
 import sys
+import subprocess
+from pathlib import Path
 
-ROOT = Path(__file__).parent.absolute()
-AUGPY_DIR = ROOT / '..' / '..' / 'datadings'
-sys.path.insert(0, str((ROOT / '..' / '..').absolute()))
+DOC_SOURCE = Path(__file__).parent
+DOC_ROOT = DOC_SOURCE.parent.absolute()
+REPO_ROOT = DOC_ROOT.parent.absolute()
+PACKAGE_DIR = (REPO_ROOT / 'datadings').absolute()
+sys.path.insert(0, str(REPO_ROOT.absolute()))
 
 
 # -- Project information -----------------------------------------------------
@@ -23,6 +27,24 @@ sys.path.insert(0, str((ROOT / '..' / '..').absolute()))
 project = 'datadings'
 copyright = '2020, Joachim Folz'
 author = 'Joachim Folz'
+
+
+# -- Setup -------------------------------------------------------------------
+
+def setup(app):
+    subprocess.check_call([
+            sys.executable,
+            '-m', 'sphinx.ext.apidoc',
+            '--module-first',
+            '--separate',
+            '--maxdepth', '6',
+            '--no-toc',
+            '--output-dir', str(DOC_SOURCE / 'generated'),
+            str(PACKAGE_DIR),
+        ],
+        env={'SPHINX_APIDOC_OPTIONS': 'members,show-inheritance'}
+    )
+    os.remove(DOC_SOURCE / 'generated' / 'datadings.rst')
 
 
 # -- General configuration ---------------------------------------------------
