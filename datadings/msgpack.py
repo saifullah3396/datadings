@@ -1,4 +1,14 @@
-from functools import partial
+"""
+Compatibility functions that wrap msgpack to seamlessly support
+both version 1.0.0 and earlier versions.
+Encoding is always UTF-8 and bin type is enabled and
+``strict_map_key=False``.
+
+All helpers are setup to use ``msgpack_numpy`` for transparent
+packing and unpacking of numpy arrays enabled by default.
+"""
+
+from functools import partial as __partial
 
 import msgpack as __msgpack
 from msgpack_numpy import encode as __encode
@@ -35,19 +45,37 @@ else:
     )
 
 
-make_packer = partial(__msgpack.Packer, **pack_kwargs)
+make_packer = __partial(__msgpack.Packer, **pack_kwargs)
+"""
+Create a packer with default arguments.
+"""
 
 
-make_unpacker = partial(__msgpack.Unpacker, **unpack_kwargs)
+make_unpacker = __partial(__msgpack.Unpacker, **unpack_kwargs)
+"""
+Create a unpacker with default arguments.
+"""
 
 
-pack = partial(__msgpack.pack, **pack_kwargs)
+pack = __partial(__msgpack.pack, **pack_kwargs)
+"""
+Pack object to stream.
+"""
 
 
-packb = partial(__msgpack.packb, **pack_kwargs)
+packb = __partial(__msgpack.packb, **pack_kwargs)
+"""
+Pack object to bytes.
+"""
 
 
-unpack = partial(__msgpack.unpack, **unpack_kwargs)
+unpack = __partial(__msgpack.unpack, **unpack_kwargs)
+"""
+Unpack object from stream.
+"""
 
 
-unpackb = partial(__msgpack.unpackb, **unpack_kwargs)
+unpackb = __partial(__msgpack.unpackb, **unpack_kwargs)
+"""
+Unpack object from bytes.
+"""

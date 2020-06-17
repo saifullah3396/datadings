@@ -9,9 +9,9 @@ How datadings fits into the picture is best explained by
 `XKCD #927 <https://xkcd.com/927/>`_:
 
 .. image:: _static/xkcd927.png
-   :alt: XKCD #927
-   :width: 500
-   :target: https://xkcd.com/927/
+    :alt: XKCD #927
+    :width: 500
+    :target: https://xkcd.com/927/
 
 Slightly less cynically, datadings aims to make dealing with datasets
 fast and easy.
@@ -63,15 +63,18 @@ and remote sensing.
 
 
 
-Reference
-=========
+Contents
+========
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2
 
-   file_format.rst
-   generated/datadings.rst
+    usage.rst
+    conventions.rst
+    file_format.rst
+    add_dataset.rst
+    reference.rst
+
 
 
 Indices and tables

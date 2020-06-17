@@ -1,7 +1,7 @@
 .. _file-format:
 
-The datadings file format
-=========================
+File format
+===============
 
 The file format datadings uses is simple.
 A dataset is made up of three files:
