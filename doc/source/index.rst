@@ -19,8 +19,8 @@ One command lets you download all necessary files and convert them to
 the datadings format.
 And since it's based on the excellent
 `msgpack <http://msgpack.org>`_, a JSON-like format thet supports
-binary data.
-It's space-efficient, blazingly fast, does not use schema, and has
+binary data,
+it's space-efficient, blazingly fast, does not use schema, and has
 support for over 50 programming languages and environments.
 You are also not limited to any specific learning framework, only
 Python if you want to use additional tools provided by datadings.
