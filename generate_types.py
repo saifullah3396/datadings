@@ -38,8 +38,8 @@ def {name}(
         {args}
 ):
     """
-Creates a dictionary::
-    
+Returns a dictionary::
+
     {{
 {values}
     }}
