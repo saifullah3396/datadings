@@ -7,7 +7,7 @@ class Reader(object):
 
     Subclasses must implement iteration and seeking methods.
 
-    Readers can be used as a context manager:
+    Readers should be used as context managers::
 
         with Reader('dataset.msgpack') as reader:
             for sample in reader:
