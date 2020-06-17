@@ -3,10 +3,14 @@ import scipy.io
 
 
 def loadmat(mat):
-    """ Load a Matlab "mat" file.
+    """
+    Load a Matlab "mat" file.
 
-        @param mat: path, file-like object, or data
-        @return: contents of the "mat" file
+    Parameters:
+        mat: Path, file-like object, or data.
+
+    Returns:
+        Contents of the Matlab file.
     """
     try:
         return scipy.io.loadmat(mat)
@@ -17,12 +21,17 @@ def loadmat(mat):
 
 
 def iter_fields(arr, ignore=()):
-    """ Iterate over the fields of a structured numpy array
-        (i.e., an array with a complex data type).
-        Each iteration yields (fieldname, value).
+    """
+    Iterate over the fields of a structured numpy array
+    (i.e., an array with a complex data type).
+    Each iteration yields (fieldname, value).
 
-        @param arr: a structured array
-        @param ignore: set of fields to ignore
+    Parameters:
+        arr: A structured array.
+        ignore: Fields to ignore.
+
+    Returns:
+        Yields individual fields from the array.
     """
     for k in arr.dtype.fields.keys():
         if k in ignore:

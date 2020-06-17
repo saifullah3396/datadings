@@ -26,7 +26,7 @@ class MsgpackReader(Reader):
 
     Note:
         The default read-ahead buffer size is 4MB.
-        That's a lot of byte, optimized for fast sequential access.
+        That's a lot of bytes, which is good for fast sequential access.
         Reduce this to roughly the size of a single sample for best
         random access performance.
 
@@ -77,19 +77,12 @@ class MsgpackReader(Reader):
     next = __next__
 
     def rawnext(self):
-        """
-        Return the next sample as raw bytes.
-        :return:
-        """
         n = self._positions[self._i+1] - self._positions[self._i]
         self._infile.seek(self._positions[self._i], 0)
         self._i += 1
         return self._infile.read(n)
 
     def seek_index(self, index):
-        """
-        Seek to the given index.
-        """
         self._infile.seek(self._positions[index], 0)
         self._i = index
 
@@ -104,26 +97,22 @@ class MsgpackReader(Reader):
         return self._key_to_index_dict
 
     def seek_key(self, key):
-        """
-        Seek to the sample with the given key.
-        """
         index = self._key_to_index[key]
         self.seek_index(index)
 
     def get_key(self, index=None):
-        """
-        Get the key of a sample.
-        Uses current index if none is given.
-        """
         return self._keys[index or self._i]
 
     def verify_data(self, read_size=64*1024, progress=False):
         """
         Hash the dataset file and verify against the md5 file.
 
-        :param read_size: read-ahead size
-        :param progress: display progress
-        :return: True if verification was successful
+        Parameters:
+            read_size: Read-ahead size in bytes.
+            progress: display progress
+
+        Returns:
+            True if verification was successful.
         """
         hashes = load_md5file(self._path + '.md5')
         dataname = pt.basename(self._path)
@@ -134,9 +123,12 @@ class MsgpackReader(Reader):
         """
         Hash the index file and verify against the md5 file.
 
-        :param read_size: read-ahead size
-        :param progress: display progress
-        :return: True if verification was successful
+        Parameters:
+            read_size: Read-ahead size in bytes.
+            progress: display progress
+
+        Returns:
+            True if verification was successful.
         """
         hashes = load_md5file(self._path + '.md5')
         indexname = pt.basename(self._path) + '.index'
@@ -146,10 +138,13 @@ class MsgpackReader(Reader):
 
 def _load_index(path, buffering=4*1024*1024):
     """
-    Load index as two lists of keys and positions.
+    Load dataset index as two lists of keys and positions.
 
-    @param path: path to dataset file
-    @return: keys and positions lists of equal length
+    Parameters:
+        path: Path to dataset file without ``.index``.
+
+    Returns:
+        Keys and positions lists of equal length.
     """
     if pt.exists(path + '.index'):
         with open(path + '.index', 'rb', buffering) as f:

@@ -16,12 +16,14 @@ import tqdm
 
 # noinspection PyIncorrectDocstring
 def print_over(*args, **kwargs):
-    """ Wrapper around print that replaces the current line.
-        It prints from the start of the line and clears remaining
-        characters.
-        Accepts the same kwargs as the print function.
+    """
+    Wrapper around print that replaces the current line.
+    It prints from the start of the line and clears remaining
+    characters.
+    Accepts the same kwargs as the print function.
 
-        @param flush: if True, flush after printing
+    Parameters:
+        flush: If True, flush after printing.
     """
     end = kwargs.pop('end', '\n')
     kwargs['end'] = ''
@@ -46,6 +48,14 @@ class ProgressPrinter(tqdm.tqdm):
 
 def make_printer(bar_format=BAR_FORMAT, miniters=0,
                  mininterval=0.5, smoothing=0.1, **kwargs):
+    """
+    Convenience function to create
+    `tqdm <https://tqdm.github.io/docs/tqdm/>`_ objects with some
+    default arguments.
+
+    Returns:
+        tqdm.tqdm object.
+    """
     tqdm.tqdm.monitor_interval = 0
     p = ProgressPrinter(bar_format=bar_format, miniters=miniters,
                         mininterval=mininterval, smoothing=smoothing,
@@ -57,10 +67,13 @@ def hash_md5hex(path, read_size=64*1024, progress=False):
     """
     Calculate the (hexadecimal) MD5 hash of a file.
 
-    @param path: file path
-    @param read_size: read-ahead size
-    @param progress: if True, display progress
-    @return: hexadecimal MD5 hash as string
+    Parameters:
+        path: File to hash.
+        read_size: Read-ahead size.
+        progress: If True, display progress.
+
+    Returns:
+        Hexadecimal MD5 hash as string.
     """
     printer = make_printer(
         bar_format=DOWNLOAD_BAR,
@@ -82,10 +95,13 @@ def hash_md5hex(path, read_size=64*1024, progress=False):
 
 def load_md5file(path):
     """
-    Load a text-based "md5".
+    Load a text files of MD5 hashes.
 
-    :param path: path to md5 file
-    :return: dict {file: hash}
+    Parameters:
+        path: Path to MD5 file.
+
+    Returns:
+        Dict of (file, hash) pairs.
     """
     with open(path, encoding='utf-8') as f:
         return dict(l.strip().split('  ')[::-1] for l in f)
@@ -147,6 +163,10 @@ def __download_gdown(url, path):
 
 
 def download_if_not_found(url, path):
+    """
+    Check if ``path`` is a file,
+    otherwise download from ``url`` to ``path``.
+    """
     if not pt.exists(path):
         parent = pt.dirname(path)
         if parent and not pt.exists(parent):
@@ -160,6 +180,12 @@ def download_if_not_found(url, path):
 
 
 def download_files_if_not_found(files, indir):
+    """
+    Run :py:func:``download_if_not_found`` for multiple files.
+
+    See also:
+        :py:func:`datadings.tools.prepare_indir`
+    """
     for _, meta in files.items():
         path = pt.join(indir, meta['path'])
         if meta.get('url'):
@@ -179,23 +205,73 @@ def verify_file(meta, indir):
 
 
 def verify_files(files, indir):
+    """
+    Verify the integrity of the given files.
+
+    See also:
+        :py:func:`datadings.tools.prepare_indir`
+    """
     for _, meta in files.items():
         verify_file(meta, indir)
 
 
 def locate_files(files, indir):
+    """
+    Returns a copy of ``files`` where paths are replaced with
+    concrete paths located in ``indir``.
+
+    See also:
+        :py:func:`datadings.tools.prepare_indir`
+    """
     return {name: dict(meta, path=pt.join(indir, meta['path']))
             for name, meta in files.items()}
 
 
 def prepare_indir(files, args):
+    """
+    Prepare a directory for dataset creation.
+    ``files`` specifies with files need be downloaded and/or
+    integrity checked.
+    It is a dict of file descriptions like these::
+
+        files = {
+            'train': {
+                'path': 'dataset.zip',
+                'url': 'http://cool.dataset/dataset.zip',
+                'md5': '56ad5c77e6c8f72ed9ef2901628d6e48',
+            }
+        }
+
+    Once downloads and/or verification have finished, the relative
+    paths are replaced with concrete paths in ``args.indir``.
+
+    Parameters:
+        files: Dict of file descriptions.
+        args: Parsed argparse arguments object with ``indir``
+              and ``skip_verification`` arguments.
+
+    Returns:
+        Files with paths located in args.indir.
+    """
     download_files_if_not_found(files, args.indir)
     if not args.skip_verification:
         verify_files(files, args.indir)
     return locate_files(files, args.indir)
 
 
-def split_array(img, h_pixels, v_pixels, indices=(1, 2)):
+def split_array(img, v_pixels, h_pixels, indices=(1, 2)):
+    """
+    Split/tile an image/numpy array in horizontal and vertical direction.
+
+    Parameters:
+        img: The image to split.
+        h_pixels: Width of each tile in pixels.
+        v_pixels: Height of each tile in pixels.
+        indices: 2-tuple of indices used to calculate number of tiles.
+
+    Returns:
+        Yields single tiles from the image as arrays.
+    """
     i_ = np.arange(img.shape[indices[0]]) // v_pixels
     j_ = np.arange(img.shape[indices[1]]) // h_pixels
     for i, j in product(np.unique(i_), np.unique(j_)):
@@ -203,6 +279,20 @@ def split_array(img, h_pixels, v_pixels, indices=(1, 2)):
 
 
 def tiff_to_nd_array(file_path, type=np.uint8):
+    """
+    Decode a TIFF image and returns all contained subimages as numpy array.
+    The first dimension of the array indexes the subimages.
+
+    Warning:
+        Requires geo (GDAL) extra!
+
+    Parameters:
+        file_path: Path to TIFF file.
+        type: Output dtype.
+
+    Returns:
+        TIFF image as numpy array.
+    """
     from osgeo import gdal
     dataset = gdal.Open(file_path, gdal.GA_ReadOnly)
     return np.array([dataset.GetRasterBand(idx+1).ReadAsArray()
@@ -244,7 +334,8 @@ def yield_threaded(gen):
     Run a generator in a background thread and yield its
     output in the current thread.
 
-    :param gen: generator
+    Parameters:
+        gen: Generator to yield from.
     """
     end = object()
     error = object()
@@ -272,12 +363,15 @@ def query_user(question, default='yes', answers=('yes', 'no', 'abort')):
 
     Adapted from http://code.activestate.com/recipes/577097/
 
-    :param question: String that is presented to the user.
-    :param default: Presumed answer if the user just hits <Enter>.
-                    Must be one of ``prompts`` or ``None`` (meaning
-                    an answer is required of the user).
-    :param answers: answers the user can give
-    :returns: one of ``prompts``
+    Parameters:
+        question: String that is presented to the user.
+        default: Presumed answer if the user just hits <Enter>.
+                 Must be one of ``prompts`` or ``None`` (meaning
+                 an answer is required of the user).
+        answers: Answers the user can give.
+
+    Returns:
+        One of ``prompts``.
     """
     if not(default is None or default in answers):
         raise ValueError("invalid default answer: '%s'" % default)

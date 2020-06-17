@@ -123,15 +123,9 @@ class ListReader(Reader):
     next = __next__
 
     def rawnext(self) -> bytes:
-        """
-        Return the next sample as raw msgpack bytes.
-        """
         return packb(self.next())
 
     def seek_index(self, index):
-        """
-        Seek to the given index.
-        """
         self._i = index
 
     seek = seek_index
@@ -140,8 +134,4 @@ class ListReader(Reader):
         self._i = self._index.get(key, None) or self._i
 
     def get_key(self, index=None):
-        """
-        Get the key of a sample.
-        Uses current index if none is given.
-        """
         return self._samples[index if index is not None else self._i]['key']

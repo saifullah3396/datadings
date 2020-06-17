@@ -64,12 +64,16 @@ FILES = {
 
 
 def _max_level(params, frame):
-    """ Compute a sensible maxlevel value for a frame, i.e.,
-        ensure the smallest pyramid level is not too small.
+    """
+    Compute a sensible maxlevel value for a frame, i.e.,
+    ensure the smallest pyramid level is not too small.
 
-        @param params: other tracker parameters
-        @param frame: frame with shape (height, width, channels)
-        @return: maxlevel int; at least 1
+    Parameters:
+        params: Other tracker parameters.
+        frame: Frame with shape (height, width, channels).
+
+    Returns:
+        Maxlevel as integer. At least 1.
     """
     size = min(frame.shape[:2])
     target = max(params.get('winSize', (21, 21)))
@@ -88,10 +92,14 @@ class LucasKanade(object):
             self.points[pointid] = tuple(xy)
 
     def update(self, frame):
-        """ Update the tracking result for a new frame.
+        """
+        Update the tracking result for a new frame.
 
-            @param frame: next frame
-            @return: dict {point: (x, y)}
+        Parameters:
+            frame: Next frame.
+
+        Returns:
+            Dict of (point, (x, y)) pairs.
         """
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         if self.frame_gray is not None and self.points:

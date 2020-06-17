@@ -100,8 +100,11 @@ def class_color_map(n=256):
     Adapted from:
     https://gist.github.com/wllhf/a4533e0adebe57e3ed06d4b50c8419ae
 
-    :param n: number of classes
-    :return: numpy array of shape (n, 3)
+    Parameters:
+        n: Number of classes.
+
+    Returns:
+        Numpy array of shape (n, 3).
     """
     cmap = np.zeros((n, 3), dtype=np.uint8)
     for i in range(n):

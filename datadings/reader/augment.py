@@ -1,3 +1,10 @@
+"""
+An Augment wraps a
+:py:class:`Reader <datadings.reader.reader.Reader`
+and changes how samples are iterated over.
+How readers are used is largely unaffected.
+"""
+
 import random
 from abc import ABCMeta, abstractmethod
 from copy import copy
@@ -5,18 +12,17 @@ from copy import copy
 
 class Augment(object):
     """
-    Augment the iteration order of reader.
-    Not thread safe!
+    Abstract base class for Augments.
+
+    Warning:
+        Augments are not thread safe!
+
+    Parameters:
+        reader: The reader to augment.
     """
     __metaclass__ = ABCMeta
 
     def __init__(self, reader):
-        """
-        Reader to shuffle.
-        Not thread safe!
-
-        :param reader: Reader to shuffle
-        """
         self._reader = reader
 
     def __enter__(self):
@@ -44,16 +50,14 @@ class Augment(object):
 
 class Shuffler(Augment):
     """
-    Iterate over the contents of a Reader in random order.
-    Not thread safe!
+    Iterate over a
+    :py:class:`Reader <datadings.reader.reader.Reader` in random order.
+
+    Warning:
+        Augments are not thread safe!
     """
 
     def iter(self, yield_key=False):
-        """
-        Iterate over the wrapper Reader in random order.
-
-        :param yield_key: if True, yields (key, sample) pairs
-        """
         n = len(self._reader)
         order = list(range(n))
         random.shuffle(order)
@@ -69,12 +73,6 @@ class Shuffler(Augment):
     __iter__ = iter
 
     def rawiter(self, yield_key=False):
-        """
-        Iterate over the wrapper Reader in random order.
-        Yields samples as raw bytes.
-
-        :param yield_key: if True, yields (key, sample) pairs
-        """
         n = len(self._reader)
         order = list(range(n))
         random.shuffle(order)
@@ -93,15 +91,12 @@ class Shuffler(Augment):
 
 class Cycler(Augment):
     """
-    Cycle over the contents of a Reader or Shuffler.
-    Not thread safe!
+    Infinitely cycle a :py:class:`Reader <datadings.reader.reader.Reader`.
+
+    Warning:
+        Augments are not thread safe!
     """
     def iter(self, yield_key=False):
-        """
-        Cycle over the wrapper Reader.
-
-        :param yield_key: if True, yields (key, sample) pairs
-        """
         while 1:
             for sample in self._reader.iter(yield_key):
                 yield sample
@@ -110,12 +105,6 @@ class Cycler(Augment):
     __iter__ = iter
 
     def rawiter(self, yield_key=False):
-        """
-        Cycle over the wrapper Reader.
-        Yields samples as raw bytes.
-
-        :param yield_key: if True, yields (key, sample) pairs
-        """
         while 1:
             for sample in self._reader.rawiter(yield_key):
                 yield sample
@@ -126,22 +115,25 @@ class Cycler(Augment):
 
 
 class Range(Augment):
+    """
+    Extract a range of samples from a given reader.
+
+    Warning:
+        Augments are not thread safe!
+
+    Either stop or num must be given.
+    If both are given, an assert will be triggered if
+    stop - start != num.
+    An assert will also trigger if stop > len(reader).
+    Same holds for start + num > len(reader)
+
+    Parameters:
+        reader: Reader to sample from.
+        start: Index to start from.
+        stop: Index to stop at.
+        num: Number of samples iterators will yield.
+    """
     def __init__(self, reader, start=0, stop=None, num=None):
-        """
-        Extract a range of samples from a given reader.
-        Not thread safe!
-
-        Either stop or num must be given.
-        If both are given, an assert will be triggered if
-        stop - start != num.
-        An assert will also trigger if stop > len(reader).
-        Same holds for start + num > len(reader)
-
-        :param reader: Reader to sample
-        :param start: index to start from
-        :param stop: index to stop at
-        :param num: number of samples iterators will yield
-        """
         Augment.__init__(self, reader)
         self.start = start
         if stop is None:
@@ -183,9 +175,12 @@ def split_reader(reader, num_ranges):
     The length of ranges may vary by up to 1
     if len(reader) is not divisible by num_ranges.
 
-    :param reader: reader to split
-    :param num_ranges: number of ranges to create
-    :return: list of Range augments wrapping reader
+    Parameters:
+        reader: Reader to split.
+        num_ranges: Number of ranges to create.
+
+    Returns:
+        list of Range augments wrapping reader.
     """
     num = len(reader) / num_ranges
     ind = [int(round(num * i)) for i in range(num_ranges)] + [len(reader)]

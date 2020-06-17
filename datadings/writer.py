@@ -14,13 +14,13 @@ from .tools import query_user
 class Writer(object):
     """
     Writers can be used to create dataset files along with index
-    and md5 hash.
+    and MD5 hash.
 
     Writer is an abstract class.
     It cannot be instantiated.
     Subclasses must implement the abstract write method.
 
-    Can be used as context manager in "with" statements:
+    It is recommended to use writers as context manager in "with" statements:
 
         with Writer('dataset.msgpack') as writer:
             for sample in samples:
@@ -28,15 +28,15 @@ class Writer(object):
 
     The writer is then automatically closed and index and md5
     files are written.
+
+    Parameters:
+        outfile: Path to the dataset file.
+        overwrite: If outfile exists, force overwriting.
+        kwargs: Keyword arguments for :py:func:`datadings.tools.make_printer`.
     """
     __metaclass__ = ABCMeta
 
     def __init__(self, outfile, buffering=4*1024*1024, overwrite=False, **kwargs):
-        """
-        :param outfile: path to the dataset file
-        :param overwrite: if outfile exists, force overwriting
-        :param kwargs: keyword arguments for datadings.tools.make_printer
-        """
         self._path = outfile
         outdir = pt.dirname(outfile)
         if not pt.exists(outdir):
@@ -64,8 +64,7 @@ class Writer(object):
 
     def close(self):
         """
-        Flush and close the dataset file and write index and
-        md5 files.
+        Flush and close the dataset file and write index and MD5 files.
         """
         self._outfile.flush()
         self._outfile.close()
@@ -97,7 +96,8 @@ class Writer(object):
         """
         Write a sample to the dataset file.
 
-        :param args: sample data to write
+        Parameters:
+            args: Sample data to write.
         """
         pass
 
@@ -106,7 +106,7 @@ class RawWriter(Writer):
     """
     Writer for raw data.
     No packing is done.
-    write requires key and data as arguments.
+    :py:meth:`write` requires ``key`` and ``data`` as arguments.
     """
     def write(self, key, data):
         self._write_data(key, data)
@@ -115,7 +115,7 @@ class RawWriter(Writer):
 class FileWriter(Writer):
     """
     Writer for file-based datasets.
-    Requires sample dicts with a unique "key" value.
+    Requires sample dicts with a unique ``"key"`` value.
     """
     def write(self, sample):
         self._write(sample['key'], sample)

@@ -24,7 +24,10 @@ class Reader(object):
 
     def iter(self, yield_key=False):
         """
-        :param yield_key: if True, yields (key, sample) pairs
+        Iterate over the dataset, starting with the current index.
+
+        Parameters:
+            yield_key: If True, yields (key, sample) pairs.
         """
         try:
             if yield_key:
@@ -48,21 +51,24 @@ class Reader(object):
 
     @abstractmethod
     def next(self):
+        """
+        Returns the next sample.
+        """
         pass
 
     @abstractmethod
-    def rawnext(self):
+    def rawnext(self) -> bytes:
         """
-        Return the next sample as raw bytes.
-        :return:
+        Return the next sample msgpacked as raw bytes.
         """
         pass
 
     def rawiter(self, yield_key=False):
         """
-        Like iter, but yields raw bytes.
+        Like iter, but yields samples msgpacked as raw bytes.
 
-        :param yield_key: if True, yields (key, sample) pairs
+        Parameters:
+            yield_key: If True, yields (key, sample) pairs.
         """
         try:
             if yield_key:
