@@ -89,7 +89,7 @@ for the data and index files, so their integrity can be verified.
 
 
 Limitations
-===========
+-----------
 
 Since msgpack is used datadings inherits its limitations.
 
