@@ -1,59 +1,102 @@
+from typing import Union
+from typing import Sequence
+from typing import Iterable
+from typing import Callable
+from pathlib import Path
+
+from natsort import natsorted
+
 from .reader import Reader
 from ..msgpack import packb
-from ..sets import ImageClassificationData
 
 
 def load_lines(path):
-    with open(path) as f:
-        return [l.strip('\n ') for l in f.readlines()]
+    with open(path, encoding='utf-8') as f:
+        return [l.strip('\n ') for l in f]
 
 
-def get_labels(samples):
-    labels = set(s.get('label') for s in samples)
+canary = object()
+
+
+def sorted_labels(samples):
+    # try to get label, but with canary instead of None as default
+    labels = set(s.get('label', canary) for s in samples)
     if None in labels:
-        labels.remove(None)
-    return labels
-
-
-def identity(sample):
-    return sample
-
-
-def noop(sample):
-    return sample.get('data')
+        raise ValueError('Found None as label. '
+                         'Labels must be given to reader to use None.')
+    # remove canaries from the mine
+    if canary in labels:
+        labels.remove(canary)
+    return natsorted(labels)
 
 
 class ListReader(Reader):
     """
-    A simple Reader that holds a list of samples.
+    Reader that holds a list of samples.
+    Functions can be given to load data on the fly and/or perform further
+    conversion steps.
+
+    Two special keys ``"key"`` and ``"label"`` in samples are used:
+
+        - ``"key"`` is a unique identifier for samples.
+          Sample index is added to samples if it is missing.
+        - ``"label"`` holds an optional label.
+          Replaced by a numeric index to the list of labels if
+          ``numeric_labels`` is true.
+          The original label is retained as ``"_label"``.
+
+    Note:
+        If ``labels`` argument is not given, the list of all labels will
+        be extracted from all samples.
+        The list of all labels is :py:func:`natsorted <natsort.natsorted>`
+        to determine numerical labels.
+
+    Important:
+        Since ``None`` is not sortable, the ``labels`` argument must be
+        given to use ``None`` as a label.
+
+    Parameters:
+        samples: Sequence of samples. Must be indexable, so no
+                 generators or one-time iterators.
+        labels: Optional. List of labels in desired order,
+                or path to file with one label per line.
+                If ``None``, get ``"label"`` keys from samples, if any,
+                and sort.
+        numeric_labels: If true, convert labels to numeric index to list
+                        of all labels.
+        convertfun: Callable ``convertfun(sample: dict) -> dict``.
+                    Applied to samples. Result is returned by ``next()``.
+        loadfun: Callable ``loadfun(sample: dict) -> dict``.
+                 Applied to samples. Result is further transformed by
+                 ``convertfun``.
     """
     def __init__(
             self,
-            samples,
-            labels=None,
-            convertfun=identity,
-            loadfun=noop,
+            samples: Sequence[dict],
+            labels: Union[Iterable, Path] = None,
+            numeric_labels=True,
+            loadfun: Callable = None,
+            convertfun: Callable = None,
     ):
-        """
-
-        :param samples: list of samples
-        :param labels: list of labels in correct order;
-                       if None, extract labels from samples and sort;
-                       if
-        :param convertfun:
-        :param loadfun:
-        """
         self._convertfun = convertfun
         self._loadfun = loadfun
         self._samples = samples
-        self._index = {s.get('key', 1): i for i, s in enumerate(samples)}
-        self._keys = {i: s.get('key', i) for i, s in enumerate(samples)}
-        labels = labels or sorted(get_labels(samples))
+        self._index = {}
+        for i, sample in enumerate(self._samples):
+            key = sample.get('key', i)
+            if key in self._index:
+                raise ValueError('duplicate key %r' % key)
+            sample['key'] = key
+            self._index[key] = i
+        self.labels = labels or sorted_labels(self._samples)
         try:
-            labels = load_lines(labels)
+            self.labels = load_lines(labels)
         except TypeError:
             pass
-        self._labels = {l: i for i, l in enumerate(labels)}
+        self._numeric_labels = numeric_labels
+        if numeric_labels:
+            self._label_index = {str(l): i for i, l in enumerate(self.labels)}
+            self._label_index.update({l: i for i, l in enumerate(self.labels)})
         self._i = 0
 
     def __enter__(self):
@@ -66,23 +109,22 @@ class ListReader(Reader):
         return len(self._samples)
 
     def __next__(self):
-        s = dict(self._samples[self._i])
+        sample = dict(self._samples[self._i])
         self._i += 1
         if self._loadfun is not None:
-            s['data'] = self._loadfun(s)
-        if s.get('label') is None:
-            s.pop('label', None)
-        else:
-            s['labelstring'] = s['label']
-            s['label'] = self._labels[s['label']]
-        return self._convertfun(s)
+            sample = self._loadfun(sample)
+        if self._numeric_labels and 'label' in sample:
+            sample['_label'] = sample['label']
+            sample['label'] = self._label_index[sample['label']]
+        if self._convertfun is not None:
+            sample = self._convertfun(sample)
+        return sample
 
     next = __next__
 
-    def rawnext(self):
+    def rawnext(self) -> bytes:
         """
-        Return the next sample as raw bytes.
-        :return:
+        Return the next sample as raw msgpack bytes.
         """
         return packb(self.next())
 
@@ -102,4 +144,4 @@ class ListReader(Reader):
         Get the key of a sample.
         Uses current index if none is given.
         """
-        return self._keys.get(index or self._i, self._i)
+        return self._samples[index if index is not None else self._i]['key']
