@@ -5,9 +5,10 @@ Dealing with different datasets can be tedious for machine learning
 practitioners.
 Two datasets almost never share the same directory structure and often
 custom file formats are used.
-How datadings fits into the picture is best explained by XKCD #927:
+How datadings fits into the picture is best explained by
+`XKCD #927 <https://xkcd.com/927/>`_:
 
-.. image:: https://imgs.xkcd.com/comics/standards.png
+.. image:: _static/xkcd927.png
    :alt: XKCD #927
    :width: 500
    :target: https://xkcd.com/927/
@@ -45,12 +46,11 @@ Once converted into the datadings format, you can easily saturate
 10G ethernet reading well over 20000 samples/s using the
 :py:class:`MsgpackReader <datadings.reader.msgpack.MsgpackReader>`.
 
-To top it all off, it also takes over 7 seconds to start reading from
-the directory tree, whereas is takes less than 0.7 seconds to start
-reading from msgpack files.
+It also takes over 7 seconds to start reading from the directory tree,
+whereas is takes less than 0.7 seconds to start reading from msgpack files.
 This makes debugging a breeze.
 Check out the :ref:`file format description<file-format>` description
-if you want to know how this is possible.
+if you want to know how this is achieved.
 
 
 
