@@ -85,6 +85,7 @@ class ZipFileReader(ListReader):
             exclude=(),
             separator='\t',
     ):
+        self._path = str(path)
         # single patterns must be wrapped in tuple
         if isinstance(patterns, (str, Path)):
             patterns = patterns,

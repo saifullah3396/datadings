@@ -1,5 +1,8 @@
+from typing import Union
+
 import os
 from os import path as pt
+from pathlib import Path
 
 from .reader import Reader
 from ..msgpack import unpack
@@ -10,21 +13,41 @@ from ..tools import hash_md5hex
 
 class MsgpackReader(Reader):
     """
-    Simple, iterable and seekable reader for messagepack dataset files.
-    Needs dataset and index file.
-    Can Optionally verify the integrity of dataset and index files
-    if md5 file is present.
+    Reader for msgpack files in the
+    :ref:`datadings format description<file-format>`.
+
+    Needs at least data and index file.
+    For example, if the dataset file is ``some_dir/dataset.msgpack``,
+    then the reader will attempt to load the index from
+    ``some_dir/dataset.msgpack.index``.
+
+    Can optionally verify the integrity of data and index files if
+    the md5 file ``some_dir/dataset.msgpack.md5`` is present.
+
+    Note:
+        The default read-ahead buffer size is 4MB.
+        That's a lot of byte, optimized for fast sequential access.
+        Reduce this to roughly the size of a single sample for best
+        random access performance.
+
+    Parameters:
+        path: Dataset file to load.
+        buffering: Read buffer size in bytes.
+                   Reduce this for faster random access.
+
+    Raises:
+        IOError: If dataset or index cannot be loaded.
     """
-    def __init__(self, infile, buffering=4*1024*1024):
-        """
-        :param infile: dataset file to load
-        :raises IOError: if dataset or index cannot be loaded
-        """
-        self._path = infile
+    def __init__(
+            self,
+            path: Union[str, Path],
+            buffering=4 * 1024 * 1024
+    ):
+        self._path = str(path)
         self._buffering = buffering
-        self._infile = open(infile, 'rb', buffering)
-        self._keys, self._positions = _load_index(infile, buffering)
-        self._positions.append(os.stat(infile).st_size)
+        self._infile = open(path, 'rb', buffering)
+        self._keys, self._positions = _load_index(path, buffering)
+        self._positions.append(os.stat(path).st_size)
         self._key_to_index_dict = None
         self._len = len(self._keys)
         self._i = 0
