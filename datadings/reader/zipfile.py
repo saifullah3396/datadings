@@ -60,7 +60,7 @@ class ZipFileReader(ListReader):
         self._args = (path, patterns, separator, convertfun,
                       include, exclude, labels)
         self._zipfile = zipfile.ZipFile(path)
-        samples = list(yield_zipfile(self._zipfile, patterns, separator))
+        samples = yield_zipfile(self._zipfile, patterns, separator)
         samples = [{'key': s, 'label': l} for s, l in samples
                    if check_included(s, include, exclude)]
         ListReader.__init__(self, samples, labels, convertfun, self._load)
