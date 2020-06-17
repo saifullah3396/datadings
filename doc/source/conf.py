@@ -84,7 +84,10 @@ html_theme_options = {
 # -- Other -------------------------------------------------------------------
 
 # Add Python doc to intersphinx
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'natsort': ('https://natsort.readthedocs.io/en/master/', None),
+}
 
 # autodoc Configuration
 autoclass_content = 'class'
