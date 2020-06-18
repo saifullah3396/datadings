@@ -7,6 +7,7 @@ from queue import Queue
 from queue import Full
 from queue import Empty
 import hashlib
+import inspect
 
 import requests
 import gdown
@@ -391,3 +392,31 @@ def query_user(question, default='yes', answers=('yes', 'no', 'abort')):
             return answer
         else:
             print('You can choose', ', '.join(answers), flush=True)
+
+
+def document_keys(typefun):
+    """
+    Extract the keys that samples created by a type function have
+    create a documentation string that lists them.
+    For example, for
+    :py:func:`ImageClassificationData <datadings.sets.types.ImageClassificationData>`
+    it returns:
+
+    \"\"\"Important:
+        Samples will have the following keys:
+
+            - ``"key"``
+            - ``"image"``
+            - ``"label"``'
+    \"\"\"
+
+
+    Parameters:
+        typefun: Type function
+    """
+    sig = inspect.signature(typefun)
+    sample = typefun(*((1,)*len(sig.parameters)))
+    return 'Important:\n' \
+           + '    Samples will have the following keys:\n\n        - ' \
+           + ('\n        - '.join('``"%s"``' % k for k in sample)) \
+           + '\n'
