@@ -8,9 +8,9 @@ learning, based on two simple principles:
 
     Each sample is a dictionary with descriptive keys.
 
-E.g., for supervised training with images each sample is a dictionary
-``{'key': unique_key, 'image': imagedata, 'label': label)``.
-More images and meta-data may be added as required.
+For supervised training with images samples are dictionaries like this::
+
+    {"key": unique_key, "image": imagedata, "label": label}
 
 
 
