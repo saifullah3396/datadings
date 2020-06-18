@@ -11,8 +11,8 @@ More images and meta-data may be added as required.
 
 
 
-Why?
-====
+Mission statement
+=================
 
 Dealing with different datasets can be tedious for machine learning
 practitioners.
