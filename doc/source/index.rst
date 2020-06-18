@@ -1,5 +1,17 @@
-datadings
-=========
+datadings is a collection of tools to prepare datasets for machine
+learning, based on two simple principles:
+
+    Datasets are collections of individual data samples.
+    Each sample is a dictionary with descriptive keys.
+
+E.g., for supervised training with images each sample is a dictionary
+``{'image': imagedata, 'label': label)``.
+More images and meta-data may be added as required.
+
+
+
+Why?
+====
 
 Dealing with different datasets can be tedious for machine learning
 practitioners.
@@ -15,6 +27,8 @@ How datadings fits into the picture is best explained by
 
 Slightly less cynically, datadings aims to make dealing with datasets
 fast and easy.
+datadings currently supports over 20 different datasets for image
+classification, segmentation, saliency prediction, and remote sensing.
 One command lets you download all necessary files and convert them to
 the datadings format.
 And since it's based on the excellent
@@ -54,12 +68,21 @@ if you want to know how this is achieved.
 
 
 
-Where do I start?
------------------
+TL;DR
+-----
 
-Right now datadings includes code to (down)load over 20 different
-datasets for image classification, segmentation, saliency prediction,
-and remote sensing.
+First, use the :py:mod:`datadings-write <datadings.commands.write>`
+command to create the dataset files.
+It creates a ``dataset.msgpack`` file.
+In your code, open this file with the
+:py:class:`MsgpackReader <datadings.reader.msgpack.MsgpackReader>`
+like any other file.
+You can now iterate over it::
+
+    from datadings.reader import MsgpackReader
+    with MsgpackReader('dataset.msgpack') as reader:
+        for sample in reader:
+            [do dataset things]
 
 
 
