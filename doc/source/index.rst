@@ -2,10 +2,11 @@ datadings is a collection of tools to prepare datasets for machine
 learning, based on two simple principles:
 
     Datasets are collections of individual data samples.
+
     Each sample is a dictionary with descriptive keys.
 
 E.g., for supervised training with images each sample is a dictionary
-``{'image': imagedata, 'label': label)``.
+``{'key': unique_key, 'image': imagedata, 'label': label)``.
 More images and meta-data may be added as required.
 
 
