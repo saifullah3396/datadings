@@ -297,6 +297,17 @@ is so vast that the conversion would simply take too long and take
 up too much additional space to be sensible.
 Other examples would be large video files that should really be
 streamed while decoding instead of loading all of the data at once.
-In cases like these, the ``FOO`` module should provide a
-``FOOReader`` class that extends the
-:py:class:`datadings.reader.Reader`.
+For these and similar cases it (at least currently) does not make
+sense to use the datadings msgpack format with the
+:py:class:`MsgpackReader <datadings.reader.msgpack.MsgpackReader>`.
+Instead, we recommend the ``FOO`` module provide a ``FOOReader``
+class that extends :py:class:`datadings.reader.Reader` or one of its
+subclasses.
+An effort should be made to reduce processing times.
+The ``FOOReader`` should read directly from the source files of the
+dataset and perform limited pre-processing.
+For example, datadings includes a list of samples from the
+:py:mod:`YFCC100m <datadings.sets.YFCC100m>` dataset that are not
+useful, because they were either damaged or blank images.
+This slow process of analyzing every image was performed offline
+to speed up subsequent iterations of the dataset.
