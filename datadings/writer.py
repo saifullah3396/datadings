@@ -29,6 +29,17 @@ class Writer(object):
     The writer is then automatically closed and index and md5
     files are written.
 
+    Important:
+        If ``overwrite`` is ``False``, the user will be prompted to overwrite
+        an existing file.
+        The user can now:
+
+            - Accept to overwrite the file.
+            - Decline, which raises a :py:class:`FileExistsError`.
+              The program should continue as if writing had finished.
+            - Abort, which raises a :py:class:`KeyboardInterrupt`.
+              The program should abort immediately.
+
     Parameters:
         outfile: Path to the dataset file.
         overwrite: If outfile exists, force overwriting.

@@ -1,3 +1,22 @@
+"""
+A collection of useful helper functions to create argument parsers.
+Using pre-defined arguments ensures that arguments are consistent
+across different tools in datadings.
+
+All helper functions in this module follow the convention that a
+function called ``argument_indir`` adds the ``indir`` argument to
+the given parser, including additional configuration and help text.
+
+Note:
+    Any of the default arguments given by the ``argument_*``
+    functions can be overwritten.
+    For example, ``argument_shuffle`` defines
+    ``choices = ['yes', 'no']``.
+    If those are too formal for your liking, you can also use
+    ``argument_shuffle(parser, choices=['yeah', 'naw']``.
+    But please don't.
+"""
+
 import argparse
 from functools import partial
 from multiprocessing import cpu_count
@@ -47,11 +66,11 @@ def make_parser(
     Parameters:
         description: Description text displayed before arguments.
                      Usually ``__doc__`` is fine.
-        indir: if True, add ``indir`` argument
-        outdir: if True, add ``outdir`` argument
-        no_confirm: if True, add ``no_confirm`` argument
-        skip_verification: if True, add ``skip_verification`` argument
-        shuffle: if True, add ``shuffle`` argument
+        indir: If True, add ``indir`` argument.
+        outdir: If True, add ``outdir`` argument.
+        no_confirm: If True, add ``no_confirm`` argument.
+        skip_verification: If True, add ``skip_verification`` argument.
+        shuffle: If True, add ``shuffle`` argument.
         formatter_class: Description formatter, defaults to raw.
         kwargs: kwargs given to ``ArgumentParser``.
 
