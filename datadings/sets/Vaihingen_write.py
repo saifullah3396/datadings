@@ -4,7 +4,7 @@ This tool will look for the ISPRS_semantic_labeling_Vaihingen directory in the
 input directory.
 
 See also:
-    http://www2.isprs.org/commissions/comm3/wg4/detection-and-reconstruction.html
+    http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html
 
 Note:
     Requests to download the dataset can be made by filling out the form on
