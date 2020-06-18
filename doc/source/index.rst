@@ -1,3 +1,6 @@
+datadings' documentation
+========================
+
 datadings is a collection of tools to prepare datasets for machine
 learning, based on two simple principles:
 
