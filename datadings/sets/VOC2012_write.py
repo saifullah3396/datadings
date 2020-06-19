@@ -3,7 +3,7 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - VOCtrainval_11-May-2012.tar
+- VOCtrainval_11-May-2012.tar
 
 See also:
     http://host.robots.ox.ac.uk/pascal/VOC/voc2012/

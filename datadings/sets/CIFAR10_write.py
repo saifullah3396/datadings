@@ -3,7 +3,7 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - cifar-10-python.tar.gz
+- cifar-10-python.tar.gz
 
 See also:
     https://www.cs.toronto.edu/~kriz/cifar.html

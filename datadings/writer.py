@@ -34,11 +34,11 @@ class Writer(object):
         an existing file.
         The user can now:
 
-            - Accept to overwrite the file.
-            - Decline, which raises a :py:class:`FileExistsError`.
-              The program should continue as if writing had finished.
-            - Abort, which raises a :py:class:`KeyboardInterrupt`.
-              The program should abort immediately.
+        - Accept to overwrite the file.
+        - Decline, which raises a :py:class:`FileExistsError`.
+          The program should continue as if writing had finished.
+        - Abort, which raises a :py:class:`KeyboardInterrupt`.
+          The program should abort immediately.
 
     Parameters:
         outfile: Path to the dataset file.

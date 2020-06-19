@@ -14,9 +14,9 @@ or through
 :py:mod:`datadings-write <datadings.commands.write>`.
 Three files will be written:
 
-* ``MIT1003.msgpack`` contains sample data
-* ``MIT1003.msgpack.index`` contains index for random access
-* ``MIT1003.msgpack.md5`` contains MD5 hashes of both files
+- ``MIT1003.msgpack`` contains sample data
+- ``MIT1003.msgpack.index`` contains index for random access
+- ``MIT1003.msgpack.md5`` contains MD5 hashes of both files
 
 Reading all samples sequentially,
 using a ``MsgpackReader`` as a context manager::
@@ -63,3 +63,4 @@ This can be done with the
     with Cycler(MsgpackReader('MIT1003.msgpack')) as reader:
         for sample in reader:
             # do dataset things, but FOREVER!
+

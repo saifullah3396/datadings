@@ -17,15 +17,15 @@ datadings follows the best-effort principle that the kind of data
 associated with a certain key remains the same across datasets.
 These are some common keys and their meanings:
 
-    - ``"key"``: Unique identifier of this sample.
-    - ``"image"``: Contents of an image file.
-      Use any standard image library to get pixel data.
-    - ``"label"``: Numerical label for the whole sample.
-    - ``"*_image"``: Same as image, but different semantisch.
-      For example ``"label_image"`` with per-pixel segmentation
-      labels, or ``"instance_image"`` for instance segmentation.
-    - ``"experiments"``: A list of experiments, usually saliency.
-      Type depends on dataset.
-    - ``"locations"``: List of (x,y) coordinates.
-    - ``"map"``: Fixation map as image.
-    - ``"fixations"``: List of (x,y) fixation points.
+- ``"key"``: Unique identifier of this sample.
+- ``"image"``: Contents of an image file.
+  Use any standard image library to get pixel data.
+- ``"label"``: Numerical label for the whole sample.
+- ``"*_image"``: Same as image, but different semantics.
+  For example, ``"label_image"`` with per-pixel segmentation
+  labels, or ``"instance_image"`` for instance segmentation.
+- ``"experiments"``: A list of experiments, usually saliency.
+  Type depends on dataset.
+- ``"locations"``: List of (x,y) coordinates.
+- ``"map"``: Fixation map as image.
+- ``"fixations"``: List of (x,y) fixation points.

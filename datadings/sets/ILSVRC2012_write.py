@@ -2,8 +2,8 @@
 
 This tool will look for the following files in the input directory:
 
-    - ILSVRC2012_img_train.tar
-    - ILSVRC2012_img_val.tar
+- ILSVRC2012_img_train.tar
+- ILSVRC2012_img_val.tar
 
 See also:
     http://image-net.org/challenges/LSVRC/2012/index

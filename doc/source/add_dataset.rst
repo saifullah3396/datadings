@@ -22,7 +22,7 @@ lot of data.
 We usually optimize those files using
 `zopfli <https://github.com/google/zopfli>`_ to keep to size of
 repository and distributed wheels down.
-For exmaple, for the
+For example, for the
 :py:mod:`ILSVRC2012 <datadings.sets.ILSVRC2012_synsets>` dataset,
 the list of WordNet synsets included with datadings is 31K of text,
 15k gzipped and 14k with zopfli optimization.
@@ -36,10 +36,10 @@ Now add another module called ``FOO_write``.
 This will be an executable that writes dataset files.
 There are generally four steps to the writing process:
 
-    - Argument parsing.
-    - Download and verify source files.
-    - Locate and load sample data.
-    - Convert and write samples to dataset.
+- Argument parsing.
+- Download and verify source files.
+- Locate and load sample data.
+- Convert and write samples to dataset.
 
 If you prefer to learn from code, the
 :py:mod:`CAT2000_write <datadings.sets.CAT2000_write>` module
@@ -189,11 +189,11 @@ with the desired output path and pass samples to it::
     user will be prompted to overwrite an existing file.
     The user can now:
 
-        - Accept to overwrite the file.
-        - Decline, which raises a :py:class:`FileExistsError`.
-          The program should continue as if writing had finished.
-        - Abort, which raises a :py:class:`KeyboardInterrupt`.
-          The program should abort immediately.
+    - Accept to overwrite the file.
+    - Decline, which raises a :py:class:`FileExistsError`.
+      The program should continue as if writing had finished.
+    - Abort, which raises a :py:class:`KeyboardInterrupt`.
+      The program should abort immediately.
 
     The default argument parser accepts a ``no_confirm`` argument,
     which is passed to the ``overwrite`` parameter.
@@ -220,11 +220,9 @@ keyboard interrupts by the user::
 
     def main():
         from ..argparse import make_parser
-        from ..argparse import argument_threads
         from ..tools import prepare_indir
 
         parser = make_parser(__doc__)
-        argument_threads(parser)
         args = parser.parse_args()
         outdir = args.outdir or args.indir
 
@@ -275,6 +273,10 @@ process pool can be used to parallelize this step::
         with writer:
             for sample in pool.imap_unordered(create_sample, gen):
                 writer.write(sample)
+
+.. note::
+    Add :py:func:`datadings.tools.argument_threads` to the parser to
+    allow users to control the number of threads.
 
 .. note::
     :py:meth:`imap_unordered <multiprocessing.pool.Pool.imap_unordered>`

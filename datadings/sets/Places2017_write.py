@@ -3,12 +3,12 @@
 This tool will look for all or parts of the following files in the input
 directory, depending on the given command, and download them if necessary:
 
-    - images.tar
-    - sceneparsing.tar
-    - annotations_instance.tar
-    - boundaries.tar
-    - objectInfo150.txt
-    - color150.mat
+- images.tar
+- sceneparsing.tar
+- annotations_instance.tar
+- boundaries.tar
+- objectInfo150.txt
+- color150.mat
 
 Additionally, ADE20K_2016_07_26.zip from the ADE20k dataset is required
 to extract scene labels with the ``--scenelabels`` option.

@@ -3,10 +3,10 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - Targets.zip
-    - allImages_release.mat
-    - Fillers.zip
-    - allImages_fillers.mat
+- Targets.zip
+- allImages_release.mat
+- Fillers.zip
+- allImages_fillers.mat
 
 See also:
     http://figrim.mit.edu/index_eyetracking.html

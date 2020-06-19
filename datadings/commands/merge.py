@@ -2,9 +2,9 @@
 
 Available strategies:
 
-    - concat: Concat input files in the order they are given.
-    - random: Choose input file to read next sample from randomly, with
-      probability depending on the relative size of datasets.
+- concat: Concat input files in the order they are given.
+- random: Choose input file to read next sample from randomly, with
+  probability depending on the relative size of datasets.
 """
 import sys
 import os.path as pt

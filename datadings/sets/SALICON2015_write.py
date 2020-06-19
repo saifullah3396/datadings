@@ -3,8 +3,8 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - image.zip
-    - fixations.zip
+- image.zip
+- fixations.zip
 
 See also:
     http://salicon.net/challenge-2015/

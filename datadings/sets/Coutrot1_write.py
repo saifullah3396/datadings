@@ -3,8 +3,8 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - coutrot_database1.mat
-    - ERB3_Stimuli.zip
+- coutrot_database1.mat
+- ERB3_Stimuli.zip
 
 See also:
     http://antoinecoutrot.magix.net/public/databases.html

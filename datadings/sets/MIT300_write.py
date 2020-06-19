@@ -3,7 +3,7 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - BenchmarkIMAGES.zip
+- BenchmarkIMAGES.zip
 
 See also:
     http://saliency.mit.edu/results_mit300.html

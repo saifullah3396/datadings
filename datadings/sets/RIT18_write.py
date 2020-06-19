@@ -3,7 +3,7 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - rit18_data.mat
+- rit18_data.mat
 
 See also:
     https://github.com/rmkemker/RIT-18

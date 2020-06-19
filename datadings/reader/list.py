@@ -38,12 +38,12 @@ class ListReader(Reader):
 
     Two special keys ``"key"`` and ``"label"`` in samples are used:
 
-        - ``"key"`` is a unique identifier for samples.
-          Sample index is added to samples if it is missing.
-        - ``"label"`` holds an optional label.
-          Replaced by a numeric index to the list of labels if
-          ``numeric_labels`` is true.
-          The original label is retained as ``"_label"``.
+    - ``"key"`` is a unique identifier for samples.
+      Sample index is added to samples if it is missing.
+    - ``"label"`` holds an optional label.
+      Replaced by a numeric index to the list of labels if
+      ``numeric_labels`` is true.
+      The original label is retained as ``"_label"``.
 
     Note:
         If ``labels`` argument is not given, the list of all labels will

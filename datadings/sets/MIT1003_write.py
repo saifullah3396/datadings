@@ -3,8 +3,8 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - ALLSTIMULI.zip
-    - DATA.zip
+- ALLSTIMULI.zip
+- DATA.zip
 
 See also:
     http://people.csail.mit.edu/tjudd/WherePeopleLook/index.html

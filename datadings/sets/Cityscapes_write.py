@@ -2,9 +2,9 @@
 
 This tool will look for the following files in the input directory:
 
-    - disparity_trainvaltest.zip
-    - gtFine_trainvaltest.zip
-    - leftImg8bit_trainvaltest.zip
+- disparity_trainvaltest.zip
+- gtFine_trainvaltest.zip
+- leftImg8bit_trainvaltest.zip
 
 Note:
     Registration is required to download this dataset.

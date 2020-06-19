@@ -3,8 +3,8 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - trainSet.zip
-    - testSet.zip
+- trainSet.zip
+- testSet.zip
 
 See also:
     http://saliency.mit.edu/results_cat2000.html

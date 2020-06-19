@@ -42,9 +42,8 @@ BAR_FORMAT = '{desc} {percentage:3.0f}% {elapsed}<{remaining}, {rate_fmt}{postfi
 
 
 class ProgressPrinter(tqdm.tqdm):
-    def __call__(self, **kwargs):
-        self.set_postfix(refresh=False, **kwargs)
-        self.update()
+    monitor_interval = 0
+    __call__ = tqdm.tqdm.update
 
 
 def make_printer(bar_format=BAR_FORMAT, miniters=0,
@@ -57,11 +56,13 @@ def make_printer(bar_format=BAR_FORMAT, miniters=0,
     Returns:
         tqdm.tqdm object.
     """
-    tqdm.tqdm.monitor_interval = 0
-    p = ProgressPrinter(bar_format=bar_format, miniters=miniters,
-                        mininterval=mininterval, smoothing=smoothing,
-                        **kwargs)
-    return p
+    return ProgressPrinter(
+        bar_format=bar_format,
+        miniters=miniters,
+        mininterval=mininterval,
+        smoothing=smoothing,
+        **kwargs
+    )
 
 
 def hash_md5hex(path, read_size=64*1024, progress=False):
@@ -398,18 +399,15 @@ def document_keys(typefun):
     """
     Extract the keys that samples created by a type function have
     create a documentation string that lists them.
-    For example, for
-    :py:func:`ImageClassificationData <datadings.sets.types.ImageClassificationData>`
-    it returns:
+    For example, it produces the following documentation for
+    :py:func:`ImageClassificationData <datadings.sets.types.ImageClassificationData>`:
 
-    \"\"\"Important:
+    Important:
         Samples will have the following keys:
 
-            - ``"key"``
-            - ``"image"``
-            - ``"label"``'
-    \"\"\"
-
+        - ``"key"``
+        - ``"image"``
+        - ``"label"``
 
     Parameters:
         typefun: Type function
@@ -417,6 +415,6 @@ def document_keys(typefun):
     sig = inspect.signature(typefun)
     sample = typefun(*((1,)*len(sig.parameters)))
     return 'Important:\n' \
-           + '    Samples will have the following keys:\n\n        - ' \
-           + ('\n        - '.join('``"%s"``' % k for k in sample)) \
+           + '    Samples will have the following keys:\n\n    - ' \
+           + ('\n    - '.join('``"%s"``' % k for k in sample)) \
            + '\n'
