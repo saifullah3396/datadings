@@ -9,6 +9,10 @@ See also:
 Note:
     Requests to download the dataset can be made by filling out the form on
     the website.
+
+Warning:
+    Images, labels, and masks are numpy arrays, not images!
+
 """
 import numpy as np
 import os.path as pt

@@ -8,7 +8,7 @@ and download them if necessary:
 See also:
     https://github.com/rmkemker/RIT-18
 
-Important:
+Warning:
     Images, labels, and masks are numpy arrays, not images!
 
 """
