@@ -17,6 +17,10 @@ from . import MaskedImageSegmentationData
 from .RIT18 import CROP_SIZE
 from ..matlab import loadmat
 from ..tools import split_array
+from ..tools import document_keys
+
+
+__doc__ += document_keys(MaskedImageSegmentationData)
 
 
 FILES = {

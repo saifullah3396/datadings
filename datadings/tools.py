@@ -395,26 +395,38 @@ def query_user(question, default='yes', answers=('yes', 'no', 'abort')):
             print('You can choose', ', '.join(answers), flush=True)
 
 
-def document_keys(typefun):
+def document_keys(
+        typefun,
+        block='Important:',
+        prefix='Samples have the following keys:',
+        postfix='',
+):
     """
     Extract the keys that samples created by a type function have
     create a documentation string that lists them.
     For example, it produces the following documentation for
-    :py:func:`ImageClassificationData <datadings.sets.types.ImageClassificationData>`:
+    :py:func:`ImageClassificationData <datadings.sets.types.ImageClassificationData>`::
 
-    Important:
-        Samples will have the following keys:
+        {block}
+            {prefix}
 
-        - ``"key"``
-        - ``"image"``
-        - ``"label"``
+            - ``"key"``
+            - ``"image"``
+            - ``"label"``
+
+            {postfix}
 
     Parameters:
-        typefun: Type function
+        typefun: Type function to analyze.
+        block: Type of block to use. Defaults to "Important:".
+        prefix: Text before parameter list.
+        postfix: Text after parameter list.
     """
     sig = inspect.signature(typefun)
     sample = typefun(*((1,)*len(sig.parameters)))
-    return 'Important:\n' \
-           + '    Samples will have the following keys:\n\n    - ' \
-           + ('\n    - '.join('``"%s"``' % k for k in sample)) \
-           + '\n'
+    return (
+        '{block}\n'
+        + '    {prefix}\n\n    - '
+        + ('\n    - '.join('``"%s"``' % k for k in sample))
+        + '\n{postfix}'
+    ).format(block=block, prefix=prefix, postfix=postfix)

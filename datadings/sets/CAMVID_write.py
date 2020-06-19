@@ -23,6 +23,10 @@ from .VOC2012_write import print_values
 from .VOC2012 import median_frequency_weights
 from ..writer import FileWriter
 from . import ImageSegmentationData
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageSegmentationData)
 
 
 BASE_URL = 'https://github.com/alexgkendall/SegNet-Tutorial/archive/'

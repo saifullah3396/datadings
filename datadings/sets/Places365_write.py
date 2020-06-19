@@ -47,6 +47,10 @@ from ..writer import FileWriter
 from . import ImageClassificationData
 from . import ImageData
 from .Places365 import CLASS_TO_ID
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageClassificationData)
 
 
 READ_SIZE = 4 * 1024 * 1024

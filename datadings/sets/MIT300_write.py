@@ -14,6 +14,10 @@ import random
 
 from ..writer import FileWriter
 from . import ImageData
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageData)
 
 
 FILES = {

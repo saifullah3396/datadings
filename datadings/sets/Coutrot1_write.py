@@ -46,6 +46,17 @@ from . import SaliencyData
 from . import SaliencyExperiment
 from ..matlab import loadmat
 from ..matlab import iter_fields
+from ..tools import document_keys
+
+
+__doc__ += document_keys(
+    SaliencyData,
+    postfix=document_keys(
+        SaliencyExperiment,
+        block='',
+        prefix='Each experiment has the following keys:'
+    )
+)
 
 
 THRESHOLD_GOOD = 1.

@@ -20,6 +20,10 @@ import random
 from ..writer import FileWriter
 from ..tools import yield_threaded
 from . import ImageDisparitySegmentationData
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageDisparitySegmentationData)
 
 
 FILES = {

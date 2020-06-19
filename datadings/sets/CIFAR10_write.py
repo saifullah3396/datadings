@@ -18,6 +18,10 @@ from PIL import Image
 
 from ..writer import FileWriter
 from . import ImageClassificationData
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageClassificationData)
 
 
 BASE_URL = 'https://www.cs.toronto.edu/~kriz/'

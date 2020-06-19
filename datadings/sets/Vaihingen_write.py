@@ -19,6 +19,10 @@ from .Vaihingen import CROP_SIZE
 from .Vaihingen import COLOR_TO_CLASS_MAP
 from ..tools import split_array
 from ..tools import tiff_to_nd_array
+from ..tools import document_keys
+
+
+__doc__ += document_keys(MaskedImageSegmentationData)
 
 
 def write(writer, img, labels, mask, filename):

@@ -23,12 +23,12 @@ from PIL import Image
 from . import ADE20kData
 from ..writer import FileWriter
 from ..tools import yield_threaded
-from ..tools import document_keys
 from ..matlab import loadmat
 from ..matlab import iter_fields
 from .VOC2012_write import imagedata_to_array
 from .VOC2012_write import class_counts
 from .VOC2012_write import sorted_values
+from ..tools import document_keys
 
 
 __doc__ += document_keys(ADE20kData)

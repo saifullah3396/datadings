@@ -1,5 +1,6 @@
 """
 Create ANP460 data set files.
+
 """
 import os
 import os.path as pt
@@ -13,6 +14,17 @@ import numpy as np
 from ..writer import FileWriter
 from . import ANP460Data
 from . import ANP460Experiment
+from ..tools import document_keys
+
+
+__doc__ += document_keys(
+    ANP460Data,
+    postfix=document_keys(
+        ANP460Experiment,
+        block='',
+        prefix='Each experiment has the following keys:'
+    )
+)
 
 
 def __lines(s):

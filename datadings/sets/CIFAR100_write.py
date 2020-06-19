@@ -18,6 +18,10 @@ from ..writer import FileWriter
 from . import ImageCoarseClassificationData
 from .CIFAR10_write import get_files
 from .CIFAR10_write import row2image
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageCoarseClassificationData)
 
 
 BASE_URL = 'https://www.cs.toronto.edu/~kriz/'

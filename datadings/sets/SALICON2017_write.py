@@ -10,6 +10,17 @@ See also:
     http://salicon.net/challenge-2017/
 """
 from . import SALICON2015_write
+from ..tools import document_keys
+
+
+__doc__ += document_keys(
+    SALICON2015_write.SaliencyData,
+    postfix=document_keys(
+        SALICON2015_write.SaliencyTimeseriesExperiment,
+        block='',
+        prefix='Each experiment has the following keys:'
+    )
+)
 
 
 BASE_URL = 'https://drive.google.com/uc?id='

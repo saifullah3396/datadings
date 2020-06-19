@@ -57,6 +57,10 @@ from .ADE20k_write import FILES as FILES_ADE20k
 from .ADE20k_write import load_index
 from .ADE20k import SCENELABELS
 from . import Places2017Data
+from ..tools import document_keys
+
+
+__doc__ += document_keys(Places2017Data)
 
 
 BASE_URL = 'http://placeschallenge.csail.mit.edu/data/ChallengeData2017/'

@@ -27,6 +27,10 @@ from . import ImageSegmentationData
 from .InriaBuildings import CROP_SIZE
 from ..tools import split_array
 from ..tools import tiff_to_nd_array
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageSegmentationData)
 
 
 def array2imagedata(array):
