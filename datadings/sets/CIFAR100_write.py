@@ -3,7 +3,7 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - cifar-100-python.tar.gz
+- cifar-100-python.tar.gz
 
 See also:
     https://www.cs.toronto.edu/~kriz/cifar.html
@@ -18,6 +18,10 @@ from ..writer import FileWriter
 from . import ImageCoarseClassificationData
 from .CIFAR10_write import get_files
 from .CIFAR10_write import row2image
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageCoarseClassificationData)
 
 
 BASE_URL = 'https://www.cs.toronto.edu/~kriz/'

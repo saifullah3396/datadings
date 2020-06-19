@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e -x
 
-# delete Python 2.x
+# Python 2.x is not supported
 rm -rf /opt/python/cp2*
 
 # make wheel with Python 3.8

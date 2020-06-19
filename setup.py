@@ -83,7 +83,7 @@ setup(
     author_email='joachim.folz@dfki.de',
     license='MIT',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.5',
@@ -106,7 +106,7 @@ setup(
         'build_py': build_py,
     },
     project_urls={
-        'Documentation': 'https://gitlab.com/jfolz/datadings/blob/master/README.rst',
+        'Documentation': 'https://datadings.readthedocs.io',
         'Source': 'https://gitlab.com/jfolz/datadings',
         'Tracker': 'https://gitlab.com/jfolz/datadings/issues',
     },

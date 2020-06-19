@@ -76,15 +76,15 @@ class DirectoryReader(ListReader):
     look for samples.
     Each search pattern can either be:
 
-        - A glob pattern to a filesystem directory.
-          Use the special ``{LABEL}`` string to define which directory
-          in the path to use as a label.
-        - A path to a CSV-like file (with the given ``separator`` string)
-          where each line contains the path to a sample file.
-          Paths can be relative and optionally prefixed with a ``root_dir``.
-          A label as well as additional information can be included besides
-          the path in additional columns.
-          They will be stored as ``"label"`` and ``"_additional_info"``.
+    - A glob pattern to a filesystem directory.
+      Use the special ``{LABEL}`` string to define which directory
+      in the path to use as a label.
+    - A path to a CSV-like file (with the given ``separator`` string)
+      where each line contains the path to a sample file.
+      Paths can be relative and optionally prefixed with a ``root_dir``.
+      A label as well as additional information can be included besides
+      the path in additional columns.
+      They will be stored as ``"label"`` and ``"_additional_info"``.
 
     Example glob pattern: ``some_dir/{LABEL}/**``
 
@@ -97,9 +97,9 @@ class DirectoryReader(ListReader):
     :py:func:`fnmatch.fnmatch` glob patterns.
     These are applied as follows:
 
-        - If no inclusion patterns are given, all files are included.
-        - If inclusion patterns are given, a file must match at least one.
-        - A file is excluded if it matches any exclusion patterns.
+    - If no inclusion patterns are given, all files are included.
+    - If inclusion patterns are given, a file must match at least one.
+    - A file is excluded if it matches any exclusion patterns.
 
     Note:
         Please refer to the

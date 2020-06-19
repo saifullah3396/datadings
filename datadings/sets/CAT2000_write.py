@@ -3,8 +3,8 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - trainSet.zip
-    - testSet.zip
+- trainSet.zip
+- testSet.zip
 
 See also:
     http://saliency.mit.edu/results_cat2000.html
@@ -26,6 +26,17 @@ from ..matlab import loadmat
 from ..tools import yield_threaded
 from . import SaliencyData
 from . import SaliencyExperiment
+from ..tools import document_keys
+
+
+__doc__ += document_keys(
+    SaliencyData,
+    postfix=document_keys(
+        SaliencyExperiment,
+        block='',
+        prefix='Each experiment has the following keys:'
+    )
+)
 
 
 BASE_URL = 'http://saliency.mit.edu/'

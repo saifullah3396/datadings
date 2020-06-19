@@ -3,7 +3,7 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - ADE20K_2016_07_26.zip
+- ADE20K_2016_07_26.zip
 
 See also:
     http://groups.csail.mit.edu/vision/datasets/ADE20K
@@ -28,6 +28,10 @@ from ..matlab import iter_fields
 from .VOC2012_write import imagedata_to_array
 from .VOC2012_write import class_counts
 from .VOC2012_write import sorted_values
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ADE20kData)
 
 
 BASE_URL = 'http://groups.csail.mit.edu/vision/datasets/ADE20K/'

@@ -3,8 +3,8 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - image.zip
-    - fixations.zip
+- image.zip
+- fixations.zip
 
 See also:
     http://salicon.net/challenge-2015/
@@ -20,6 +20,17 @@ from . import SaliencyData
 from . import SaliencyTimeseriesExperiment
 from ..tools import yield_threaded
 from ..matlab import loadmat
+from ..tools import document_keys
+
+
+__doc__ += document_keys(
+    SaliencyData,
+    postfix=document_keys(
+        SaliencyTimeseriesExperiment,
+        block='',
+        prefix='Each experiment has the following keys:'
+    )
+)
 
 
 BASE_URL = 'https://drive.google.com/uc?id='

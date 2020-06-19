@@ -3,10 +3,10 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - Targets.zip
-    - allImages_release.mat
-    - Fillers.zip
-    - allImages_fillers.mat
+- Targets.zip
+- allImages_release.mat
+- Fillers.zip
+- allImages_fillers.mat
 
 See also:
     http://figrim.mit.edu/index_eyetracking.html
@@ -21,6 +21,17 @@ from ..writer import FileWriter
 from . import SaliencyData
 from . import SaliencyExperiment
 from ..matlab import loadmat
+from ..tools import document_keys
+
+
+__doc__ += document_keys(
+    SaliencyData,
+    postfix=document_keys(
+        SaliencyExperiment,
+        block='',
+        prefix='Each experiment has the following keys:'
+    )
+)
 
 
 BASE_URL_MIT = 'http://figrim.mit.edu/'

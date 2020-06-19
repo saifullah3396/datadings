@@ -1,3 +1,21 @@
+"""
+The Yahoo Flickr Creative Commons 100 Million (YFCC100m) dataset.
+
+Important:
+    Only images are included.
+    No videos or metadata.
+
+See also:
+    https://multimediacommons.wordpress.com/yfcc100m-core-dataset/
+
+Warning:
+    This code is intended to load a pre-release version of the
+    YFCC100m dataset.
+    Please complain if you want to use the release version available
+    from amazon:
+    https://multimediacommons.wordpress.com/yfcc100m-core-dataset/
+"""
+
 import os
 import os.path as pt
 import zipfile
@@ -13,9 +31,13 @@ from PIL import Image
 from ..reader import Reader
 from ..msgpack import unpack
 from ..msgpack import make_packer
-from . import ImageData as YFCC100mData
+from . import ImageData
 from .YFCC100m_counts import FILE_COUNTS
 from .YFCC100m_counts import FILES_TOTAL
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageData)
 
 
 ROOT = pt.abspath(pt.dirname(__file__))
@@ -180,6 +202,31 @@ class DevNull(object):
 
 
 class YFCC100mReader(Reader):
+    """
+    Special reader for the YFCC100m dataset only.
+    It reads images from 10000 ZIP files of roughly 10000 images
+    each.
+
+    One pass over the whole dataset was made to filter out irrelevant
+    images if one of the following conditions is met:
+
+    - Image is damaged/incomplete.
+    - Less than 2600 bytes.
+    - Exactly 9218 bytes - a placeholder image from Flickr.
+    - Less than 20000 bytes and less than 5% of lines in the image
+      have a variance less than 50.
+
+    Which images are rejected is controlled by the files given as
+    ``reject_file_paths``.
+    Set this to None or empty list to iterate over the whole dataset.
+
+    Parameters:
+        image_packs_dir: Path to directory with image ZIP files.
+        validator: Callable
+                   ``validator(data: bytes) -> Union[bytes, None]``.
+                   Validates images before they are returned.
+                   Receives image data and returns data or ``None``.
+    """
     def __init__(
             self,
             image_packs_dir,
@@ -197,7 +244,7 @@ class YFCC100mReader(Reader):
         self._validator = validator
         self._next_sample = None
         self._rejected = defaultdict(lambda: set())
-        for path in reject_file_paths:
+        for path in reject_file_paths or ():
             with gzip.open(path, 'rb') as f:
                 self._rejected = _parse_rejected(f, self._rejected)
         if error_file is None:
@@ -233,7 +280,7 @@ class YFCC100mReader(Reader):
         return self._next_sample
 
     def next(self):
-        sample = YFCC100mData(*self._get_next_sample())
+        sample = ImageData(*self._get_next_sample())
         self._next_sample = None
         return sample
 

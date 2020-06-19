@@ -3,7 +3,7 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - VOCtrainval_11-May-2012.tar
+- VOCtrainval_11-May-2012.tar
 
 See also:
     http://host.robots.ox.ac.uk/pascal/VOC/voc2012/
@@ -20,6 +20,10 @@ from ..writer import FileWriter
 from ..tools import make_printer
 from . import ImageSegmentationData
 from .VOC2012 import COLORS
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageSegmentationData)
 
 
 BASE_URL = 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/'

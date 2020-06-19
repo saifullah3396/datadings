@@ -7,6 +7,7 @@ from queue import Queue
 from queue import Full
 from queue import Empty
 import hashlib
+import inspect
 
 import requests
 import gdown
@@ -41,9 +42,8 @@ BAR_FORMAT = '{desc} {percentage:3.0f}% {elapsed}<{remaining}, {rate_fmt}{postfi
 
 
 class ProgressPrinter(tqdm.tqdm):
-    def __call__(self, **kwargs):
-        self.set_postfix(refresh=False, **kwargs)
-        self.update()
+    monitor_interval = 0
+    __call__ = tqdm.tqdm.update
 
 
 def make_printer(bar_format=BAR_FORMAT, miniters=0,
@@ -56,11 +56,13 @@ def make_printer(bar_format=BAR_FORMAT, miniters=0,
     Returns:
         tqdm.tqdm object.
     """
-    tqdm.tqdm.monitor_interval = 0
-    p = ProgressPrinter(bar_format=bar_format, miniters=miniters,
-                        mininterval=mininterval, smoothing=smoothing,
-                        **kwargs)
-    return p
+    return ProgressPrinter(
+        bar_format=bar_format,
+        miniters=miniters,
+        mininterval=mininterval,
+        smoothing=smoothing,
+        **kwargs
+    )
 
 
 def hash_md5hex(path, read_size=64*1024, progress=False):
@@ -391,3 +393,40 @@ def query_user(question, default='yes', answers=('yes', 'no', 'abort')):
             return answer
         else:
             print('You can choose', ', '.join(answers), flush=True)
+
+
+def document_keys(
+        typefun,
+        block='Important:',
+        prefix='Samples have the following keys:',
+        postfix='',
+):
+    """
+    Extract the keys that samples created by a type function have
+    create a documentation string that lists them.
+    For example, it produces the following documentation for
+    :py:func:`ImageClassificationData <datadings.sets.types.ImageClassificationData>`::
+
+        {block}
+            {prefix}
+
+            - ``"key"``
+            - ``"image"``
+            - ``"label"``
+
+            {postfix}
+
+    Parameters:
+        typefun: Type function to analyze.
+        block: Type of block to use. Defaults to "Important:".
+        prefix: Text before parameter list.
+        postfix: Text after parameter list.
+    """
+    sig = inspect.signature(typefun)
+    sample = typefun(*((1,)*len(sig.parameters)))
+    return (
+        '{block}\n'
+        + '    {prefix}\n\n    - '
+        + ('\n    - '.join('``"%s"``' % k for k in sample))
+        + '\n{postfix}'
+    ).format(block=block, prefix=prefix, postfix=postfix)

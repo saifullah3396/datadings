@@ -3,12 +3,12 @@
 This tool will look for all or parts of the following files in the input
 directory, depending on the given command, and download them if necessary:
 
-    - images.tar
-    - sceneparsing.tar
-    - annotations_instance.tar
-    - boundaries.tar
-    - objectInfo150.txt
-    - color150.mat
+- images.tar
+- sceneparsing.tar
+- annotations_instance.tar
+- boundaries.tar
+- objectInfo150.txt
+- color150.mat
 
 Additionally, ADE20K_2016_07_26.zip from the ADE20k dataset is required
 to extract scene labels with the ``--scenelabels`` option.
@@ -57,6 +57,10 @@ from .ADE20k_write import FILES as FILES_ADE20k
 from .ADE20k_write import load_index
 from .ADE20k import SCENELABELS
 from . import Places2017Data
+from ..tools import document_keys
+
+
+__doc__ += document_keys(Places2017Data)
 
 
 BASE_URL = 'http://placeschallenge.csail.mit.edu/data/ChallengeData2017/'

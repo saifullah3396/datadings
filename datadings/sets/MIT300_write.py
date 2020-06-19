@@ -3,7 +3,7 @@
 This tool will look for the following files in the input directory
 and download them if necessary:
 
-    - BenchmarkIMAGES.zip
+- BenchmarkIMAGES.zip
 
 See also:
     http://saliency.mit.edu/results_mit300.html
@@ -14,6 +14,10 @@ import random
 
 from ..writer import FileWriter
 from . import ImageData
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageData)
 
 
 FILES = {

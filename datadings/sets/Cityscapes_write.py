@@ -2,9 +2,9 @@
 
 This tool will look for the following files in the input directory:
 
-    - disparity_trainvaltest.zip
-    - gtFine_trainvaltest.zip
-    - leftImg8bit_trainvaltest.zip
+- disparity_trainvaltest.zip
+- gtFine_trainvaltest.zip
+- leftImg8bit_trainvaltest.zip
 
 Note:
     Registration is required to download this dataset.
@@ -20,6 +20,10 @@ import random
 from ..writer import FileWriter
 from ..tools import yield_threaded
 from . import ImageDisparitySegmentationData
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageDisparitySegmentationData)
 
 
 FILES = {

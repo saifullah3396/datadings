@@ -6,9 +6,9 @@ File format
 The file format datadings uses is simple.
 A dataset is made up of three files:
 
-    - ``.msgpack`` main data file
-    - ``.msgpack.index`` index file
-    - ``.msgpack.md5`` for integrity checks
+- ``.msgpack`` main data file
+- ``.msgpack.index`` index file
+- ``.msgpack.md5`` for integrity checks
 
 
 
@@ -56,9 +56,9 @@ Reserved keys
 The following keys are reserved by datadings for internal use and thus
 cannot be used in samples:
 
-    - ``"key"``: used to uniquely identify samples in a dataset
-    - ``"nd"``: used by msgpack-numpy for array decoding
-    - ``"complex"``: used by msgpack-numpy for complex number decoding
+- ``"key"``: used to uniquely identify samples in a dataset
+- ``"nd"``: used by msgpack-numpy for array decoding
+- ``"complex"``: used by msgpack-numpy for complex number decoding
 
 Using these keys results in undefined behavior.
 
@@ -93,10 +93,10 @@ Limitations
 
 Since msgpack is used datadings inherits its limitations.
 
-    - Maps and lists cannot have more than 2\ :sup:`32`\-1  entries.
-    - Strings and binary data cannot be longer than 2\ :sup:`32`\-1  bytes.
-    - Integers (signed or unsinged) are limited to 64 bits.
-    - Floats are limited to single or double precision.
+- Maps and lists cannot have more than 2\ :sup:`32`\-1  entries.
+- Strings and binary data cannot be longer than 2\ :sup:`32`\-1  bytes.
+- Integers (signed or unsigned) are limited to 64 bits.
+- Floats are limited to single or double precision.
 
 This means each dataset is limited to less than 2\ :sup:`32`\  samples
 (since the index uses a map) and around 2\ :sup:`64`\  bytes total

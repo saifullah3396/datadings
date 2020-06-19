@@ -4,11 +4,15 @@ This tool will look for the ISPRS_semantic_labeling_Vaihingen directory in the
 input directory.
 
 See also:
-    http://www2.isprs.org/commissions/comm3/wg4/detection-and-reconstruction.html
+    http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html
 
 Note:
     Requests to download the dataset can be made by filling out the form on
     the website.
+
+Warning:
+    Images, labels, and masks are numpy arrays, not images!
+
 """
 import numpy as np
 import os.path as pt
@@ -19,6 +23,10 @@ from .Vaihingen import CROP_SIZE
 from .Vaihingen import COLOR_TO_CLASS_MAP
 from ..tools import split_array
 from ..tools import tiff_to_nd_array
+from ..tools import document_keys
+
+
+__doc__ += document_keys(MaskedImageSegmentationData)
 
 
 def write(writer, img, labels, mask, filename):

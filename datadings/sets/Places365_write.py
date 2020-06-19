@@ -1,32 +1,32 @@
 """Create Places365 data set files.
 You can choose between any combination of
 
-    - high or low resolution images and
-    - standard or challenge (extended) training data set
+- high or low resolution images and
+- standard or challenge (extended) training data set
 
 This tool will look for the following files in the input directory
 depending on the chosen version and download them if necessary:
 
-    - standard (large)
+- standard (large)
 
-        - train_large_places365standard.tar (105 GB)
-        - val_large.tar (2.1 GB)
-        - test_large.tar (19 GB)
-    - standard (small)
+    - train_large_places365standard.tar (105 GB)
+    - val_large.tar (2.1 GB)
+    - test_large.tar (19 GB)
+- standard (small)
 
-        - train_256_places365standard.tar (24 GB)
-        - val_256.tar (501 MB)
-        - test_256.tar (4.4 GB)
-    - challenge (large)
+    - train_256_places365standard.tar (24 GB)
+    - val_256.tar (501 MB)
+    - test_256.tar (4.4 GB)
+- challenge (large)
 
-        - train_large_places365challenge.tar (476 GB)
-        - val_large.tar (2.1 GB)
-        - test_large.tar (19 GB)
-    - challenge (small)
+    - train_large_places365challenge.tar (476 GB)
+    - val_large.tar (2.1 GB)
+    - test_large.tar (19 GB)
+- challenge (small)
 
-        - train_256_places365challenge.tar (108 GB)
-        - val_256.tar (501 MB)
-        - test_256.tar (4.4 GB)
+    - train_256_places365challenge.tar (108 GB)
+    - val_256.tar (501 MB)
+    - test_256.tar (4.4 GB)
 
 See also:
     http://places2.csail.mit.edu/index.html
@@ -47,6 +47,10 @@ from ..writer import FileWriter
 from . import ImageClassificationData
 from . import ImageData
 from .Places365 import CLASS_TO_ID
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageClassificationData)
 
 
 READ_SIZE = 4 * 1024 * 1024

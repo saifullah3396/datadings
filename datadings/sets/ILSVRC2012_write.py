@@ -2,8 +2,8 @@
 
 This tool will look for the following files in the input directory:
 
-    - ILSVRC2012_img_train.tar
-    - ILSVRC2012_img_val.tar
+- ILSVRC2012_img_train.tar
+- ILSVRC2012_img_val.tar
 
 See also:
     http://image-net.org/challenges/LSVRC/2012/index
@@ -33,6 +33,10 @@ from ..writer import FileWriter
 from ..tools import yield_threaded
 from . import ImageClassificationData
 from .ILSVRC2012_synsets import SYNSETS
+from ..tools import document_keys
+
+
+__doc__ += document_keys(ImageClassificationData)
 
 
 FILES = {
