@@ -1,6 +1,7 @@
-""" A collection of tools to prepare public datasets for
-    machine learning, i.e., to convert them into easy to
-    handle and quick to read messagepack files.
+"""
+datadings is a collection of tools to prepare datasets for machine
+learning.
+It's easy to use, space-efficient, and blazingly fast.
 """
 import os
 import os.path as pt
@@ -76,7 +77,7 @@ console_scripts = [
 setup(
     name='datadings',
     version=find_version('datadings', '__init__.py'),
-    description=__doc__,
+    description=__doc__.replace('\n', ' '),
     long_description=long_description,
     long_description_content_type='text/x-rst; charset=UTF-8',
     author='Joachim Folz',

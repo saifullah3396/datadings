@@ -52,6 +52,7 @@ with :py:mod:`Augments <datadings.reader.augment>`.
 For example, to randomize the order of samples, wrap the reader
 in a :py:class:`Shuffler <datadings.reader.augment.Shuffler>`::
 
+    from datadings.reader import Shuffler
     with Shuffler(MsgpackReader('MIT1003.msgpack')) as reader:
         for sample in reader:
             # do dataset things, but in random order!
@@ -60,6 +61,7 @@ A common use case is to iterate over the whole dataset multiple times.
 This can be done with the
 :py:class:`Cycler <datadings.reader.augment.Cycler>`::
 
+    from datadings.reader import Cycler
     with Cycler(MsgpackReader('MIT1003.msgpack')) as reader:
         for sample in reader:
             # do dataset things, but FOREVER!

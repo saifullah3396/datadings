@@ -1,5 +1,5 @@
 datadings is a collection of tools to prepare datasets for machine
-learning, based on two simple principles:
+learning, based on two simple principles
 
     Datasets are collections of individual data samples.
 
@@ -134,4 +134,22 @@ Reading samples as raw bytes::
 Number of samples::
 
     print(len(reader))
+
+You can also change the order and selection of iterated samples
+with augments.
+For example, to randomize the order of samples, wrap the reader
+in a ``Shuffler``::
+
+    from datadings.reader import Shuffler
+    with Shuffler(MsgpackReader('MIT1003.msgpack')) as reader:
+        for sample in reader:
+            # do dataset things, but in random order!
+
+A common use case is to iterate over the whole dataset multiple times.
+This can be done with the ``Cycler``::
+
+    from datadings.reader import Cycler
+    with Cycler(MsgpackReader('MIT1003.msgpack')) as reader:
+        for sample in reader:
+            # do dataset things, but FOREVER!
 
