@@ -1,6 +1,7 @@
 stages:
   - build
   - test
+  - publish
 
 
 .image: &image
@@ -28,7 +29,7 @@ devel:
 release:
   extends: .build
   artifacts:
-    expire_in: 1000 years
+    expire_in: 1 week
   only:
   - tags
 
@@ -38,3 +39,11 @@ test:
   stage: test
   script:
     - ./test.sh
+
+
+publish:
+  stage: publish
+  script:
+  - ./publish-wheels.sh
+  only:
+  - tags
