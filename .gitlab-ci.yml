@@ -42,6 +42,7 @@ test:
 
 
 publish:
+  <<: *image
   stage: publish
   script:
   - ./publish-wheels.sh
