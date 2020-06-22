@@ -143,7 +143,7 @@ def write_set(split, outdir, gen, args):
 
     def __verify_inner(item):
         key, data, label = item
-        data = verify_image(data, args.quality, colorsubsampling=args.subsampling)
+        data = verify_image(data, args.compress, colorsubsampling=args.subsampling)
         return ImageClassificationData(key, data, label)
 
     pool = ThreadPool(args.threads)
@@ -165,7 +165,7 @@ def main():
     from ..tools import prepare_indir
 
     parser = make_parser(__doc__, shuffle=False)
-    argument_threads(parser, default=8)
+    argument_threads(parser, default=1)
     parser.add_argument(
         '--compress',
         nargs='?',
