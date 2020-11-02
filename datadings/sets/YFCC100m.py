@@ -276,11 +276,11 @@ class YFCC100mReader(Reader):
                     self._rejected[z].add(i)
                     self._error_file.write('%s %d\n' % (z, i))
                 else:
-                    self._next_sample = sample, key
+                    self._next_sample = ImageData(key, sample)
         return self._next_sample
 
     def next(self):
-        sample = ImageData(*self._get_next_sample())
+        sample = self._get_next_sample()
         self._next_sample = None
         return sample
 
@@ -308,7 +308,7 @@ class YFCC100mReader(Reader):
         )
 
     def get_key(self, index=None):
-        return self._get_next_sample()[1]
+        return self._get_next_sample()['key']
 
 
 def main():
