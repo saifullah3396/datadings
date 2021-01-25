@@ -150,12 +150,12 @@ class DirectoryReader(ListReader):
             samples,
             labels=labels,
             numeric_labels=numeric_labels,
-            loadfun=self.load_binary,
+            loadfun=self._load_binary,
             convertfun=convertfun,
         )
         self.bytes_read = 0
 
-    def load_binary(self, sample):
+    def _load_binary(self, sample):
         with open(sample['path'], 'rb') as f:
             data = f.read()
         self.bytes_read += len(data)

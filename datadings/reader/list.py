@@ -108,9 +108,16 @@ class ListReader(Reader):
     def __len__(self):
         return len(self._samples)
 
-    def __next__(self):
-        sample = dict(self._samples[self._i])
-        self._i += 1
+    def find_key(self, index):
+        return self._samples[index]['key']
+
+    def find_index(self, key):
+        return self._index[key]
+
+    def get(self, index, yield_key=False, raw=False):
+        sample = self._samples[index]
+
+        # load and convert sample
         if self._loadfun is not None:
             sample = self._loadfun(sample)
         if self._numeric_labels and 'label' in sample:
@@ -118,20 +125,17 @@ class ListReader(Reader):
             sample['label'] = self._label_index[sample['label']]
         if self._convertfun is not None:
             sample = self._convertfun(sample)
-        return sample
 
-    next = __next__
+        # return sample
+        key = sample['key']
+        if raw:
+            sample = packb(sample)
+        if yield_key:
+            return key, sample
+        else:
+            return sample
 
-    def rawnext(self) -> bytes:
-        return packb(self.next())
-
-    def seek_index(self, index):
-        self._i = index
-
-    seek = seek_index
-
-    def seek_key(self, key):
-        self._i = self._index.get(key, None) or self._i
-
-    def get_key(self, index=None):
-        return self._samples[index if index is not None else self._i]['key']
+    def slice(self, start, stop=None, step=None, yield_key=False, raw=False):
+        start, stop, step = slice(start, stop, step).indices(len(self._samples))
+        for index in range(start, stop, step):
+            yield self.get(index, yield_key=yield_key, raw=raw)

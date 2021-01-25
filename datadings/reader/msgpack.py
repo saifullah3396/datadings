@@ -1,14 +1,12 @@
 from typing import Union
 
-import os
-from os import path as pt
 from pathlib import Path
 
 from .reader import Reader
-from ..msgpack import unpack
 from ..msgpack import unpackb
 from ..tools import load_md5file
 from ..tools import hash_md5hex
+from ..cached_property import cached_property
 
 
 class MsgpackReader(Reader):
@@ -41,22 +39,19 @@ class MsgpackReader(Reader):
     def __init__(
             self,
             path: Union[str, Path],
-            buffering=4 * 1024 * 1024
+            buffering=0
     ):
-        self._path = str(path)
+        path = Path(path)
+        if not path.exists():
+            raise FileNotFoundError(f'{path} not found')
+        self._path = path
         self._buffering = buffering
-        self._infile = open(path, 'rb', buffering)
-        self._keys, self._positions = _load_index(path, buffering)
-        self._positions.append(os.stat(path).st_size)
-        self._key_to_index_dict = None
+        self._keys, self._positions = _load_index(path)
+        self._positions.append(path.stat().st_size)
         self._len = len(self._keys)
-        self._i = 0
 
-    def __copy__(self):
-        reader = MsgpackReader.__new__(MsgpackReader)
-        reader.__dict__.update(self.__dict__)
-        reader._infile = open(self._path, 'rb', self._buffering)
-        return reader
+    def __len__(self):
+        return self._len
 
     def _close(self):
         if hasattr(self, 'infile') and not self._infile.closed:
@@ -68,42 +63,64 @@ class MsgpackReader(Reader):
     def __del__(self):
         self._close()
 
-    def __len__(self):
-        return self._len
+    def __copy__(self):
+        reader = MsgpackReader.__new__(MsgpackReader)
+        reader.__dict__.update(
+            (k, v) for k, v in self.__dict__
+            if k not in ('_infile', '_key_to_index_dict')
+        )
+        return reader
 
-    def __next__(self):
-        return unpackb(self.rawnext())
+    def find_key(self, index):
+        return self._keys[index]
 
-    next = __next__
-
-    def rawnext(self):
-        n = self._positions[self._i+1] - self._positions[self._i]
-        self._infile.seek(self._positions[self._i], 0)
-        self._i += 1
-        return self._infile.read(n)
-
-    def seek_index(self, index):
-        self._infile.seek(self._positions[index], 0)
-        self._i = index
-
-    seek = seek_index
-
-    @property
+    @cached_property
     def _key_to_index(self):
-        if self._key_to_index_dict is None:
-            self._key_to_index_dict = dict(
-                (k, i) for i, k in enumerate(self._keys)
-            )
-        return self._key_to_index_dict
+        return {k: i for i, k in enumerate(self._keys)}
 
-    def seek_key(self, key):
-        index = self._key_to_index[key]
-        self.seek_index(index)
+    def find_index(self, key):
+        return self._key_to_index[key]
 
-    def get_key(self, index=None):
-        return self._keys[index or self._i]
+    @cached_property
+    def _infile(self):
+        return open(self._path, 'rb', self._buffering)
 
-    def verify_data(self, read_size=64*1024, progress=False):
+    def get(self, index, yield_key=False, raw=False):
+        offset = self._positions[index]
+        n = self._positions[index+1] - offset
+        self._infile.seek(offset, 0)
+        data = self._infile.read(n)
+        if not raw:
+            data = unpackb(data)
+        if yield_key:
+            return self._keys[index], data
+        else:
+            return data
+
+    def slice(self, start, stop=None, step=None, yield_key=False, raw=False):
+        start, stop, step = slice(start, stop, step).indices(self._len)
+        pos = self._positions
+        key = self._keys
+        offset = pos[start]
+        n = pos[stop] - offset
+        self._infile.seek(offset, 0)
+        buf = memoryview(self._infile.read(n))
+        if yield_key:
+            if raw:
+                for i in range(start, stop, step):
+                    yield key[i], buf[pos[i] - offset:pos[i+1] - offset]
+            else:
+                for i in range(start, stop, step):
+                    yield key[i], unpackb(buf[pos[i] - offset:pos[i+1] - offset])
+        else:
+            if raw:
+                for i in range(start, stop, step):
+                    yield buf[pos[i] - offset:pos[i+1] - offset]
+            else:
+                for i in range(start, stop, step):
+                    yield unpackb(buf[pos[i] - offset:pos[i+1] - offset])
+
+    def verify_data(self, read_size=512*1024, progress=False):
         """
         Hash the dataset file and verify against the md5 file.
 
@@ -114,12 +131,11 @@ class MsgpackReader(Reader):
         Returns:
             True if verification was successful.
         """
-        hashes = load_md5file(self._path + '.md5')
-        dataname = pt.basename(self._path)
+        hashes = load_md5file(str(self._path) + '.md5')
         md5 = hash_md5hex(self._path, read_size, progress)
-        return hashes[dataname] == md5
+        return hashes[self._path.name] == md5
 
-    def verify_index(self, read_size=64*1024, progress=False):
+    def verify_index(self, read_size=512*1024, progress=False):
         """
         Hash the index file and verify against the md5 file.
 
@@ -131,12 +147,11 @@ class MsgpackReader(Reader):
             True if verification was successful.
         """
         hashes = load_md5file(self._path + '.md5')
-        indexname = pt.basename(self._path) + '.index'
-        md5 = hash_md5hex(self._path + '.index', read_size, progress)
-        return hashes[indexname] == md5
+        md5 = hash_md5hex(str(self._path) + '.index', read_size, progress)
+        return hashes[self._path.name + '.index'] == md5
 
 
-def _load_index(path, buffering=4*1024*1024):
+def _load_index(path: Path):
     """
     Load dataset index as two lists of keys and positions.
 
@@ -146,9 +161,11 @@ def _load_index(path, buffering=4*1024*1024):
     Returns:
         Keys and positions lists of equal length.
     """
-    if pt.exists(path + '.index'):
-        with open(path + '.index', 'rb', buffering) as f:
-            pairs = unpack(f, object_hook=None, object_pairs_hook=list)
-            return [k for k, _ in pairs], [p for _, p in pairs]
+    path = path.parent / (path.name + '.index')
+    if path.exists():
+        with path.open('rb', 0) as f:
+            data = f.read()
+        pairs = unpackb(data, object_hook=None, object_pairs_hook=list)
+        return [k for k, _ in pairs], [p for _, p in pairs]
     else:
-        raise IOError('index for %r not found' % path)
+        raise IOError('%r not found' % path)

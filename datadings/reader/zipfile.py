@@ -111,12 +111,12 @@ class ZipFileReader(ListReader):
             samples,
             labels=labels,
             numeric_labels=numeric_labels,
-            loadfun=self.load_binary,
+            loadfun=self._load_binary,
             convertfun=convertfun,
         )
         self.bytes_read = 0
 
-    def load_binary(self, sample):
+    def _load_binary(self, sample):
         data = self._zipfile.read(sample['path'])
         self.bytes_read += len(data)
         sample['data'] = data
