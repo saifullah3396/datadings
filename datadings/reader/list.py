@@ -78,6 +78,7 @@ class ListReader(Reader):
             loadfun: Callable = None,
             convertfun: Callable = None,
     ):
+        super().__init__()
         self._convertfun = convertfun
         self._loadfun = loadfun
         self._samples = samples

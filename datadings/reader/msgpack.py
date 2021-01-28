@@ -43,6 +43,7 @@ class MsgpackReader(Reader):
             path: Union[str, Path],
             buffering=0
     ):
+        super().__init__()
         path = Path(path)
         if not path.exists():
             raise FileNotFoundError(f'{path} not found')

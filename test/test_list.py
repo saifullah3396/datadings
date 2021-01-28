@@ -56,9 +56,9 @@ def test_checkEndOfIteration():
     with reader:
         for test in reader:
             print(test)
-        for test in reader:
-            print("this should be reached")
-            assert True
+        for _ in reader:
+            print("this should never be reached")
+            assert False
 
 
 def test_multipleIterations():
@@ -76,6 +76,7 @@ def test_multipleIterations():
         for test in reader:
             reached1 = True
             print(test)
+        reader.seek(0)
         for test in reader:
             reached2 = True
             print(test)

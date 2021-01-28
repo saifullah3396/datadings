@@ -25,6 +25,9 @@ class Reader(metaclass=ABCMeta):
     """
     _do_not_copy = ()
 
+    def __init__(self):
+        self._i = 0
+
     @abstractmethod
     def __len__(self):
         pass
@@ -59,6 +62,25 @@ class Reader(metaclass=ABCMeta):
         """
         pass
 
+    def seek_index(self, index):
+        """
+        Seek to the given index.
+        """
+        n = len(self)
+        if index < 0:
+            index += n
+        if index < 0 or index >= n:
+            raise IndexError(f'index {index} out of range for length {n} reader')
+        self._i = index
+
+    seek = seek_index
+
+    def seek_key(self, key):
+        """
+        Seek to the sample with the given key.
+        """
+        self.seek_index(self.find_index(key))
+
     @abstractmethod
     def get(self, index, yield_key=False, raw=False):
         """
@@ -91,6 +113,52 @@ class Reader(metaclass=ABCMeta):
         """
         pass
 
+    def next(self):
+        """
+        Returns the next sample.
+
+        This can be slow for file-based readers if a lot of
+        samples are to be read.
+        Consider using iter instead::
+
+            it = iter(reader)
+            while 1:
+                next(it)
+                ...
+
+        Or simply loop over the reader::
+
+            for sample in reader:
+                ...
+        """
+        sample = self.get(self._i)
+        self._i += 1
+        return sample
+
+    __next__ = next
+
+    def rawnext(self) -> bytes:
+        """
+        Return the next sample msgpacked as raw bytes.
+
+        This can be slow for file-based readers if a lot of
+        samples are to be read.
+        Consider using iter instead::
+
+            it = iter(reader)
+            while 1:
+                next(it)
+                ...
+
+        Or simply loop over the reader::
+
+            for sample in reader:
+                ...
+        """
+        sample = self.get(self._i, raw=True)
+        self._i += 1
+        return sample
+
     def __getitem__(self, index):
         if isinstance(index, slice):
             start, stop, step = index.indices(len(self))
@@ -110,12 +178,15 @@ class Reader(metaclass=ABCMeta):
     ):
         """
         Iterate over the dataset.
-        Start, stop and
+
+        Start, stop, and step behave like the parameters of the
+        ``range`` function.
+        Step must be >= 1.
 
         Parameters:
-            start: start of slice
-            stop: stop of slice
-            step: step of slice; must be >= 1
+            start: start of range
+            stop: stop of range
+            step: step of range; must be >= 1
             yield_key: If True, yields (key, sample) pairs.
             raw: If True, yields samples as msgpacked messages.
             chunk_size: number of samples read at once;
@@ -127,12 +198,15 @@ class Reader(metaclass=ABCMeta):
         Returns:
             Iterator
         """
+        start = start or self._i
         start, stop, step = slice(start, stop, step).indices(len(self))
         if step < 1:
             raise ValueError('step size must be >= 1')
 
-        # use slices for small step sizes
-        if step <= chunk_threshold:
+        # load chunks
+        # if chunk size is at least as big as step size
+        # and step size is small
+        if chunk_size >= step and step <= chunk_threshold:
             n = stop - start
             # optimize chunk size for step > 2
             # removes "dangling" samples that do not need to be loaded
@@ -148,11 +222,14 @@ class Reader(metaclass=ABCMeta):
             for c in range(chunks):
                 a = c * chunk_stride
                 b = min(n, a + chunk_size)
-                yield from self.slice(a, b, step, yield_key=yield_key, raw=raw)
+                for sample in self.slice(a, b, step, yield_key=yield_key, raw=raw):
+                    yield sample
+                    self._i += 1
         # load individual samples for large step sizes
         else:
             for i in range(start, stop, step):
                 yield self.get(i, yield_key=yield_key, raw=raw)
+                self._i += 1
 
     __iter__ = iter
 
