@@ -3,8 +3,8 @@ set -e -x
 
 # Python 2.x is not supported
 rm -rf /opt/python/cp2*
-# Don't test Python 3.9 - missing dependencies
-rm -rf /opt/python/cp39*
+# Don't test Python 3.5
+rm -rf /opt/python/cp35*
 
 for PYBIN in /opt/python/*/bin; do
   (
