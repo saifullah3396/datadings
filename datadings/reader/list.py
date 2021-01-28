@@ -107,12 +107,6 @@ class ListReader(Reader):
     def __len__(self):
         return len(self._samples)
 
-    def __copy__(self):
-        cls = self.__class__
-        reader = cls.__new__(cls)
-        reader.__dict__.update(self.__dict__)
-        return reader
-
     def find_key(self, index):
         return self._samples[index]['key']
 

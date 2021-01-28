@@ -36,6 +36,8 @@ class MsgpackReader(Reader):
     Raises:
         IOError: If dataset or index cannot be loaded.
     """
+    _do_not_copy = '_infile'
+
     def __init__(
             self,
             path: Union[str, Path],
@@ -62,14 +64,6 @@ class MsgpackReader(Reader):
 
     def __del__(self):
         self._close()
-
-    def __copy__(self):
-        reader = MsgpackReader.__new__(MsgpackReader)
-        reader.__dict__.update(
-            (k, v) for k, v in self.__dict__
-            if k not in ('_infile', '_key_to_index_dict')
-        )
-        return reader
 
     def find_key(self, index):
         return self._keys[index]
@@ -99,12 +93,26 @@ class MsgpackReader(Reader):
 
     def slice(self, start, stop=None, step=None, yield_key=False, raw=False):
         start, stop, step = slice(start, stop, step).indices(self._len)
+        if step < 1:
+            raise ValueError('step size must be >= 1')
+
+        # optimize slice length for step > 2
+        # removes "dangling" samples that do not need to be loaded
+        # example: chunk size 12, step 4
+        # X---X---X---
+        # (12 - 1) // 4 * 4 + 1 = 9
+        # X---X---X
+        n = stop - start
+        n = (n - 1) // step * step + 1
+        stop = start + n
+
         pos = self._positions
         key = self._keys
         offset = pos[start]
         n = pos[stop] - offset
         self._infile.seek(offset, 0)
         buf = memoryview(self._infile.read(n))
+
         if yield_key:
             if raw:
                 for i in range(start, stop, step):
