@@ -97,7 +97,6 @@ class ListReader(Reader):
         if numeric_labels:
             self._label_index = {str(l): i for i, l in enumerate(self.labels)}
             self._label_index.update({l: i for i, l in enumerate(self.labels)})
-        self._i = 0
 
     def __enter__(self):
         return self
@@ -108,6 +107,12 @@ class ListReader(Reader):
     def __len__(self):
         return len(self._samples)
 
+    def __copy__(self):
+        cls = self.__class__
+        reader = cls.__new__(cls)
+        reader.__dict__.update(self.__dict__)
+        return reader
+
     def find_key(self, index):
         return self._samples[index]['key']
 
@@ -115,7 +120,7 @@ class ListReader(Reader):
         return self._index[key]
 
     def get(self, index, yield_key=False, raw=False):
-        sample = self._samples[index]
+        sample = dict(self._samples[index])
 
         # load and convert sample
         if self._loadfun is not None:
