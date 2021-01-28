@@ -131,9 +131,12 @@ class Reader(metaclass=ABCMeta):
             for sample in reader:
                 ...
         """
-        sample = self.get(self._i)
-        self._i += 1
-        return sample
+        try:
+            sample = self.get(self._i)
+            self._i += 1
+            return sample
+        except IndexError:
+            raise StopIteration
 
     __next__ = next
 
@@ -155,9 +158,12 @@ class Reader(metaclass=ABCMeta):
             for sample in reader:
                 ...
         """
-        sample = self.get(self._i, raw=True)
-        self._i += 1
-        return sample
+        try:
+            sample = self.get(self._i, raw=True)
+            self._i += 1
+            return sample
+        except IndexError:
+            raise StopIteration
 
     def __getitem__(self, index):
         if isinstance(index, slice):
