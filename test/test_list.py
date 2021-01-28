@@ -5,10 +5,8 @@ import random
 
 from datadings.reader import ListReader
 
-
 ROOT = pt.dirname(__file__)
 parent = pt.abspath(pt.join(ROOT, os.pardir))
-
 
 for p in (os.pardir, parent):
     try:
@@ -26,7 +24,7 @@ def floatrange(start, stop=None, step=None):
     delta = b - a
     steps = int(delta / step)
     for x in range(steps):
-        yield delta * x/steps + a
+        yield delta * x / steps + a
 
 
 def test_checkAllKeys():
@@ -37,7 +35,7 @@ def test_checkAllKeys():
         sample = {"data": data, "key": count, "label": random.random()}
         samples.append(sample)
         map[count] = sample
-        count = count +1
+        count = count + 1
     reader = ListReader(samples)
     print(reader)
     with reader:
@@ -52,15 +50,15 @@ def test_checkEndOfIteration():
     for data in floatrange(10, 20, 0.1):
         sample = {"data": data, "key": count, "label": random.random()}
         samples.append(sample)
-        count = count +1
+        count = count + 1
     reader = ListReader(samples)
     print(reader)
     with reader:
         for test in reader:
-            print (test)
+            print(test)
         for test in reader:
-            print("this should never be reached")
-            assert False
+            print("this should be reached")
+            assert True
 
 
 def test_multipleIterations():
@@ -69,20 +67,18 @@ def test_multipleIterations():
     for data in floatrange(10, 20, 0.1):
         sample = {"data": data, "key": count, "label": random.random()}
         samples.append(sample)
-        count = count +1
+        count = count + 1
     reader = ListReader(samples)
     print(reader)
     reached1 = False
-    reached2= False
+    reached2 = False
     with reader:
         for test in reader:
             reached1 = True
-            print (test)
-    reader.seek_index(0)
-    with reader:
+            print(test)
         for test in reader:
             reached2 = True
-            print (test)
+            print(test)
     assert reached1 and reached2
 
 
@@ -97,9 +93,9 @@ def test_seek_keys():
         count = count + 1
     reader = ListReader(samples)
     print(reader)
-    reader.seek_key(10)
+    start = reader.find_index(10)
     with reader:
-        for test in reader:
+        for test in reader.iter(start=start):
             map.pop(test["key"])
     assert len(map) == 10  # because the reader is ordered
 
@@ -115,8 +111,7 @@ def test_seek_index():
         count = count + 1
     reader = ListReader(samples)
     print(reader)
-    reader.seek_index(10)
     with reader:
-        for test in reader:
+        for test in reader.iter(start=10):
             map.pop(test["key"])
     assert len(map) == 10
