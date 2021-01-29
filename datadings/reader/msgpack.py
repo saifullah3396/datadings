@@ -92,7 +92,7 @@ class MsgpackReader(Reader):
         else:
             return data
 
-    def slice(self, start, stop=None, step=None, yield_key=False, raw=False):
+    def slice(self, start, stop=None, step=None, yield_key=False, raw=False, copy=True):
         start, stop, step = slice(start, stop, step).indices(self._len)
         if step < 1:
             raise ValueError('step size must be >= 1')
@@ -112,7 +112,9 @@ class MsgpackReader(Reader):
         offset = pos[start]
         n = pos[stop] - offset
         self._infile.seek(offset, 0)
-        buf = memoryview(self._infile.read(n))
+        buf = self._infile.read(n)
+        if not copy:
+            buf = memoryview(buf)
 
         if yield_key:
             if raw:
