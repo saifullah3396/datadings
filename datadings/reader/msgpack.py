@@ -80,7 +80,7 @@ class MsgpackReader(Reader):
     def _infile(self):
         return open(self._path, 'rb', self._buffering)
 
-    def get(self, index, yield_key=False, raw=False):
+    def get(self, index, yield_key=False, raw=False, copy=True):
         offset = self._positions[index]
         n = self._positions[index+1] - offset
         self._infile.seek(offset, 0)

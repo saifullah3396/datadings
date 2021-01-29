@@ -82,14 +82,21 @@ class Reader(metaclass=ABCMeta):
         self.seek_index(self.find_index(key))
 
     @abstractmethod
-    def get(self, index, yield_key=False, raw=False):
+    def get(self, index, yield_key=False, raw=False, copy=True):
         """
         Returns sample at given index.
+
+        ``copy=False`` allows the reader to use zero-copy mechanisms.
+        Data may be returned as ``memoryview`` objects rather than ``bytes``.
+        This can improve performance, but also drastically increase memory
+        consumption, since one sample can keep the whole slice in memory.
 
         Parameters:
             index: Index of the sample
             yield_key: If True, returns (key, sample)
             raw: If True, returns sample as msgpacked message
+            copy: if False, allow the reader to return data as
+                  ``memoryview`` objects instead of ``bytes``
 
         Returns:
             Sample as index.
@@ -97,9 +104,14 @@ class Reader(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def slice(self, start, stop=None, step=None, yield_key=False, raw=False):
+    def slice(self, start, stop=None, step=None, yield_key=False, raw=False, copy=True):
         """
         Returns a generator of samples selected by the given slice.
+
+        ``copy=False`` allows the reader to use zero-copy mechanisms.
+        Data may be returned as ``memoryview`` objects rather than ``bytes``.
+        This can improve performance, but also drastically increase memory
+        consumption, since one sample can keep the whole slice in memory.
 
         Parameters:
             start: start index of slice
@@ -107,6 +119,8 @@ class Reader(metaclass=ABCMeta):
             step: stride of slice
             yield_key: if True, yield (key, sample)
             raw: if True, returns sample as msgpacked message
+            copy: if False, allow the reader to return data as
+                  ``memoryview`` objects instead of ``bytes``
 
         Returns:
             Iterator of selected samples
@@ -179,6 +193,7 @@ class Reader(metaclass=ABCMeta):
             step=None,
             yield_key=False,
             raw=False,
+            copy=True,
             chunk_size=16,
             chunk_threshold=3,
     ):
@@ -186,15 +201,24 @@ class Reader(metaclass=ABCMeta):
         Iterate over the dataset.
 
         Start, stop, and step behave like the parameters of the
-        ``range`` function.
+        ``range`` function, though ``range(10)`` has to be specified as
+        ``Reader.iter(0, 10)``.
+        Current index is used If ``start=None``.
         Step must be >= 1.
 
+        ``copy=False`` allows the reader to use zero-copy mechanisms.
+        Data may be returned as ``memoryview`` objects rather than ``bytes``.
+        This can improve performance, but also drastically increase memory
+        consumption, since one sample can keep the whole slice in memory.
+
         Parameters:
-            start: start of range
+            start: start of range; if None, current index is used
             stop: stop of range
             step: step of range; must be >= 1
-            yield_key: If True, yields (key, sample) pairs.
-            raw: If True, yields samples as msgpacked messages.
+            yield_key: if True, yields (key, sample) pairs.
+            raw: if True, yields samples as msgpacked messages.
+            copy: if False, allow the reader to return data as
+                  ``memoryview`` objects instead of ``bytes``
             chunk_size: number of samples read at once;
                         bigger values can increase throughput,
                         but also memory
@@ -228,7 +252,7 @@ class Reader(metaclass=ABCMeta):
             for c in range(chunks):
                 a = c * chunk_stride
                 b = min(n, a + chunk_size)
-                for sample in self.slice(a, b, step, yield_key=yield_key, raw=raw):
+                for sample in self.slice(a, b, step, yield_key, raw, copy):
                     yield sample
                     self._i += 1
         # load individual samples for large step sizes
