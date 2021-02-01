@@ -27,6 +27,8 @@ class Reader(metaclass=ABCMeta):
 
     def __init__(self):
         self._i = 0
+        self.getitem_max_slice_length = 512
+        self.getitem_chunk_size = 64
 
     @abstractmethod
     def __len__(self):
@@ -171,6 +173,9 @@ class Reader(metaclass=ABCMeta):
 
             for sample in reader:
                 ...
+
+        Included for backwards compatibility and may be deprecated and
+        subsequently removed in the future.
         """
         try:
             sample = self.get(self._i, raw=True)
@@ -182,7 +187,12 @@ class Reader(metaclass=ABCMeta):
     def __getitem__(self, index):
         if isinstance(index, slice):
             start, stop, step = index.indices(len(self))
-            return self.slice(start, stop, step)
+            # use iter if number of samples is large
+            if stop - start >= self.getitem_max_slice_length:
+                return self.iter(start, stop, step, chunk_size=self.getitem_chunk_size)
+            # otherwise use slice directly
+            else:
+                return self.slice(start, stop, step)
         else:
             return self.get(index)
 
@@ -225,6 +235,7 @@ class Reader(metaclass=ABCMeta):
             chunk_threshold: for step sizes greater than this
                              threshold samples will be loaded
                              one by one instead of in chunks
+
         Returns:
             Iterator
         """
@@ -260,6 +271,9 @@ class Reader(metaclass=ABCMeta):
             for i in range(start, stop, step):
                 yield self.get(i, yield_key=yield_key, raw=raw)
                 self._i += 1
+
+        # return to start
+        self.seek_index(0)
 
     __iter__ = iter
 
