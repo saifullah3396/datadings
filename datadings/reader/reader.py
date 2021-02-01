@@ -239,7 +239,19 @@ class Reader(metaclass=ABCMeta):
         Returns:
             Iterator
         """
-        start = start or self._i
+        n = len(self)
+
+        if start is None:
+            if self._i == n:
+                # return to start
+                self.seek_index(0)
+            start = self._i
+        else:
+            if start < 0:
+                start += n
+            if start < 0 or start >= n:
+                raise IndexError(f'index {start} out of range for length {n} reader')
+
         start, stop, step = slice(start, stop, step).indices(len(self))
         if step < 1:
             raise ValueError('step size must be >= 1')
@@ -271,9 +283,6 @@ class Reader(metaclass=ABCMeta):
             for i in range(start, stop, step):
                 yield self.get(i, yield_key=yield_key, raw=raw)
                 self._i += 1
-
-        # return to start
-        self.seek_index(0)
 
     __iter__ = iter
 
