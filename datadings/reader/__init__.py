@@ -3,7 +3,4 @@ from .list import ListReader
 from .msgpack import MsgpackReader
 from .reader import Reader
 from .zipfile import ZipFileReader
-from .augment import Cycler
-from .augment import Shuffler
-from .augment import QuasiShuffler
-from .augment import Range
+from .augment import *
