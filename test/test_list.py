@@ -1,19 +1,6 @@
-import os
-import os.path as pt
-import sys
 import random
 
 from datadings.reader import ListReader
-
-ROOT = pt.dirname(__file__)
-parent = pt.abspath(pt.join(ROOT, os.pardir))
-
-for p in (os.pardir, parent):
-    try:
-        sys.path.remove(p)
-    except ValueError:
-        pass
-print(sys.path)
 
 
 def floatrange(start, stop=None, step=None):
@@ -27,7 +14,7 @@ def floatrange(start, stop=None, step=None):
         yield delta * x / steps + a
 
 
-def test_checkAllKeys():
+def test_missing_keys():
     count = 0
     samples = []
     map = {}
@@ -44,7 +31,10 @@ def test_checkAllKeys():
     assert len(map) == 0
 
 
-def test_checkEndOfIteration():
+def test_return_to_front():
+    """
+    Readers should return to first element after iteration.
+    """
     count = 0
     samples = []
     for data in floatrange(10, 20, 0.1):
@@ -54,36 +44,16 @@ def test_checkEndOfIteration():
     reader = ListReader(samples)
     print(reader)
     with reader:
-        for test in reader:
-            print(test)
-        for _ in reader:
-            print("this should never be reached")
-            assert False
+        first = None
+        for sample in reader:
+            if first is None:
+                first = sample
+        for sample in reader:
+            assert sample == first, (first, sample)
+            break
 
 
-def test_multipleIterations():
-    count = 0
-    samples = []
-    for data in floatrange(10, 20, 0.1):
-        sample = {"data": data, "key": count, "label": random.random()}
-        samples.append(sample)
-        count = count + 1
-    reader = ListReader(samples)
-    print(reader)
-    reached1 = False
-    reached2 = False
-    with reader:
-        for test in reader:
-            reached1 = True
-            print(test)
-        reader.seek(0)
-        for test in reader:
-            reached2 = True
-            print(test)
-    assert reached1 and reached2
-
-
-def test_seek_keys():
+def test_seek_key():
     count = 0
     samples = []
     map = {}
