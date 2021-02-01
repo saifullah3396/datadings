@@ -154,7 +154,8 @@ class Reader(metaclass=ABCMeta):
         except IndexError:
             raise StopIteration
 
-    __next__ = next
+    def __next__(self):
+        return self.next()
 
     def rawnext(self) -> bytes:
         """
@@ -210,11 +211,8 @@ class Reader(metaclass=ABCMeta):
         """
         Iterate over the dataset.
 
-        Start, stop, and step behave like the parameters of the
-        ``range`` function, though ``range(10)`` has to be specified as
-        ``Reader.iter(0, 10)``.
-        Current index is used If ``start=None``.
-        Step must be >= 1.
+        ``start``, ``stop``, and ``step`` behave like the parameters of the
+        ``range`` function, though ``step`` must be greater than 0.
 
         ``copy=False`` allows the reader to use zero-copy mechanisms.
         Data may be returned as ``memoryview`` objects rather than ``bytes``.
@@ -284,7 +282,8 @@ class Reader(metaclass=ABCMeta):
                 yield self.get(i, yield_key=yield_key, raw=raw)
                 self._i += 1
 
-    __iter__ = iter
+    def __iter__(self):
+        return self.iter()
 
     def rawiter(self, yield_key=False):
         """
