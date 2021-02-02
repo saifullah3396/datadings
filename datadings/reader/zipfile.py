@@ -10,6 +10,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 
 from .list import ListReader
+from .list import noop
 from .directory import check_included
 from .directory import yield_file
 
@@ -68,8 +69,10 @@ class ZipFileReader(ListReader):
                 and sort.
         numeric_labels: If true, convert labels to numeric index to list
                         of all labels.
-        convertfun: Callable ``convertfun(sample: dict) -> dict``.
-                    Applied to samples. Result is returned by ``next()``.
+        initfun: Callable ``initfun(sample: dict)``.
+                 Applied to given samples during initialization.
+        convertfun: Callable ``loadfun(sample: dict)``.
+                    Applied to samples before they are returned.
         include: Set of inclusion patterns.
         exclude: Set of exclusion patterns.
         separator: Separator string for file patterns.
@@ -80,7 +83,8 @@ class ZipFileReader(ListReader):
             patterns: Sequence[Union[str, Path]] = '{LABEL}/**',
             labels=None,
             numeric_labels=True,
-            convertfun: Callable = None,
+            initfun: Callable = noop,
+            convertfun: Callable = noop,
             include=(),
             exclude=(),
             separator='\t',
@@ -94,7 +98,7 @@ class ZipFileReader(ListReader):
             patterns,
             labels,
             numeric_labels,
-            convertfun,
+            initfun,
             separator,
             include,
             exclude,
@@ -111,16 +115,18 @@ class ZipFileReader(ListReader):
             samples,
             labels=labels,
             numeric_labels=numeric_labels,
-            loadfun=self._load_binary,
-            convertfun=convertfun,
+            initfun=initfun,
+            convertfun=self._load_binary,
         )
+        self._convertfun = convertfun
         self.bytes_read = 0
 
     def _load_binary(self, sample):
         data = self._zipfile.read(sample['path'])
         self.bytes_read += len(data)
         sample['data'] = data
-        return sample
+        # apply custom convert function, if any
+        self._convertfun(sample)
 
     def __copy__(self):
         return ZipFileReader(*self._args)

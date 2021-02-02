@@ -30,6 +30,10 @@ def sorted_labels(samples):
     return natsorted(labels)
 
 
+def noop(_):
+    pass
+
+
 class ListReader(Reader):
     """
     Reader that holds a list of samples.
@@ -51,6 +55,12 @@ class ListReader(Reader):
         The list of all labels is :py:func:`natsorted <natsort.natsorted>`
         to determine numerical labels.
 
+    Note:
+        ``initfun`` is applied to the given samples during initialization
+        and thus remain for the life of the reader.
+        ``convertfun`` is applied to a shallow copy of the sample every
+        time before it is returned.
+
     Important:
         Since ``None`` is not sortable, the ``labels`` argument must be
         given to use ``None`` as a label.
@@ -64,26 +74,26 @@ class ListReader(Reader):
                 and sort.
         numeric_labels: If true, convert labels to numeric index to list
                         of all labels.
-        convertfun: Callable ``convertfun(sample: dict) -> dict``.
-                    Applied to samples. Result is returned by ``next()``.
-        loadfun: Callable ``loadfun(sample: dict) -> dict``.
-                 Applied to samples. Result is further transformed by
-                 ``convertfun``.
+        initfun: Callable ``convertfun(sample: dict)``.
+                 Applied to samples during initialization.
+        convertfun: Callable ``loadfun(sample: dict)``.
+                    Applied to shallow copies of samples before
+                    they are returned.
     """
     def __init__(
             self,
             samples: Sequence[dict],
             labels: Union[Iterable, Path] = None,
             numeric_labels=True,
-            loadfun: Callable = None,
-            convertfun: Callable = None,
+            initfun: Callable = noop,
+            convertfun: Callable = noop,
     ):
         super().__init__()
         self._convertfun = convertfun
-        self._loadfun = loadfun
         self._samples = samples
         self._index = {}
         for i, sample in enumerate(self._samples):
+            initfun(sample)
             key = sample.get('key', i)
             if key in self._index:
                 raise ValueError('duplicate key %r' % key)
@@ -114,17 +124,14 @@ class ListReader(Reader):
     def find_index(self, key):
         return self._index[key]
 
-    def get(self, index, yield_key=False, raw=False):
+    def get(self, index, yield_key=False, raw=False, copy=True):
         sample = dict(self._samples[index])
 
         # load and convert sample
-        if self._loadfun is not None:
-            sample = self._loadfun(sample)
         if self._numeric_labels and 'label' in sample:
             sample['_label'] = sample['label']
             sample['label'] = self._label_index[sample['label']]
-        if self._convertfun is not None:
-            sample = self._convertfun(sample)
+        self._convertfun(sample)
 
         # return sample
         key = sample['key']

@@ -11,6 +11,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 
 from .list import ListReader
+from .list import noop
 
 
 def check_included(filename, include, exclude):
@@ -115,8 +116,10 @@ class DirectoryReader(ListReader):
                 and sort.
         numeric_labels: If true, convert labels to numeric index to list
                         of all labels.
-        convertfun: Callable ``convertfun(sample: dict) -> dict``.
-                    Applied to samples. Result is returned by ``next()``.
+        initfun: Callable ``convertfun(sample: dict)``.
+                 Applied to samples during initialization.
+        convertfun: Callable ``loadfun(sample: dict)``.
+                    Applied to samples before they are returned.
         include: Set of inclusion patterns.
         exclude: Set of exclusion patterns.
         separator: Separator string for file patterns.
@@ -127,7 +130,8 @@ class DirectoryReader(ListReader):
             patterns: Sequence[Union[str, Path]],
             labels: Union[Iterable, Path] = None,
             numeric_labels=True,
-            convertfun: Callable = None,
+            initfun: Callable = noop,
+            convertfun: Callable = noop,
             include: Sequence[str] = (),
             exclude: Sequence[str] = (),
             separator='\t',
@@ -150,9 +154,10 @@ class DirectoryReader(ListReader):
             samples,
             labels=labels,
             numeric_labels=numeric_labels,
-            loadfun=self._load_binary,
-            convertfun=convertfun,
+            initfun=initfun,
+            convertfun=self._load_binary,
         )
+        self._convertfun = convertfun
         self.bytes_read = 0
 
     def _load_binary(self, sample):
@@ -160,4 +165,5 @@ class DirectoryReader(ListReader):
             data = f.read()
         self.bytes_read += len(data)
         sample['data'] = data
-        return sample
+        # apply custom convert function, if any
+        self._convertfun(sample)
