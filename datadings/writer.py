@@ -48,6 +48,7 @@ class Writer(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, outfile, buffering=4*1024*1024, overwrite=False, **kwargs):
+        outfile = str(outfile)
         self._path = outfile
         outdir = pt.dirname(outfile)
         if not pt.exists(outdir):
