@@ -17,6 +17,6 @@ for PYBIN in /opt/python/*/bin; do
       "import os.path as pt; import datadings; print(pt.dirname(datadings.__file__))"
     )
     "${PYBIN}/python" -m pytest -vv
-    "${PYBIN}/python" -m pytest --cov="${LIBDIR}" ./test_* --cov-report term-missing
+    "${PYBIN}/python" -m pytest --cov="${LIBDIR}" ./test_*.py --cov-report term-missing
   )
 done
