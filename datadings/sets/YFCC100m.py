@@ -176,9 +176,11 @@ def yield_from_zips(
         rejected,
         start_index,
         validator=noop,
+        buffering=None,
 ):
     for z in zips:
-        with zipfile.ZipFile(pt.join(path, z) + '.zip') as imagezip:
+        with open(pt.join(path, z) + '.zip', 'rb', buffering=buffering) as f:
+            imagezip = zipfile.ZipFile(f)
             r = rejected[z]
             # filter out non-image members
             members = _filter_zipinfo(imagezip.infolist())
@@ -411,6 +413,7 @@ class YFCC100mReader(Reader):
         )
         gen = yield_from_zips(
             self._path, zips, self._rejected, start_index, self._validator,
+            buffering=4*1024*1024,
         )
 
         if raw:
