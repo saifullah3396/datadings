@@ -23,6 +23,7 @@ class Reader(metaclass=ABCMeta):
     * get
     * slice
     """
+    # attributes that are ignored by __copy__
     _do_not_copy = ()
 
     def __init__(self):
@@ -75,7 +76,12 @@ class Reader(metaclass=ABCMeta):
             raise IndexError(f'index {index} out of range for length {n} reader')
         self._i = index
 
-    seek = seek_index
+    def seek(self, index):
+        """
+        Seek to the given index.
+        Alias for ``seek_index``.
+        """
+        self.seek_index(index)
 
     def seek_key(self, key):
         """
@@ -197,6 +203,45 @@ class Reader(metaclass=ABCMeta):
         else:
             return self.get(index)
 
+    def _iter_impl(
+            self,
+            start=None,
+            stop=None,
+            step=None,
+            yield_key=False,
+            raw=False,
+            copy=True,
+            chunk_size=16,
+            chunk_threshold=3,
+    ):
+        # load chunks
+        # if chunk size is at least as big as step size
+        # and step size is small
+        if chunk_size >= step and step <= chunk_threshold:
+            n = stop - start
+            # optimize chunk size for step > 2
+            # removes "dangling" samples that do not need to be loaded
+            # example: chunk size 12, step 4
+            # X---X---X---
+            # (12 - 1) // 4 * 4 + 1 = 9
+            # X---X---X
+            chunk_size = (chunk_size - 1) // step * step + 1
+            # since dangling samples are removed from chunk size,
+            # chunks must start where the next sample in the sequence would be
+            chunk_stride = chunk_size + step - 1
+            chunks = int(ceil(n / chunk_size))
+            for c in range(chunks):
+                a = c * chunk_stride
+                b = min(n, a + chunk_size)
+                for sample in self.slice(a, b, step, yield_key, raw, copy):
+                    yield sample
+                    self._i += 1
+        # load individual samples for large step sizes
+        else:
+            for i in range(start, stop, step):
+                yield self.get(i, yield_key=yield_key, raw=raw)
+                self._i += 1
+
     def iter(
             self,
             start=None,
@@ -254,33 +299,16 @@ class Reader(metaclass=ABCMeta):
         if step < 1:
             raise ValueError('step size must be >= 1')
 
-        # load chunks
-        # if chunk size is at least as big as step size
-        # and step size is small
-        if chunk_size >= step and step <= chunk_threshold:
-            n = stop - start
-            # optimize chunk size for step > 2
-            # removes "dangling" samples that do not need to be loaded
-            # example: chunk size 12, step 4
-            # X---X---X---
-            # (12 - 1) // 4 * 4 + 1 = 9
-            # X---X---X
-            chunk_size = (chunk_size - 1) // step * step + 1
-            # since dangling samples are removed from chunk size,
-            # chunks must start where the next sample in the sequence would be
-            chunk_stride = chunk_size + step - 1
-            chunks = int(ceil(n / chunk_size))
-            for c in range(chunks):
-                a = c * chunk_stride
-                b = min(n, a + chunk_size)
-                for sample in self.slice(a, b, step, yield_key, raw, copy):
-                    yield sample
-                    self._i += 1
-        # load individual samples for large step sizes
-        else:
-            for i in range(start, stop, step):
-                yield self.get(i, yield_key=yield_key, raw=raw)
-                self._i += 1
+        yield from self._iter_impl(
+            start,
+            stop,
+            step,
+            yield_key,
+            raw,
+            copy,
+            chunk_size,
+            chunk_threshold,
+        )
 
     def __iter__(self):
         return self.iter()

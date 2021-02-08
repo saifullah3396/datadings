@@ -41,6 +41,7 @@ __doc__ += document_keys(ImageData)
 
 
 ROOT = pt.abspath(pt.dirname(__file__))
+REJECTED_PATH = pt.join(ROOT, 'YFCC100m_rejected_images.msgpack.gz')
 
 
 def noop(data):
@@ -78,30 +79,36 @@ def validate_image(data):
         return None
 
 
-def _find_zip_key(zips, key):
+def _find_zip_key(rejected, zips, key):
     z, f = key.split(os.sep)
     try:
-        return zips.index(z), f
+        zip_index = zips.index(z)
     except ValueError:
         raise IndexError('ZIP file {!r} not found'.format(z))
+
+    partial_index = 0
+    for z, count in FILE_COUNTS[:zip_index]:
+        partial_index += count - len(rejected[z])
+
+    return zip_index, f, partial_index
 
 
 def _find_zip_index(rejects, index):
     total = FILES_TOTAL
     for z, _ in FILE_COUNTS:
         total -= len(rejects[z])
-    rem = index
     if index < 0:
-        rem += total
-    if rem < 0 or rem >= total:
+        index += total
+    if index < 0 or index >= total:
         raise IndexError('index {} out of range for {} items'.format(
             index, total - 1
         ))
+    partial_index = 0
     for i, (z, count) in enumerate(FILE_COUNTS):
         count -= len(rejects[z])
-        if count > rem:
-            return i, rem
-        rem -= count
+        if partial_index + count > index:
+            return i, index - partial_index, partial_index
+        partial_index += count
 
 
 def _filter_zipinfo(infos):
@@ -143,12 +150,12 @@ def _find_start(
     zips = [f for f, _ in FILE_COUNTS]
     # find out which zipfile to start from
     if start_index:
-        zip_index, start_index = _find_zip_index(rejected, start_index)
+        zip_index, start_index, partial_index = _find_zip_index(rejected, start_index)
         start_image = ''
     elif start_key:
-        zip_index, start_image = _find_zip_key(zips, start_key)
+        zip_index, start_image, partial_index = _find_zip_key(rejected, zips, start_key)
     else:
-        return zips, 0
+        return zips, 0, 0
 
     z = zips[zip_index]
     r = rejected[z]
@@ -160,7 +167,7 @@ def _find_start(
         start_index = _find_member_index(r, start_index)
     elif start_image:
         start_index = _find_member_image(members, r, start_image)
-    return zips, start_index
+    return zips[zip_index:], start_index, partial_index
 
 
 def yield_from_zips(
@@ -226,37 +233,43 @@ class YFCC100mReader(Reader):
                    ``validator(data: bytes) -> Union[bytes, None]``.
                    Validates images before they are returned.
                    Receives image data and returns data or ``None``.
+
+    Warning:
+        A validating reader cannot be copied and it is strongly
+        discourages to copy readers with ``error_file`` paths.
+
+    Warning:
+        Methods``get``, ``slice``, ``find_index``, ``find_key``,
+        ``seek_index``, and ``seek_key`` are considerably slower
+        for this reader compared to others.
+        Use iterators and large ``slice`` ranges instead.
     """
+    _do_not_copy = ('_gen', '_error_file')
+
     def __init__(
             self,
             image_packs_dir,
             validator=noop,
-            reject_file_paths=(
-                    pt.join(ROOT, 'YFCC100m_rejected_images.msgpack.gz'),
-            ),
+            reject_file_paths=(REJECTED_PATH,),
             error_file=None,
             error_file_mode='a',
     ):
+        super().__init__()
         self._path = image_packs_dir
         if not callable(validator):
             raise ValueError('validator must be callable, not %r'
                              % validator)
         self._validator = validator
-        self._next_sample = None
         self._rejected = defaultdict(lambda: set())
         for path in reject_file_paths or ():
             with gzip.open(path, 'rb') as f:
                 self._rejected = _parse_rejected(f, self._rejected)
-        if error_file is None:
-            self._error_file = DevNull()
-        else:
-            self._error_file = open(error_file, error_file_mode)
-        zips, start_index = _find_start(image_packs_dir, self._rejected)
-        self._gen = yield_from_zips(
-            image_packs_dir, zips, self._rejected, start_index,
-            self._validator,
-        )
         self._packer = make_packer()
+        self._error_file_args = error_file, error_file_mode
+        self._error_file = None
+        self.open_error_file_()
+        self._gen = None
+        self.seek_index(0)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__del__()
@@ -268,47 +281,158 @@ class YFCC100mReader(Reader):
     def __len__(self):
         return FILES_TOTAL - sum(len(r) for r in self._rejected.values())
 
-    def _get_next_sample(self):
-        while self._next_sample is None:
-            sample, key, z, i = next(self._gen)
-            if i not in self._rejected[z]:
-                if sample is None:
-                    self._rejected[z].add(i)
-                    self._error_file.write('%s %d\n' % (z, i))
-                else:
-                    self._next_sample = ImageData(key, sample)
-        return self._next_sample
+    def __copy__(self):
+        if self._validator != noop:
+            raise RuntimeError('cannot copy a validating reader')
+        reader = super().__copy__()
+        reader.open_error_file_()
+        reader.seek_index(self._i)
+        return reader
+
+    def open_error_file_(self):
+        error_file, error_file_mode = self._error_file_args
+        if error_file is None:
+            self._error_file = DevNull()
+        else:
+            self._error_file = open(error_file, error_file_mode)
+
+    def _get_next_sample(self, gen):
+        while True:
+            sample, key, z, i = next(gen)
+            if i in self._rejected[z]:
+                continue
+            if sample is None:
+                self._rejected[z].add(i)
+                self._error_file.write('%s %d\n' % (z, i))
+            else:
+                break
+        return ImageData(key, sample)
 
     def next(self):
-        sample = self._get_next_sample()
-        self._next_sample = None
-        return sample
+        return self._get_next_sample(self._gen)
 
     __next__ = next
 
     def rawnext(self):
         return self._packer.pack(self.next())
 
-    def seek_index(self, index):
-        zips, start_index = _find_start(
-            self._path, self._rejected, start_index=index
-        )
-        self._gen = yield_from_zips(
-            self._path, zips, self._rejected, start_index, self._validator,
-        )
-
-    seek = seek_index
-
-    def seek_key(self, key):
-        zips, start_index = _find_start(
+    def find_index(self, key):
+        zips, start_index, index = _find_start(
             self._path, self._rejected, start_key=key
         )
+
+        # count up to start_index in zip and all samples
+        # that are not in rejected to index
+        r = self._rejected[zips[0]]
+        for i in range(start_index):
+            if i not in r:
+                index += 1
+
+        if index != 0 and self._validator != noop:
+            raise RuntimeError('found index may be incorrect while validating')
+
+        return start_index
+
+    def find_key(self, index):
+        if index != 0 and self._validator != noop:
+            raise RuntimeError('found key may be incorrect while validating')
+
+        zips, start_index, _ = _find_start(
+            self._path, self._rejected, start_index=index
+        )
+        gen = yield_from_zips(
+            self._path, zips, self._rejected, start_index, self._validator,
+        )
+        sample, key, _, _ = next(gen)
+        return key
+
+    def seek_index(self, index):
+        if index != 0 and self._validator != noop:
+            raise RuntimeError('can only seek to start while validating')
+
+        zips, start_index, _ = _find_start(
+            self._path, self._rejected, start_index=index
+        )
+
         self._gen = yield_from_zips(
             self._path, zips, self._rejected, start_index, self._validator,
         )
+        self._i = index
 
-    def get_key(self, index=None):
-        return self._get_next_sample()['key']
+    def seek_key(self, key):
+        zips, start_index, index = _find_start(
+            self._path, self._rejected, start_key=key
+        )
+
+        # count up to start_index in zip and all samples
+        # that are not in rejected to index
+        r = self._rejected[zips[0]]
+        for i in range(start_index):
+            if i not in r:
+                index += 1
+
+        if index != 0 and self._validator != noop:
+            raise RuntimeError('can only seek to start while validating')
+
+        self._gen = yield_from_zips(
+            self._path, zips, self._rejected, start_index, self._validator,
+        )
+        self._i = index
+
+    def get(self, index, yield_key=False, raw=False, copy=True):
+        if index != 0 and self._validator != noop:
+            raise RuntimeError('can only seek to start while validating')
+
+        zips, start_index, _ = _find_start(
+            self._path, self._rejected, start_index=index
+        )
+
+        gen = yield_from_zips(
+            self._path, zips, self._rejected, start_index, self._validator,
+        )
+        return self._get_next_sample(gen)
+
+    def _iter_impl(
+            self,
+            start=None,
+            stop=None,
+            step=None,
+            yield_key=False,
+            raw=False,
+            copy=True,
+            chunk_size=16,
+            chunk_threshold=3,
+    ):
+        if start != 0 and self._validator != noop:
+            raise RuntimeError('can only seek to start while validating')
+
+        zips, start_index, _ = _find_start(
+            self._path, self._rejected, start_index=start
+        )
+        gen = yield_from_zips(
+            self._path, zips, self._rejected, start_index, self._validator,
+        )
+
+        if raw:
+            pack = noop
+        else:
+            pack = self._packer.pack
+
+        if yield_key:
+            for i in range(start, stop):
+                sample = self._get_next_sample(gen)
+                if (i - start) % step:
+                    self._i = i
+                    yield sample['key'], pack(sample)
+        else:
+            for i in range(start, stop):
+                sample = self._get_next_sample(gen)
+                if (i - start) % step:
+                    self._i = i
+                    yield pack(sample)
+
+    def slice(self, start, stop=None, step=None, yield_key=False, raw=False, copy=True):
+        return self._iter_impl(start, stop, step, yield_key, raw, copy)
 
 
 def main():
