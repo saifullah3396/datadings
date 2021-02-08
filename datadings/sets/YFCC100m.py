@@ -421,13 +421,13 @@ class YFCC100mReader(Reader):
         if yield_key:
             for i in range(start, stop):
                 sample = self._get_next_sample(gen)
-                if (i - start) % step:
+                if (i - start) % step == 0:
                     self._i = i
                     yield sample['key'], pack(sample)
         else:
             for i in range(start, stop):
                 sample = self._get_next_sample(gen)
-                if (i - start) % step:
+                if (i - start) % step == 0:
                     self._i = i
                     yield pack(sample)
 
