@@ -191,7 +191,7 @@ def yield_from_zips(
 
 
 def _parse_rejected(f, rejected):
-    new_rejected = unpack(f, encoding='utf-8')
+    new_rejected = unpack(f)
     for z, r in new_rejected.items():
         rejected[z].update(r)
     return rejected
