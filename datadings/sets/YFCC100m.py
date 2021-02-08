@@ -406,6 +406,10 @@ class YFCC100mReader(Reader):
         if start != 0 and self._validator != noop:
             raise RuntimeError('can only seek to start while validating')
 
+        start, stop, step = slice(start, stop, step).indices(len(self))
+        if step < 1:
+            raise ValueError('step size must be >= 1')
+
         zips, start_index, _ = _find_start(
             self._path, self._rejected, start_index=start
         )
