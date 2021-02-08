@@ -170,17 +170,15 @@ def _find_start(
     return zips[zip_index:], start_index, partial_index
 
 
-def yield_from_zips(
+def _yield_from_zips(
         path,
         zips,
         rejected,
         start_index,
         validator=noop,
-        buffering=None,
 ):
     for z in zips:
-        with open(pt.join(path, z) + '.zip', 'rb', buffering=buffering) as f:
-            imagezip = zipfile.ZipFile(f)
+        with zipfile.ZipFile(pt.join(path, z) + '.zip') as imagezip:
             r = rejected[z]
             # filter out non-image members
             members = _filter_zipinfo(imagezip.infolist())
@@ -342,7 +340,7 @@ class YFCC100mReader(Reader):
         zips, start_index, _ = _find_start(
             self._path, self._rejected, start_index=index
         )
-        gen = yield_from_zips(
+        gen = _yield_from_zips(
             self._path, zips, self._rejected, start_index, self._validator,
         )
         sample, key, _, _ = next(gen)
@@ -356,7 +354,7 @@ class YFCC100mReader(Reader):
             self._path, self._rejected, start_index=index
         )
 
-        self._gen = yield_from_zips(
+        self._gen = _yield_from_zips(
             self._path, zips, self._rejected, start_index, self._validator,
         )
         self._i = index
@@ -376,7 +374,7 @@ class YFCC100mReader(Reader):
         if index != 0 and self._validator != noop:
             raise RuntimeError('can only seek to start while validating')
 
-        self._gen = yield_from_zips(
+        self._gen = _yield_from_zips(
             self._path, zips, self._rejected, start_index, self._validator,
         )
         self._i = index
@@ -389,7 +387,7 @@ class YFCC100mReader(Reader):
             self._path, self._rejected, start_index=index
         )
 
-        gen = yield_from_zips(
+        gen = _yield_from_zips(
             self._path, zips, self._rejected, start_index, self._validator,
         )
         return self._get_next_sample(gen)
@@ -411,9 +409,8 @@ class YFCC100mReader(Reader):
         zips, start_index, _ = _find_start(
             self._path, self._rejected, start_index=start
         )
-        gen = yield_from_zips(
+        gen = _yield_from_zips(
             self._path, zips, self._rejected, start_index, self._validator,
-            buffering=4*1024*1024,
         )
 
         if raw:
