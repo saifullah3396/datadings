@@ -1341,7 +1341,6 @@ static const char __pyx_k_num_hashes[] = "num_hashes";
 static const char __pyx_k_pyx_result[] = "__pyx_result";
 static const char __pyx_k_MemoryError[] = "MemoryError";
 static const char __pyx_k_PickleError[] = "PickleError";
-static const char __pyx_k_digest_size[] = "digest_size";
 static const char __pyx_k_pyx_checksum[] = "__pyx_checksum";
 static const char __pyx_k_stringsource[] = "stringsource";
 static const char __pyx_k_reduce_cython[] = "__reduce_cython__";
@@ -1362,7 +1361,6 @@ static PyObject *__pyx_n_s_data;
 static PyObject *__pyx_n_s_datadings_tools__cbloom;
 static PyObject *__pyx_n_s_dict;
 static PyObject *__pyx_n_s_digest;
-static PyObject *__pyx_n_s_digest_size;
 static PyObject *__pyx_n_s_encode;
 static PyObject *__pyx_n_s_getstate;
 static PyObject *__pyx_n_s_hashlib;
@@ -1399,7 +1397,6 @@ static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_10__reduc
 static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_12__setstate_cython__(struct __pyx_obj_9datadings_5tools_7_cbloom_BloomFilterBase *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_pf_9datadings_5tools_7_cbloom___pyx_unpickle_BloomFilterBase(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_tp_new_9datadings_5tools_7_cbloom_BloomFilterBase(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
-static PyObject *__pyx_int_16;
 static PyObject *__pyx_int_258424811;
 static PyObject *__pyx_tuple_;
 static PyObject *__pyx_codeobj__2;
@@ -1409,8 +1406,8 @@ static PyObject *__pyx_codeobj__2;
  * 
  * 
  * cdef inline void hash_key(object key, uint64_t* h1, uint64_t* h2):             # <<<<<<<<<<<<<<
- *     # generate 16 bytes of hash for key
- *     hashes = blake2s(key.encode('utf-8'), digest_size=16).digest()
+ *     # generate 16+ bytes of hash for key
+ *     hashes = blake2s(key.encode('utf-8')).digest()
  */
 
 static CYTHON_INLINE void __pyx_f_9datadings_5tools_7_cbloom_hash_key(PyObject *__pyx_v_key, uint64_t *__pyx_v_h1, uint64_t *__pyx_v_h2) {
@@ -1422,7 +1419,8 @@ static CYTHON_INLINE void __pyx_f_9datadings_5tools_7_cbloom_hash_key(PyObject *
   PyObject *__pyx_t_3 = NULL;
   PyObject *__pyx_t_4 = NULL;
   PyObject *__pyx_t_5 = NULL;
-  int __pyx_t_6;
+  PyObject *__pyx_t_6 = NULL;
+  int __pyx_t_7;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -1430,48 +1428,32 @@ static CYTHON_INLINE void __pyx_f_9datadings_5tools_7_cbloom_hash_key(PyObject *
 
   /* "datadings/tools/_cbloom.pyx":25
  * cdef inline void hash_key(object key, uint64_t* h1, uint64_t* h2):
- *     # generate 16 bytes of hash for key
- *     hashes = blake2s(key.encode('utf-8'), digest_size=16).digest()             # <<<<<<<<<<<<<<
+ *     # generate 16+ bytes of hash for key
+ *     hashes = blake2s(key.encode('utf-8')).digest()             # <<<<<<<<<<<<<<
  *     # retrieve 2 hash values
  *     cdef Py_buffer view
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_blake2s); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_v_key, __pyx_n_s_encode); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 25, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = NULL;
-  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
-    __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_4);
-    if (likely(__pyx_t_5)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
-      __Pyx_INCREF(__pyx_t_5);
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_blake2s); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_key, __pyx_n_s_encode); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_6 = NULL;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_5))) {
+    __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
+    if (likely(__pyx_t_6)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
+      __Pyx_INCREF(__pyx_t_6);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_4, function);
+      __Pyx_DECREF_SET(__pyx_t_5, function);
     }
   }
-  __pyx_t_3 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_5, __pyx_kp_u_utf_8) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_kp_u_utf_8);
-  __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 25, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __pyx_t_4 = (__pyx_t_6) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_6, __pyx_kp_u_utf_8) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_kp_u_utf_8);
+  __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+  if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 25, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GIVEREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3);
-  __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 25, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_digest_size, __pyx_int_16) < 0) __PYX_ERR(0, 25, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 25, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_digest); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 25, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_t_5 = NULL;
-  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_3))) {
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
     __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_3);
     if (likely(__pyx_t_5)) {
       PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
@@ -1480,8 +1462,27 @@ static CYTHON_INLINE void __pyx_f_9datadings_5tools_7_cbloom_hash_key(PyObject *
       __Pyx_DECREF_SET(__pyx_t_3, function);
     }
   }
-  __pyx_t_1 = (__pyx_t_5) ? __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_5) : __Pyx_PyObject_CallNoArg(__pyx_t_3);
+  __pyx_t_2 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_5, __pyx_t_4) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_digest); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_2 = NULL;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_3))) {
+    __pyx_t_2 = PyMethod_GET_SELF(__pyx_t_3);
+    if (likely(__pyx_t_2)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+      __Pyx_INCREF(__pyx_t_2);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_3, function);
+    }
+  }
+  __pyx_t_1 = (__pyx_t_2) ? __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2) : __Pyx_PyObject_CallNoArg(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 25, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -1495,7 +1496,7 @@ static CYTHON_INLINE void __pyx_f_9datadings_5tools_7_cbloom_hash_key(PyObject *
  *     h1[0] = ntoh64((<uint64_t*>view.buf)[0])
  *     h2[0] = ntoh64((<uint64_t*>view.buf)[1])
  */
-  __pyx_t_6 = PyObject_GetBuffer(__pyx_v_hashes, (&__pyx_v_view), PyBUF_SIMPLE); if (unlikely(__pyx_t_6 == ((int)-1))) __PYX_ERR(0, 28, __pyx_L1_error)
+  __pyx_t_7 = PyObject_GetBuffer(__pyx_v_hashes, (&__pyx_v_view), PyBUF_SIMPLE); if (unlikely(__pyx_t_7 == ((int)-1))) __PYX_ERR(0, 28, __pyx_L1_error)
 
   /* "datadings/tools/_cbloom.pyx":29
  *     cdef Py_buffer view
@@ -1528,8 +1529,8 @@ static CYTHON_INLINE void __pyx_f_9datadings_5tools_7_cbloom_hash_key(PyObject *
  * 
  * 
  * cdef inline void hash_key(object key, uint64_t* h1, uint64_t* h2):             # <<<<<<<<<<<<<<
- *     # generate 16 bytes of hash for key
- *     hashes = blake2s(key.encode('utf-8'), digest_size=16).digest()
+ *     # generate 16+ bytes of hash for key
+ *     hashes = blake2s(key.encode('utf-8')).digest()
  */
 
   /* function exit code */
@@ -1540,6 +1541,7 @@ static CYTHON_INLINE void __pyx_f_9datadings_5tools_7_cbloom_hash_key(PyObject *
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
   __Pyx_WriteUnraisable("datadings.tools._cbloom.hash_key", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_hashes);
@@ -1950,7 +1952,7 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_4__getbuffer__(
  *         buffer.strides = NULL
  *         buffer.suboffsets = NULL             # <<<<<<<<<<<<<<
  * 
- *     @cython.boundscheck(False)
+ *     @cython.cdivision(True)
  */
   __pyx_v_buffer->suboffsets = NULL;
 
@@ -1972,8 +1974,8 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_4__getbuffer__(
   return __pyx_r;
 }
 
-/* "datadings/tools/_cbloom.pyx":71
- *     @cython.nonecheck(False)
+/* "datadings/tools/_cbloom.pyx":68
+ * 
  *     @cython.cdivision(True)
  *     def __iadd__(self, key):             # <<<<<<<<<<<<<<
  *         f = self.data
@@ -2011,7 +2013,7 @@ static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_6__iadd__
   int __pyx_t_5;
   __Pyx_RefNannySetupContext("__iadd__", 0);
 
-  /* "datadings/tools/_cbloom.pyx":72
+  /* "datadings/tools/_cbloom.pyx":69
  *     @cython.cdivision(True)
  *     def __iadd__(self, key):
  *         f = self.data             # <<<<<<<<<<<<<<
@@ -2021,7 +2023,7 @@ static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_6__iadd__
   __pyx_t_1 = __pyx_v_self->data;
   __pyx_v_f = __pyx_t_1;
 
-  /* "datadings/tools/_cbloom.pyx":73
+  /* "datadings/tools/_cbloom.pyx":70
  *     def __iadd__(self, key):
  *         f = self.data
  *         cdef uint64_t b=self.num_bits, h1=0, h2=0, index, x             # <<<<<<<<<<<<<<
@@ -2033,17 +2035,17 @@ static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_6__iadd__
   __pyx_v_h1 = 0;
   __pyx_v_h2 = 0;
 
-  /* "datadings/tools/_cbloom.pyx":77
+  /* "datadings/tools/_cbloom.pyx":73
+ *         cdef uint8_t y
  *         cdef int k
- * 
  *         hash_key(key, &h1, &h2)             # <<<<<<<<<<<<<<
  *         for k in range(self.num_hashes):
  *             index = (h1 + k * h2) % b
  */
   __pyx_f_9datadings_5tools_7_cbloom_hash_key(__pyx_v_key, (&__pyx_v_h1), (&__pyx_v_h2));
 
-  /* "datadings/tools/_cbloom.pyx":78
- * 
+  /* "datadings/tools/_cbloom.pyx":74
+ *         cdef int k
  *         hash_key(key, &h1, &h2)
  *         for k in range(self.num_hashes):             # <<<<<<<<<<<<<<
  *             index = (h1 + k * h2) % b
@@ -2054,7 +2056,7 @@ static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_6__iadd__
   for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
     __pyx_v_k = __pyx_t_5;
 
-    /* "datadings/tools/_cbloom.pyx":79
+    /* "datadings/tools/_cbloom.pyx":75
  *         hash_key(key, &h1, &h2)
  *         for k in range(self.num_hashes):
  *             index = (h1 + k * h2) % b             # <<<<<<<<<<<<<<
@@ -2063,7 +2065,7 @@ static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_6__iadd__
  */
     __pyx_v_index = ((__pyx_v_h1 + (__pyx_v_k * __pyx_v_h2)) % __pyx_v_b);
 
-    /* "datadings/tools/_cbloom.pyx":80
+    /* "datadings/tools/_cbloom.pyx":76
  *         for k in range(self.num_hashes):
  *             index = (h1 + k * h2) % b
  *             x = index >> 3             # <<<<<<<<<<<<<<
@@ -2072,7 +2074,7 @@ static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_6__iadd__
  */
     __pyx_v_x = (__pyx_v_index >> 3);
 
-    /* "datadings/tools/_cbloom.pyx":81
+    /* "datadings/tools/_cbloom.pyx":77
  *             index = (h1 + k * h2) % b
  *             x = index >> 3
  *             y = 1 << (index & 7)             # <<<<<<<<<<<<<<
@@ -2081,7 +2083,7 @@ static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_6__iadd__
  */
     __pyx_v_y = (1 << (__pyx_v_index & 7));
 
-    /* "datadings/tools/_cbloom.pyx":82
+    /* "datadings/tools/_cbloom.pyx":78
  *             x = index >> 3
  *             y = 1 << (index & 7)
  *             f[x] |= y             # <<<<<<<<<<<<<<
@@ -2092,20 +2094,20 @@ static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_6__iadd__
     (__pyx_v_f[__pyx_t_2]) = ((__pyx_v_f[__pyx_t_2]) | __pyx_v_y);
   }
 
-  /* "datadings/tools/_cbloom.pyx":83
+  /* "datadings/tools/_cbloom.pyx":79
  *             y = 1 << (index & 7)
  *             f[x] |= y
  *         return self             # <<<<<<<<<<<<<<
  * 
- *     @cython.boundscheck(False)
+ *     @cython.cdivision(True)
  */
   __Pyx_XDECREF(__pyx_r);
   __Pyx_INCREF(((PyObject *)__pyx_v_self));
   __pyx_r = ((PyObject *)__pyx_v_self);
   goto __pyx_L0;
 
-  /* "datadings/tools/_cbloom.pyx":71
- *     @cython.nonecheck(False)
+  /* "datadings/tools/_cbloom.pyx":68
+ * 
  *     @cython.cdivision(True)
  *     def __iadd__(self, key):             # <<<<<<<<<<<<<<
  *         f = self.data
@@ -2119,8 +2121,8 @@ static PyObject *__pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_6__iadd__
   return __pyx_r;
 }
 
-/* "datadings/tools/_cbloom.pyx":89
- *     @cython.nonecheck(False)
+/* "datadings/tools/_cbloom.pyx":82
+ * 
  *     @cython.cdivision(True)
  *     def __contains__(self, key):             # <<<<<<<<<<<<<<
  *         f = self.data
@@ -2159,7 +2161,7 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
   int __pyx_t_6;
   __Pyx_RefNannySetupContext("__contains__", 0);
 
-  /* "datadings/tools/_cbloom.pyx":90
+  /* "datadings/tools/_cbloom.pyx":83
  *     @cython.cdivision(True)
  *     def __contains__(self, key):
  *         f = self.data             # <<<<<<<<<<<<<<
@@ -2169,7 +2171,7 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
   __pyx_t_1 = __pyx_v_self->data;
   __pyx_v_f = __pyx_t_1;
 
-  /* "datadings/tools/_cbloom.pyx":91
+  /* "datadings/tools/_cbloom.pyx":84
  *     def __contains__(self, key):
  *         f = self.data
  *         cdef uint64_t b=self.num_bits, h1=0, h2=0, index, x             # <<<<<<<<<<<<<<
@@ -2181,17 +2183,17 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
   __pyx_v_h1 = 0;
   __pyx_v_h2 = 0;
 
-  /* "datadings/tools/_cbloom.pyx":95
+  /* "datadings/tools/_cbloom.pyx":87
+ *         cdef uint8_t y
  *         cdef int k
- * 
  *         hash_key(key, &h1, &h2)             # <<<<<<<<<<<<<<
  *         for k in range(self.num_hashes):
  *             index = (h1 + k * h2) % b
  */
   __pyx_f_9datadings_5tools_7_cbloom_hash_key(__pyx_v_key, (&__pyx_v_h1), (&__pyx_v_h2));
 
-  /* "datadings/tools/_cbloom.pyx":96
- * 
+  /* "datadings/tools/_cbloom.pyx":88
+ *         cdef int k
  *         hash_key(key, &h1, &h2)
  *         for k in range(self.num_hashes):             # <<<<<<<<<<<<<<
  *             index = (h1 + k * h2) % b
@@ -2202,7 +2204,7 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
   for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
     __pyx_v_k = __pyx_t_5;
 
-    /* "datadings/tools/_cbloom.pyx":97
+    /* "datadings/tools/_cbloom.pyx":89
  *         hash_key(key, &h1, &h2)
  *         for k in range(self.num_hashes):
  *             index = (h1 + k * h2) % b             # <<<<<<<<<<<<<<
@@ -2211,7 +2213,7 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
  */
     __pyx_v_index = ((__pyx_v_h1 + (__pyx_v_k * __pyx_v_h2)) % __pyx_v_b);
 
-    /* "datadings/tools/_cbloom.pyx":98
+    /* "datadings/tools/_cbloom.pyx":90
  *         for k in range(self.num_hashes):
  *             index = (h1 + k * h2) % b
  *             x = index >> 3             # <<<<<<<<<<<<<<
@@ -2220,7 +2222,7 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
  */
     __pyx_v_x = (__pyx_v_index >> 3);
 
-    /* "datadings/tools/_cbloom.pyx":99
+    /* "datadings/tools/_cbloom.pyx":91
  *             index = (h1 + k * h2) % b
  *             x = index >> 3
  *             y = 1 << (index & 7)             # <<<<<<<<<<<<<<
@@ -2229,7 +2231,7 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
  */
     __pyx_v_y = (1 << (__pyx_v_index & 7));
 
-    /* "datadings/tools/_cbloom.pyx":100
+    /* "datadings/tools/_cbloom.pyx":92
  *             x = index >> 3
  *             y = 1 << (index & 7)
  *             if f[x] & y <= 0:             # <<<<<<<<<<<<<<
@@ -2239,7 +2241,7 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
     __pyx_t_6 = ((((__pyx_v_f[__pyx_v_x]) & __pyx_v_y) <= 0) != 0);
     if (__pyx_t_6) {
 
-      /* "datadings/tools/_cbloom.pyx":101
+      /* "datadings/tools/_cbloom.pyx":93
  *             y = 1 << (index & 7)
  *             if f[x] & y <= 0:
  *                 return False             # <<<<<<<<<<<<<<
@@ -2248,7 +2250,7 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
       __pyx_r = 0;
       goto __pyx_L0;
 
-      /* "datadings/tools/_cbloom.pyx":100
+      /* "datadings/tools/_cbloom.pyx":92
  *             x = index >> 3
  *             y = 1 << (index & 7)
  *             if f[x] & y <= 0:             # <<<<<<<<<<<<<<
@@ -2258,7 +2260,7 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
     }
   }
 
-  /* "datadings/tools/_cbloom.pyx":102
+  /* "datadings/tools/_cbloom.pyx":94
  *             if f[x] & y <= 0:
  *                 return False
  *         return True             # <<<<<<<<<<<<<<
@@ -2266,8 +2268,8 @@ static int __pyx_pf_9datadings_5tools_7_cbloom_15BloomFilterBase_8__contains__(s
   __pyx_r = 1;
   goto __pyx_L0;
 
-  /* "datadings/tools/_cbloom.pyx":89
- *     @cython.nonecheck(False)
+  /* "datadings/tools/_cbloom.pyx":82
+ * 
  *     @cython.cdivision(True)
  *     def __contains__(self, key):             # <<<<<<<<<<<<<<
  *         f = self.data
@@ -3269,7 +3271,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_datadings_tools__cbloom, __pyx_k_datadings_tools__cbloom, sizeof(__pyx_k_datadings_tools__cbloom), 0, 0, 1, 1},
   {&__pyx_n_s_dict, __pyx_k_dict, sizeof(__pyx_k_dict), 0, 0, 1, 1},
   {&__pyx_n_s_digest, __pyx_k_digest, sizeof(__pyx_k_digest), 0, 0, 1, 1},
-  {&__pyx_n_s_digest_size, __pyx_k_digest_size, sizeof(__pyx_k_digest_size), 0, 0, 1, 1},
   {&__pyx_n_s_encode, __pyx_k_encode, sizeof(__pyx_k_encode), 0, 0, 1, 1},
   {&__pyx_n_s_getstate, __pyx_k_getstate, sizeof(__pyx_k_getstate), 0, 0, 1, 1},
   {&__pyx_n_s_hashlib, __pyx_k_hashlib, sizeof(__pyx_k_hashlib), 0, 0, 1, 1},
@@ -3301,7 +3302,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(0, 46, __pyx_L1_error)
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 78, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 74, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -3329,7 +3330,6 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
 
 static CYTHON_SMALL_CODE int __Pyx_InitGlobals(void) {
   if (__Pyx_InitStrings(__pyx_string_tab) < 0) __PYX_ERR(0, 1, __pyx_L1_error);
-  __pyx_int_16 = PyInt_FromLong(16); if (unlikely(!__pyx_int_16)) __PYX_ERR(0, 1, __pyx_L1_error)
   __pyx_int_258424811 = PyInt_FromLong(258424811L); if (unlikely(!__pyx_int_258424811)) __PYX_ERR(0, 1, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;

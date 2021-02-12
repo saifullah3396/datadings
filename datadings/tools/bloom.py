@@ -27,6 +27,9 @@ class BloomFilter(BloomFilterBase):
         num_bytes = (num_bits >> 3) + (num_bits & 0b111 > 0)
         super().__init__(num_bits, num_hashes, num_bytes, data)
 
+    def __len__(self):
+        return memoryview(self).nbytes
+
     @classmethod
     def load(cls, fp):
         spec = unpack_msgpack(fp)

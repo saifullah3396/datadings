@@ -3,10 +3,14 @@ from typing import Union
 from pathlib import Path
 
 from .reader import Reader
+from ..msgpack import unpack
 from ..msgpack import unpackb
+from ..msgpack import make_unpacker
 from ..tools import load_md5file
 from ..tools import hash_md5hex
 from ..cached_property import cached_property
+
+import numpy as np
 
 
 class MsgpackReader(Reader):
@@ -49,9 +53,15 @@ class MsgpackReader(Reader):
             raise FileNotFoundError(f'{path} not found')
         self._path = path
         self._buffering = buffering
-        self._keys, self._positions = _load_index(path)
-        self._positions.append(path.stat().st_size)
-        self._len = len(self._keys)
+        # attempt to load offsets only
+        try:
+            self._positions = load_offsets(path)
+            self._keys = self._keys_lazy
+            self._len = index_len(path)
+        # if offsets are not found, try to load legacy index
+        except FileNotFoundError:
+            self._keys, self._positions = load_index_legacy(path)
+            self._len = len(self._keys)
 
     def __len__(self):
         return self._len
@@ -70,6 +80,10 @@ class MsgpackReader(Reader):
         return self._keys[index]
 
     @cached_property
+    def _keys_lazy(self):
+        return load_keys(self._path)
+
+    @cached_property
     def _key_to_index(self):
         return {k: i for i, k in enumerate(self._keys)}
 
@@ -81,8 +95,9 @@ class MsgpackReader(Reader):
         return open(self._path, 'rb', self._buffering)
 
     def get(self, index, yield_key=False, raw=False, copy=True):
-        offset = self._positions[index]
-        n = self._positions[index+1] - offset
+        pos = self._positions
+        offset = pos[index]
+        n = pos[index+1] - offset
         self._infile.seek(offset, 0)
         data = self._infile.read(n)
         if not raw:
@@ -162,7 +177,7 @@ class MsgpackReader(Reader):
         return hashes[self._path.name + '.index'] == md5
 
 
-def _load_index(path: Path):
+def load_index_legacy(path: Path):
     """
     Load dataset index as two lists of keys and positions.
 
@@ -177,6 +192,25 @@ def _load_index(path: Path):
         with path.open('rb', 0) as f:
             data = f.read()
         pairs = unpackb(data, object_hook=None, object_pairs_hook=list)
-        return [k for k, _ in pairs], [p for _, p in pairs]
+        positions = [p for _, p in pairs]
+        positions.append(path.stat().st_size)
+        return [k for k, _ in pairs], positions
     else:
         raise IOError('%r not found' % path)
+
+
+def index_len(path: Path):
+    path = path.parent / (path.name + '.keys')
+    with path.open('rb') as f:
+        return make_unpacker(f).read_array_header()
+
+
+def load_keys(path: Path):
+    path = path.parent / (path.name + '.keys')
+    with path.open('rb') as f:
+        return unpack(f)
+
+
+def load_offsets(path: Path):
+    path = path.parent / (path.name + '.offsets')
+    return np.fromfile(path, dtype=np.dtype('>u8')).astype(np.uint64)

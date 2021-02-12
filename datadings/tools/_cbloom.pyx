@@ -21,8 +21,8 @@ cdef extern from "_bswap.h":
 
 
 cdef inline void hash_key(object key, uint64_t* h1, uint64_t* h2):
-    # generate 16 bytes of hash for key
-    hashes = blake2s(key.encode('utf-8'), digest_size=16).digest()
+    # generate 16+ bytes of hash for key
+    hashes = blake2s(key.encode('utf-8')).digest()
     # retrieve 2 hash values
     cdef Py_buffer view
     PyObject_GetBuffer(hashes, &view, PyBUF_SIMPLE)
@@ -64,9 +64,6 @@ cdef class BloomFilterBase:
         buffer.strides = NULL
         buffer.suboffsets = NULL
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    @cython.nonecheck(False)
     @cython.cdivision(True)
     def __iadd__(self, key):
         f = self.data
@@ -81,9 +78,6 @@ cdef class BloomFilterBase:
             f[x] |= y
         return self
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    @cython.nonecheck(False)
     @cython.cdivision(True)
     def __contains__(self, key):
         f = self.data

@@ -1,8 +1,8 @@
-from struct import unpack
+from struct import Struct
 from hashlib import blake2s
 
 
-__all__ = ('BloomFilter',)
+__all__ = ('BloomFilterBase',)
 
 
 class BloomFilterBase(bytearray):
@@ -16,9 +16,9 @@ class BloomFilterBase(bytearray):
             self.clear()
             self.extend(data)
 
-    def __iadd__(self, key):
+    def __iadd__(self, key, __struct=Struct('>QQ')):
         b = self.num_bits
-        h1, h2 = unpack('>QQ', blake2s(key.encode('utf-8'), digest_size=16).digest())
+        h1, h2 = __struct.unpack_from(blake2s(key.encode('utf-8')).digest())
         for k in range(self.num_hashes):
             # simulate uint64 value range:
             # logical AND with max uint64 == 2**64-1
@@ -28,9 +28,9 @@ class BloomFilterBase(bytearray):
             self[x] |= y
         return self
 
-    def __contains__(self, key):
+    def __contains__(self, key, __struct=Struct('>QQ')):
         b = self.num_bits
-        h1, h2 = unpack('>QQ', blake2s(key.encode('utf-8'), digest_size=16).digest())
+        h1, h2 = __struct.unpack_from(blake2s(key.encode('utf-8')).digest())
         for k in range(self.num_hashes):
             # simulate uint64 value range:
             # logical AND with max uint64 == 2**64-1
