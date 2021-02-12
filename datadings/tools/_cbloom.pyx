@@ -4,7 +4,11 @@ from libc.string cimport memset
 from cpython.mem cimport PyMem_Malloc
 from cpython.mem cimport PyMem_Free
 from cpython.bytes cimport PyBytes_FromStringAndSize
-from cpython cimport Py_buffer, PyObject_CopyData
+from cpython cimport Py_buffer
+from cpython cimport PyObject_GetBuffer
+from cpython cimport PyBuffer_Release
+from cpython cimport PyBUF_SIMPLE
+from cpython cimport PyObject_CopyData
 
 # Python imports
 from hashlib import blake2s
@@ -14,6 +18,17 @@ import cython
 
 cdef extern from "_bswap.h":
     uint64_t ntoh64(const uint64_t)
+
+
+cdef inline void hash_key(object key, uint64_t* h1, uint64_t* h2):
+    # generate 16 bytes of hash for key
+    hashes = blake2s(key.encode('utf-8'), digest_size=16).digest()
+    # retrieve 2 hash values
+    cdef Py_buffer view
+    PyObject_GetBuffer(hashes, &view, PyBUF_SIMPLE)
+    h1[0] = ntoh64((<uint64_t*>view.buf)[0])
+    h2[0] = ntoh64((<uint64_t*>view.buf)[1])
+    PyBuffer_Release(&view)
 
 
 cdef class BloomFilterBase:
@@ -55,22 +70,14 @@ cdef class BloomFilterBase:
     @cython.cdivision(True)
     def __iadd__(self, key):
         f = self.data
-        cdef uint64_t b = self.num_bits
-        cdef uint64_t B = self.num_bytes
-        hashes = blake2s(key.encode('utf-8'), digest_size=16).digest()
-        cdef const uint8_t[:] hashp = hashes
-        cdef const uint64_t* hashp2 = <uint64_t*> &hashp[0]
-        cdef uint64_t h1 = ntoh64(hashp2[0])
-        cdef uint64_t h2 = ntoh64(hashp2[1])
-        cdef uint64_t index, x
+        cdef uint64_t b=self.num_bits, h1=0, h2=0, index, x
         cdef uint8_t y
         cdef int k
+        hash_key(key, &h1, &h2)
         for k in range(self.num_hashes):
             index = (h1 + k * h2) % b
             x = index >> 3
-            if x >= B:
-                raise IndexError('index out of range')
-            y = 1 << (index & 0b111)
+            y = 1 << (index & 7)
             f[x] |= y
         return self
 
@@ -80,22 +87,14 @@ cdef class BloomFilterBase:
     @cython.cdivision(True)
     def __contains__(self, key):
         f = self.data
-        cdef uint64_t b = self.num_bits
-        cdef uint64_t B = self.num_bytes
-        hashes = blake2s(key.encode('utf-8'), digest_size=16).digest()
-        cdef const uint8_t[:] hashp = hashes
-        cdef const uint64_t* hashp2 = <uint64_t*> &hashp[0]
-        cdef uint64_t h1 = ntoh64(hashp2[0])
-        cdef uint64_t h2 = ntoh64(hashp2[1])
-        cdef uint64_t index, x
+        cdef uint64_t b=self.num_bits, h1=0, h2=0, index, x
         cdef uint8_t y
-        cdef uint64_t k
+        cdef int k
+        hash_key(key, &h1, &h2)
         for k in range(self.num_hashes):
             index = (h1 + k * h2) % b
             x = index >> 3
-            if x >= B:
-                raise IndexError('index out of range')
-            y = 1 << (index & 0b111)
+            y = 1 << (index & 7)
             if f[x] & y <= 0:
                 return False
         return True
