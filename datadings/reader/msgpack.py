@@ -6,6 +6,7 @@ from .reader import Reader
 from ..msgpack import unpack
 from ..msgpack import unpackb
 from ..msgpack import make_unpacker
+from ..tools import path_append
 from ..tools import load_md5file
 from ..tools import hash_md5hex
 from ..cached_property import cached_property
@@ -123,7 +124,12 @@ class MsgpackReader(Reader):
         stop = start + n
 
         pos = self._positions
-        key = self._keys
+        # avoid lazy-loading keys if not necessary
+        if yield_key:
+            key = self._keys
+        else:
+            key = None
+
         offset = pos[start]
         n = pos[stop] - offset
         self._infile.seek(offset, 0)
@@ -157,9 +163,10 @@ class MsgpackReader(Reader):
         Returns:
             True if verification was successful.
         """
-        hashes = load_md5file(str(self._path) + '.md5')
-        md5 = hash_md5hex(self._path, read_size, progress)
-        return hashes[self._path.name] == md5
+        path = self._path
+        hashes = load_md5file(path_append(path, '.md5'))
+        md5 = hash_md5hex(path, read_size, progress)
+        return hashes[path.name] == md5
 
     def verify_index(self, read_size=512*1024, progress=False):
         """
@@ -172,9 +179,11 @@ class MsgpackReader(Reader):
         Returns:
             True if verification was successful.
         """
-        hashes = load_md5file(self._path + '.md5')
-        md5 = hash_md5hex(str(self._path) + '.index', read_size, progress)
-        return hashes[self._path.name + '.index'] == md5
+        path = self._path
+        hashes = load_md5file(path_append(path, '.md5'))
+        index_path = path_append(path, '.index')
+        md5 = hash_md5hex(index_path, read_size, progress)
+        return hashes[index_path.name] == md5
 
 
 def load_index_legacy(path: Path):
@@ -187,30 +196,30 @@ def load_index_legacy(path: Path):
     Returns:
         Keys and positions lists of equal length.
     """
-    path = path.parent / (path.name + '.index')
-    if path.exists():
-        with path.open('rb', 0) as f:
+    index_path = path_append(path, '.index')
+    if index_path.exists():
+        with index_path.open('rb', 0) as f:
             data = f.read()
         pairs = unpackb(data, object_hook=None, object_pairs_hook=list)
         positions = [p for _, p in pairs]
         positions.append(path.stat().st_size)
         return [k for k, _ in pairs], positions
     else:
-        raise IOError('%r not found' % path)
+        raise FileNotFoundError(str(index_path))
 
 
 def index_len(path: Path):
-    path = path.parent / (path.name + '.keys')
+    path = path_append(path, '.keys')
     with path.open('rb') as f:
         return make_unpacker(f).read_array_header()
 
 
 def load_keys(path: Path):
-    path = path.parent / (path.name + '.keys')
+    path = path_append(path, '.keys')
     with path.open('rb') as f:
         return unpack(f)
 
 
 def load_offsets(path: Path):
-    path = path.parent / (path.name + '.offsets')
+    path = path_append(path, '.offsets')
     return np.fromfile(path, dtype=np.dtype('>u8')).astype(np.uint64)
