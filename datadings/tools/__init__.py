@@ -8,6 +8,7 @@ from queue import Full
 from queue import Empty
 import hashlib
 import inspect
+from pathlib import Path
 
 import requests
 import gdown
@@ -63,6 +64,24 @@ def make_printer(bar_format=BAR_FORMAT, miniters=0,
         smoothing=smoothing,
         **kwargs
     )
+
+
+def path_append(path: Path, string: str):
+    """
+    Append a string to the name of a pathlib Path.
+
+    Parameters:
+        path: the path
+        string: the bit to append
+
+    Returns:
+        Path with stuff appended
+
+    Raises:
+        :py:class:`ValueError` if path does not have a name,
+        e.g., root ``/``.
+    """
+    return path.with_name(path.name + string)
 
 
 def hash_md5hex(path, read_size=64*1024, progress=False):
