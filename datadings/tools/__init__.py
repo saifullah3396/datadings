@@ -86,6 +86,35 @@ def path_append(path: Path, string: str):
     return path.with_name(path.name + string)
 
 
+def path_append_suffix(path: Path, suffix: str):
+    """
+    Appends the given suffix to the path
+    if the path does not end with said suffix::
+
+        >>> path_append_suffix(Path('some.file'), '.file')
+        >>> Path('some.file')
+        >>> path_append_suffix(Path('some.file'), '.txt')
+        >>> Path('some.file.txt')
+
+    Behaves like ``path_append``
+    if suffix does not startwith ``'.'`` (dot)::
+
+        >>> path_append_suffix(Path('some.file'), 'txt')
+        >>> Path('some.filetxt')
+
+    Parameters:
+        path: the base path
+        suffix: suffix to append if necessary
+
+    Returns:
+        Path that ends with suffix.
+    """
+    if path.suffix != suffix:
+        return path_append(path, suffix)
+    else:
+        return path
+
+
 def hash_md5hex(path, read_size=64*1024, progress=False):
     """
     Calculate the (hexadecimal) MD5 hash of a file.
