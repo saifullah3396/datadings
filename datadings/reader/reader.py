@@ -18,6 +18,7 @@ class Reader(metaclass=ABCMeta):
 
     * __exit__
     * __len__
+    * __contains__
     * find_key
     * find_index
     * get
@@ -33,6 +34,10 @@ class Reader(metaclass=ABCMeta):
 
     @abstractmethod
     def __len__(self):
+        pass
+
+    @abstractmethod
+    def __contains__(self, key):
         pass
 
     def __enter__(self):
