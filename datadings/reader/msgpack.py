@@ -3,15 +3,18 @@ from typing import Union
 from pathlib import Path
 
 from .reader import Reader
-from ..msgpack import unpack
-from ..msgpack import unpackb
-from ..msgpack import make_unpacker
 from ..tools import path_append
 from ..tools import load_md5file
 from ..tools import hash_md5hex
-from ..cached_property import cached_property
-
-import numpy as np
+from ..tools import hash_string
+from ..tools.cached_property import cached_property
+from ..tools.msgpack import unpackb
+from ..index import keys_len
+from ..index import load_keys
+from ..index import load_key_hashes
+from ..index import load_offsets
+from ..index import legacy_index_len
+from ..index import legacy_load_index
 
 
 class MsgpackReader(Reader):
@@ -50,19 +53,25 @@ class MsgpackReader(Reader):
     ):
         super().__init__()
         path = Path(path)
+
+        # check existence of data file
         if not path.exists():
             raise FileNotFoundError(f'{path} not found')
+
+        # check existence of legacy or new-style index
+        legacy_index_path = path_append(path, '.index')
+        offsets_path = path_append(path, '.offsets')
+        if not (offsets_path.exists() or legacy_index_path.exists()):
+            raise FileNotFoundError(f'neither {offsets_path} nor {legacy_index_path} found')
+
         self._path = path
         self._buffering = buffering
-        # attempt to load offsets only
+        # try to init from new-style index
         try:
-            self._positions = load_offsets(path)
-            self._keys = self._keys_lazy
-            self._len = index_len(path)
-        # if offsets are not found, try to load legacy index
+            self._len = keys_len(path)
+        # new-style index not found, try legacy index
         except FileNotFoundError:
-            self._keys, self._positions = load_index_legacy(path)
-            self._len = len(self._keys)
+            self._len = legacy_index_len(path)
 
     def __len__(self):
         return self._len
@@ -77,26 +86,52 @@ class MsgpackReader(Reader):
     def __del__(self):
         self._close()
 
-    def find_key(self, index):
-        return self._keys[index]
+    @cached_property
+    def _legacy_index(self):
+        return legacy_load_index(self._path)
 
     @cached_property
-    def _keys_lazy(self):
-        return load_keys(self._path)
+    def _keys(self):
+        try:
+            return load_keys(self._path)
+        except FileNotFoundError:
+            return self._legacy_index[0]
 
     @cached_property
-    def _key_to_index(self):
-        return {k: i for i, k in enumerate(self._keys)}
+    def _offsets(self):
+        try:
+            return load_offsets(self._path)
+        except FileNotFoundError:
+            return self._legacy_index[1]
 
-    def find_index(self, key):
-        return self._key_to_index[key]
+    @cached_property
+    def _hash_to_index(self):
+        try:
+            hashes = load_key_hashes(self._path)
+        except FileNotFoundError:
+            hashes = map(hash_string, self._keys)
+        return {h: i for i, h in enumerate(hashes)}
 
     @cached_property
     def _infile(self):
         return open(self._path, 'rb', self._buffering)
 
+    def find_index(self, key):
+        h = hash_string(key)
+        try:
+            return self._hash_to_index[h]
+        except KeyError:
+            raise KeyError(key)
+
+    def __contains__(self, key):
+        h = hash_string(key)
+        return h in self._hash_to_index
+
+    def find_key(self, index):
+        return self._keys[index]
+
     def get(self, index, yield_key=False, raw=False, copy=True):
-        pos = self._positions
+        pos = self._offsets
         offset = pos[index]
         n = pos[index+1] - offset
         self._infile.seek(offset, 0)
@@ -123,7 +158,7 @@ class MsgpackReader(Reader):
         n = (n - 1) // step * step + 1
         stop = start + n
 
-        pos = self._positions
+        pos = self._offsets
         # avoid lazy-loading keys if not necessary
         if yield_key:
             key = self._keys
@@ -184,42 +219,3 @@ class MsgpackReader(Reader):
         index_path = path_append(path, '.index')
         md5 = hash_md5hex(index_path, read_size, progress)
         return hashes[index_path.name] == md5
-
-
-def load_index_legacy(path: Path):
-    """
-    Load dataset index as two lists of keys and positions.
-
-    Parameters:
-        path: Path to dataset file without ``.index``.
-
-    Returns:
-        Keys and positions lists of equal length.
-    """
-    index_path = path_append(path, '.index')
-    if index_path.exists():
-        with index_path.open('rb', 0) as f:
-            data = f.read()
-        pairs = unpackb(data, object_hook=None, object_pairs_hook=list)
-        positions = [p for _, p in pairs]
-        positions.append(path.stat().st_size)
-        return [k for k, _ in pairs], positions
-    else:
-        raise FileNotFoundError(str(index_path))
-
-
-def index_len(path: Path):
-    path = path_append(path, '.keys')
-    with path.open('rb') as f:
-        return make_unpacker(f).read_array_header()
-
-
-def load_keys(path: Path):
-    path = path_append(path, '.keys')
-    with path.open('rb') as f:
-        return unpack(f)
-
-
-def load_offsets(path: Path):
-    path = path_append(path, '.offsets')
-    return np.fromfile(path, dtype=np.dtype('>u8')).astype(np.uint64)

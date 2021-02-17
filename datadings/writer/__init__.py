@@ -1,14 +1,17 @@
-import os
-import os.path as pt
-import hashlib
-from collections import OrderedDict
 from abc import ABCMeta
 from abc import abstractmethod
+from pathlib import Path
+import hashlib
 
-from ..tools.msgpack import make_packer
-from ..tools.msgpack import packb
 from ..tools import make_printer
 from ..tools import query_user
+from ..tools import hash_md5hex
+from ..tools import path_append
+from ..tools.msgpack import make_packer
+from ..index import write_offsets
+from ..index import write_keys
+from ..index import write_key_hashes
+from ..index import write_bloom_filter
 
 
 class Writer(object):
@@ -47,25 +50,25 @@ class Writer(object):
     """
     __metaclass__ = ABCMeta
 
-    def __init__(self, outfile, buffering=4*1024*1024, overwrite=False, **kwargs):
-        outfile = str(outfile)
+    def __init__(self, outfile, buffering=0, overwrite=False, **kwargs):
+        outfile = Path(outfile)
         self._path = outfile
-        outdir = pt.dirname(outfile)
-        if not pt.exists(outdir):
-            os.makedirs(outdir)
-        if pt.exists(outfile) and not overwrite:
-            answer = query_user(pt.basename(outfile) + ' exists, overwrite?')
+        outfile.parent.mkdir(parents=True, exist_ok=True)
+        if outfile.exists() and not overwrite:
+            answer = query_user(f'{outfile.name} exists, overwrite?')
             if answer == 'no':
                 raise FileExistsError(outfile)
             elif answer == 'abort':
                 raise KeyboardInterrupt(outfile)
-        self._outfile = open(outfile, 'wb', buffering)
-        self._index = OrderedDict()
+        self._outfile = outfile.open('wb', buffering)
+        self._keys = []
+        self._keys_set = set()
+        self._offsets = [0]
         self.written = 0
         self._hash = hashlib.md5()
         self._packer = make_packer()
         if 'desc' not in kwargs:
-            kwargs['desc'] = pt.basename(outfile)
+            kwargs['desc'] = outfile.name
         self._printer = make_printer(**kwargs)
 
     def __enter__(self):
@@ -80,21 +83,25 @@ class Writer(object):
         """
         self._outfile.flush()
         self._outfile.close()
-        with open(self._path + '.index', 'wb') as f:
-            indexdata = packb(self._index)
-            f.write(indexdata)
-            indexhash = hashlib.md5(indexdata).hexdigest()
-        with open(self._path + '.md5', 'w', encoding='utf-8') as f:
-            name = pt.basename(self._path)
-            f.write('%s  %s\n' % (self._hash.hexdigest(), name))
-            f.write('%s  %s\n' % (indexhash, name + '.index'))
+        files = [
+            write_offsets(self._offsets, self._path),
+            write_keys(self._keys, self._path),
+            write_key_hashes(self._keys, self._path),
+            write_bloom_filter(self._keys, self._path),
+        ]
+        with path_append(self._path, '.md5').open('w', encoding='utf-8') as f:
+            f.write(f'{self._hash.hexdigest()}  {self._path.name}\n')
+            for path in files:
+                f.write(f'{hash_md5hex(path)}  {path.name}\n')
         self._printer.close()
         print('%d samples written' % self.written)
 
     def _write_data(self, key, packed):
-        if key in self._index:
+        if key in self._keys_set:
             raise ValueError('duplicate key %r not allowed' % key)
-        self._index[key] = self._outfile.tell()
+        self._keys.append(key)
+        self._keys_set.add(key)
+        self._offsets.append(self._outfile.tell())
         self._hash.update(packed)
         self._outfile.write(packed)
         self.written += 1
