@@ -281,6 +281,13 @@ class YFCC100mReader(Reader):
     def __len__(self):
         return FILES_TOTAL - sum(len(r) for r in self._rejected.values())
 
+    def __contains__(self, key):
+        try:
+            self.find_index(key)
+            return True
+        except IndexError:
+            return False
+
     def __copy__(self):
         if self._validator != noop:
             raise RuntimeError('cannot copy a validating reader')
