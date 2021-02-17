@@ -11,7 +11,7 @@ from ..tools.msgpack import make_packer
 from ..index import write_offsets
 from ..index import write_keys
 from ..index import write_key_hashes
-from ..index import write_bloom_filter
+from ..index import write_filter
 
 
 class Writer(object):
@@ -87,7 +87,7 @@ class Writer(object):
             write_offsets(self._offsets, self._path),
             write_keys(self._keys, self._path),
             write_key_hashes(self._keys, self._path),
-            write_bloom_filter(self._keys, self._path),
+            write_filter(self._keys, self._path),
         ]
         with path_append(self._path, '.md5').open('w', encoding='utf-8') as f:
             f.write(f'{self._hash.hexdigest()}  {self._path.name}\n')

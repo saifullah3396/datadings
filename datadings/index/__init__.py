@@ -113,7 +113,7 @@ def write_key_hashes(keys, path):
     return path
 
 
-def write_bloom_filter(keys, path):
+def write_filter(keys, path):
     bf = BloomFilter(len(keys))
     for k in keys:
         bf += k

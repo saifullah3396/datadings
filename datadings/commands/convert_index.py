@@ -7,7 +7,7 @@ from ..tools import hash_md5hex
 from ..index import legacy_load_index
 from ..index import write_keys
 from ..index import write_key_hashes
-from ..index import write_bloom_filter
+from ..index import write_filter
 from ..index import write_offsets
 
 
@@ -21,7 +21,7 @@ def convert_index(path, outdir):
     paths = [
         write_keys(keys, outpath),
         write_key_hashes(keys, outpath),
-        write_bloom_filter(keys, outpath),
+        write_filter(keys, outpath),
         write_offsets(positions, outpath),
     ]
     new_suffixes = set(path.suffix for path in paths)
