@@ -83,7 +83,7 @@ class Writer(object):
         """
         self._outfile.flush()
         self._outfile.close()
-        files = [
+        paths = [
             write_offsets(self._offsets, self._path),
             write_keys(self._keys, self._path),
             write_key_hashes(self._keys, self._path),
@@ -91,7 +91,7 @@ class Writer(object):
         ]
         with path_append(self._path, '.md5').open('w', encoding='utf-8') as f:
             f.write(f'{self._hash.hexdigest()}  {self._path.name}\n')
-            for path in files:
+            for path in paths:
                 f.write(f'{hash_md5hex(path)}  {path.name}\n')
         self._printer.close()
         print('%d samples written' % self.written)

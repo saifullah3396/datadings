@@ -2,6 +2,8 @@
 """
 from pathlib import Path
 
+from ..tools import path_append
+from ..tools import hash_md5hex
 from ..index import legacy_load_index
 from ..index import write_keys
 from ..index import write_key_hashes
@@ -16,10 +18,23 @@ def convert_index(path, outdir):
         path = path.with_suffix('')
     keys, positions = legacy_load_index(path)
     outpath = (outdir or path.parent) / path.name
-    write_keys(keys, outpath)
-    write_key_hashes(keys, outpath)
-    write_bloom_filter(keys, outpath)
-    write_offsets(positions, outpath)
+    paths = [
+        write_keys(keys, outpath),
+        write_key_hashes(keys, outpath),
+        write_bloom_filter(keys, outpath),
+        write_offsets(positions, outpath),
+    ]
+    new_suffixes = set(path.suffix for path in paths)
+    with path_append(outpath, '.md5').open('r', encoding='utf-8') as f:
+        md5_lines = [
+            line for line in f
+            if Path(line.strip('\n')).suffix not in new_suffixes
+        ]
+    with path_append(outpath, '.md5').open('w', encoding='utf-8') as f:
+        for line in md5_lines:
+            f.write(line)
+        for path in paths:
+            f.write(f'{hash_md5hex(path)}  {path.name}\n')
 
 
 def main():
