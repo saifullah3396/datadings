@@ -118,6 +118,9 @@ class ListReader(Reader):
     def __len__(self):
         return len(self._samples)
 
+    def __contains__(self, key):
+        return key in self._index
+
     def find_key(self, index):
         return self._samples[index]['key']
 

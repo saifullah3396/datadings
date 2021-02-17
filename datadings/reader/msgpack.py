@@ -1,6 +1,7 @@
 from typing import Union
 
 from pathlib import Path
+import warnings
 
 from .reader import Reader
 from ..tools import path_append
@@ -10,12 +11,36 @@ from ..tools import hash_string
 from ..tools.cached_property import cached_property
 from ..tools.msgpack import unpackb
 from ..index import keys_len
+from ..index import load_offsets
 from ..index import load_keys
 from ..index import hash_keys
 from ..index import load_key_hashes
-from ..index import load_offsets
+from ..index import load_filter
 from ..index import legacy_index_len
 from ..index import legacy_load_index
+from ..index import SUFFIX_LEGACY_INDEX
+from ..index import SUFFIX_OFFSETS
+from ..index import SUFFIX_KEYS
+from ..index import SUFFIX_KEY_HASHES
+from ..index import SUFFIX_FILTER
+
+
+def _raise_if_none_of_paths_exists(*paths):
+    if not any(path.exists() for path in paths):
+        if len(paths) > 1:
+            raise FileNotFoundError(
+                'need at least one of '
+                + (', '.join(map(str, paths)))
+                + ' but none found'
+            )
+        else:
+            raise FileNotFoundError(f'{paths[0]} not found')
+
+
+def _warn_if_path_not_exists(path, suffix):
+    path = path_append(path, suffix)
+    if not path.exists():
+        warnings.warn(f'{path} not found, some functionality may not be available')
 
 
 class MsgpackReader(Reader):
@@ -60,10 +85,14 @@ class MsgpackReader(Reader):
             raise FileNotFoundError(f'{path} not found')
 
         # check existence of legacy or new-style index
-        legacy_index_path = path_append(path, '.index')
-        offsets_path = path_append(path, '.offsets')
-        if not (offsets_path.exists() or legacy_index_path.exists()):
-            raise FileNotFoundError(f'neither {offsets_path} nor {legacy_index_path} found')
+        _raise_if_none_of_paths_exists(
+            path_append(path, SUFFIX_LEGACY_INDEX),
+            path_append(path, SUFFIX_OFFSETS),
+        )
+        # check existence of optional files
+        _warn_if_path_not_exists(path, SUFFIX_KEYS)
+        _warn_if_path_not_exists(path, SUFFIX_KEY_HASHES)
+        _warn_if_path_not_exists(path, SUFFIX_FILTER)
 
         self._path = path
         self._buffering = buffering
@@ -106,6 +135,10 @@ class MsgpackReader(Reader):
             return self._legacy_index[1]
 
     @cached_property
+    def _filter(self):
+        return load_filter(self._path)
+
+    @cached_property
     def _hash_to_index(self):
         try:
             salt, hashes = load_key_hashes(self._path)
@@ -126,8 +159,12 @@ class MsgpackReader(Reader):
             raise KeyError(key)
 
     def __contains__(self, key):
-        h = hash_string(key)
-        return h in self._hash_to_index
+        if key in self._filter:
+            salt, hash_to_index = self._hash_to_index
+            h = hash_string(key, salt)
+            return h in hash_to_index
+        else:
+            return False
 
     def find_key(self, index):
         return self._keys[index]
@@ -218,6 +255,6 @@ class MsgpackReader(Reader):
         """
         path = self._path
         hashes = load_md5file(path_append(path, '.md5'))
-        index_path = path_append(path, '.index')
+        index_path = path_append(path, SUFFIX_LEGACY_INDEX)
         md5 = hash_md5hex(index_path, read_size, progress)
         return hashes[index_path.name] == md5
