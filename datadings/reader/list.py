@@ -7,7 +7,7 @@ from pathlib import Path
 from natsort import natsorted
 
 from .reader import Reader
-from ..msgpack import packb
+from ..tools.msgpack import packb
 
 
 def load_lines(path):

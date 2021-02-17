@@ -179,8 +179,8 @@ def calculate_set_weights(files):
 
 
 def main():
-    from ..argparse import make_parser
-    from ..argparse import argument_calculate_weights
+    from ..tools.argparse import make_parser
+    from ..tools.argparse import argument_calculate_weights
     from ..tools import prepare_indir
 
     parser = make_parser(__doc__)

@@ -105,8 +105,8 @@ def calculate_weights(files):
 
 
 def main():
-    from datadings.argparse import make_parser
-    from datadings.argparse import argument_calculate_weights
+    from ..tools.argparse import make_parser
+    from ..tools.argparse import argument_calculate_weights
     from ..tools import prepare_indir
 
     parser = make_parser(__doc__)

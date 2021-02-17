@@ -106,7 +106,7 @@ def write_sets(indir, outdir, args, crop_size=(CROP_SIZE, CROP_SIZE)):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..tools.argparse import make_parser
 
     parser = make_parser(__doc__, skip_verification=False, shuffle=False)
     args = parser.parse_args()

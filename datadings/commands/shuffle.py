@@ -17,9 +17,9 @@ def shuffle(infile, outfile):
 
 
 def main():
-    from ..argparse import make_parser_simple
-    from ..argparse import argument_infile
-    from ..argparse import argument_outfile_positional
+    from ..tools.argparse import make_parser_simple
+    from ..tools.argparse import argument_infile
+    from ..tools.argparse import argument_outfile_positional
 
     parser = make_parser_simple(__doc__)
     argument_infile(parser)

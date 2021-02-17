@@ -60,8 +60,8 @@ def reader_directory(args):
 
 
 def main():
-    from datadings.argparse import make_parser_simple
-    from datadings.argparse import argument_infile
+    from ..tools.argparse import make_parser_simple
+    from ..tools.argparse import argument_infile
 
     parser = make_parser_simple(__doc__)
     argument_infile(parser)

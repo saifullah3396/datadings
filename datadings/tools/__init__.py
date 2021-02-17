@@ -7,6 +7,8 @@ from queue import Queue
 from queue import Full
 from queue import Empty
 import hashlib
+from struct import Struct
+from hashlib import blake2s
 import inspect
 from pathlib import Path
 
@@ -126,6 +128,36 @@ def load_md5file(path):
     """
     with open(path, encoding='utf-8') as f:
         return dict(l.strip().split('  ')[::-1] for l in f)
+
+
+# noinspection PyIncorrectDocstring
+def hash_string(s: str, salt: bytes = b'', __struct=Struct('>Q')) -> int:
+    """
+    Hash a string using the blake2s algorithm.
+
+    Parameters:
+        s: the string
+        salt: optional salt, max 8 bytes
+
+    Returns:
+        first 8 bytes of the hash, interpreted as big-endian uint64
+    """
+    return __struct.unpack_from(blake2s(s.encode('utf-8'), salt=salt).digest())[0]
+
+
+# noinspection PyIncorrectDocstring
+def hash_string_bytes(s: str, salt: bytes = b'', __struct=Struct('>Q')) -> bytes:
+    """
+    Hash a string using the blake2s algorithm.
+
+    Parameters:
+        s: the string
+        salt: optional salt, max 8 bytes
+
+    Returns:
+        first 8 bytes of the hash
+    """
+    return blake2s(s.encode('utf-8'), salt=salt).digest()[:8]
 
 
 DOWNLOAD_BAR = '{rate_fmt}, ' \

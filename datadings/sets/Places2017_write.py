@@ -46,7 +46,7 @@ If you are unsure how to install OpenCV you can use pip:
     sys.exit(1)
 
 from ..writer import FileWriter
-from ..matlab import loadmat
+from ..tools.matlab import loadmat
 from .VOC2012_write import imagedata_to_array
 from .VOC2012_write import class_counts
 from .VOC2012_write import sorted_values
@@ -248,7 +248,7 @@ def extract_scenelabels(files, outdir):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..tools.argparse import make_parser
     from ..tools import prepare_indir
 
     parser = make_parser(__doc__)

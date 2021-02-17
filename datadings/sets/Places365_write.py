@@ -218,7 +218,7 @@ def write_sets(indir, outdir, args):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..tools.argparse import make_parser
 
     parser = make_parser(__doc__, shuffle=False)
     parser.add_argument(

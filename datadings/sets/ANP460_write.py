@@ -105,9 +105,9 @@ def write_sets(indir, outdir, shuffle=True):
 
 
 def main():
-    from datadings.argparse import make_parser_simple
-    from datadings.argparse import argument_indir
-    from datadings.argparse import argument_outdir
+    from ..tools.argparse import make_parser_simple
+    from ..tools.argparse import argument_indir
+    from ..tools.argparse import argument_outdir
 
     parser = make_parser_simple(__doc__)
     argument_indir(parser)

@@ -19,7 +19,7 @@ from ..writer import FileWriter
 from . import SaliencyData
 from . import SaliencyTimeseriesExperiment
 from ..tools import yield_threaded
-from ..matlab import loadmat
+from ..tools.matlab import loadmat
 from ..tools import document_keys
 
 
@@ -95,7 +95,7 @@ def write_sets(files, outdir, args):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..tools.argparse import make_parser
     from ..tools import prepare_indir
 
     parser = make_parser(__doc__)

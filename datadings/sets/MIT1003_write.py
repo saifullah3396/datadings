@@ -19,7 +19,7 @@ from collections import defaultdict
 import numpy as np
 
 from ..writer import FileWriter
-from ..matlab import loadmat
+from ..tools.matlab import loadmat
 from . import SaliencyData
 from . import SaliencyExperiment
 from ..tools import document_keys
@@ -104,7 +104,7 @@ def write_sets(files, outdir, args):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..tools.argparse import make_parser
     from ..tools import prepare_indir
 
     parser = make_parser(__doc__)

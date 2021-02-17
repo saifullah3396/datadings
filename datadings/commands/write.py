@@ -37,7 +37,7 @@ def format_writers(writers):
 
 
 def main():
-    from ..argparse import make_parser_simple
+    from ..tools.argparse import make_parser_simple
 
     writers = natsorted(find_writers())
 

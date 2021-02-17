@@ -29,8 +29,8 @@ from simplejpeg import decode_jpeg
 from PIL import Image
 
 from ..reader import Reader
-from ..msgpack import unpack
-from ..msgpack import make_packer
+from ..tools.msgpack import unpack
+from ..tools.msgpack import make_packer
 from . import ImageData
 from .YFCC100m_counts import FILE_COUNTS
 from .YFCC100m_counts import FILES_TOTAL

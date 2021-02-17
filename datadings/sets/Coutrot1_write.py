@@ -44,8 +44,8 @@ from ..writer import FileWriter
 from ..tools import print_over
 from . import SaliencyData
 from . import SaliencyExperiment
-from ..matlab import loadmat
-from ..matlab import iter_fields
+from ..tools.matlab import loadmat
+from ..tools.matlab import iter_fields
 from ..tools import document_keys
 
 
@@ -237,7 +237,7 @@ def write_sets(files, indir, outdir, args):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..tools.argparse import make_parser
     from ..tools import prepare_indir
 
     parser = make_parser(__doc__, shuffle=False)

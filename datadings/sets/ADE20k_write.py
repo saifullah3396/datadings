@@ -23,8 +23,8 @@ from PIL import Image
 from . import ADE20kData
 from ..writer import FileWriter
 from ..tools import yield_threaded
-from ..matlab import loadmat
-from ..matlab import iter_fields
+from ..tools.matlab import loadmat
+from ..tools.matlab import iter_fields
 from .VOC2012_write import imagedata_to_array
 from .VOC2012_write import class_counts
 from .VOC2012_write import sorted_values
@@ -180,9 +180,9 @@ def extract_scenelabels(files, outdir):
 
 
 def main():
-    from ..argparse import make_parser
-    from ..argparse import argument_calculate_weights
-    from ..argparse import argument_threads
+    from ..tools.argparse import make_parser
+    from ..tools.argparse import argument_calculate_weights
+    from ..tools.argparse import argument_threads
     from ..tools import prepare_indir
 
     parser = make_parser(__doc__)

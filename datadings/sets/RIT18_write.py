@@ -18,7 +18,7 @@ import numpy as np
 from ..writer import FileWriter
 from . import MaskedImageSegmentationData
 from .RIT18 import CROP_SIZE
-from ..matlab import loadmat
+from ..tools.matlab import loadmat
 from ..tools import split_array
 from ..tools import document_keys
 
@@ -91,7 +91,7 @@ def write_sets(files, outdir, args, crop_size=(CROP_SIZE, CROP_SIZE)):
 
 
 def main():
-    from ..argparse import make_parser
+    from ..tools.argparse import make_parser
     from ..tools import prepare_indir
 
     parser = make_parser(__doc__, shuffle=False)
