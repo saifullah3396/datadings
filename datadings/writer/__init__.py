@@ -101,9 +101,9 @@ class Writer(object):
             raise ValueError('duplicate key %r not allowed' % key)
         self._keys.append(key)
         self._keys_set.add(key)
-        self._offsets.append(self._outfile.tell())
         self._hash.update(packed)
         self._outfile.write(packed)
+        self._offsets.append(self._outfile.tell())
         self.written += 1
         self._printer()
 
