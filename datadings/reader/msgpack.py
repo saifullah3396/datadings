@@ -11,6 +11,7 @@ from ..tools.cached_property import cached_property
 from ..tools.msgpack import unpackb
 from ..index import keys_len
 from ..index import load_keys
+from ..index import hash_keys
 from ..index import load_key_hashes
 from ..index import load_offsets
 from ..index import legacy_index_len
@@ -107,19 +108,20 @@ class MsgpackReader(Reader):
     @cached_property
     def _hash_to_index(self):
         try:
-            hashes = load_key_hashes(self._path)
+            salt, hashes = load_key_hashes(self._path)
         except FileNotFoundError:
-            hashes = map(hash_string, self._keys)
-        return {h: i for i, h in enumerate(hashes)}
+            salt, hashes = hash_keys(self._keys)
+        return salt, {int(h): i for i, h in enumerate(hashes)}
 
     @cached_property
     def _infile(self):
         return open(self._path, 'rb', self._buffering)
 
     def find_index(self, key):
-        h = hash_string(key)
+        salt, hash_to_index = self._hash_to_index
+        h = hash_string(key, salt)
         try:
-            return self._hash_to_index[h]
+            return hash_to_index[h]
         except KeyError:
             raise KeyError(key)
 

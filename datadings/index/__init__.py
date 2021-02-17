@@ -69,8 +69,8 @@ def legacy_load_index(path: Path):
     return [k for k, _ in pairs], positions
 
 
-def write_offsets(positions, path):
-    offsets = np.array(positions, dtype=np.dtype('>u8'))
+def write_offsets(offsets, path):
+    offsets = np.array(offsets, dtype=np.dtype('>u8'))
     path = path_append_suffix(path, SUFFIX_OFFSETS)
     with path.open('wb') as f:
         f.write(memoryview(offsets))
