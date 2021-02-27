@@ -1,22 +1,21 @@
 from pathlib import Path
 import sqlite3
 import io
-from multiprocessing.pool import ThreadPool
-from queue import Queue
 from hashlib import md5
-from functools import partial
-import time
+import itertools as it
+from math import ceil
+from math import sqrt
 
 from PIL import Image
 import requests
 import numpy as np
+import pypeln as pl
 from simplejpeg import decode_jpeg
+from simplejpeg import decode_jpeg_header
 from simplejpeg import encode_jpeg
-
 
 from ..writer import FileWriter
 # from ..tools import document_keys
-from ..tools import yield_threaded
 
 
 # __doc__ += document_keys(ImageSegmentationData)
@@ -36,6 +35,9 @@ TOTAL = {
 
 
 def encode_fast(arr, quality=85, colorspace='RGB', colorsubsampling='422'):
+    h, w = arr.shape[:2]
+    if h*w <= 0.5*375*500:
+        colorsubsampling = '444'
     return encode_jpeg(
         arr,
         quality=quality,
@@ -78,13 +80,6 @@ def validate_image(data):
         return None, False
 
 
-class IterableQueue(Queue):
-    _sentinel = object()
-
-    def __iter__(self):
-        return iter(self.get, self._sentinel)
-
-
 BYTE_MAP = {'%02x' % v: '%x' % v for v in range(256)}
 
 
@@ -112,7 +107,6 @@ def generate_samples_from_db(path, table='yfcc100m_dataset'):
         row = dict(zip(cols, row))
         row['hash'] = yfcc_hash(row['downloadurl'])
         yield row
-        #time.sleep(1)
 
 
 def read(*paths):
@@ -131,80 +125,89 @@ def is_image(row):
     return row['marker'] == 0
 
 
-def get_data(row, data_directory, url_prefix, try_flickr):
-    kind = ('images',) if is_image(row) else ('videos', 'mp4')
-    ext = '.jpg' if is_image(row) else '.mp4'
-    h = row['hash']
-    parts = 'data', *kind, h[:3], h[3:6], h+ext
-    data = None
-    # try to read from disk first
-    if data_directory is not None:
-        data = read(data_directory, *parts)
-    # next try AWS
-    if data is None:
-        data = download(url_prefix, *parts)
-        # AWS returned XML instead of image
-        if data.startswith(b'<?xml'):
-            data = None
-    # finally, try Flickr if enabled
-    if data is None and try_flickr:
-        data = download(row['downloadurl'])
-    # early reject images based on data size
-    # very small image are most likely garbage
-    # 9218 bytes is a Flickr placeholder image
-    if data is None or len(data) < 2600:  # or len(data) == 9218:
+class SampleMaker:
+    def __init__(
+            self,
+            data_directory,
+            url_prefix,
+            try_flickr,
+            compress,
+            target_pixels=375*500,
+    ):
+        self.data_directory = data_directory
+        self.url_prefix = url_prefix
+        self.try_flickr = try_flickr
+        self.compress = compress
+        self.target_pixels = target_pixels
+        self.target_size = int(ceil(sqrt(target_pixels)))
+
+    def get_data(self, row):
+        kind = ('images',) if is_image(row) else ('videos', 'mp4')
+        ext = '.jpg' if is_image(row) else '.mp4'
+        h = row['hash']
+        parts = 'data', *kind, h[:3], h[3:6], h+ext
         data = None
-    return data
+        # try to read from disk first
+        if self.data_directory is not None:
+            data = read(self.data_directory, *parts)
+        # next try AWS
+        if data is None:
+            data = download(self.url_prefix, *parts)
+            # AWS returned XML instead of image
+            if data.startswith(b'<?xml'):
+                data = None
+        # finally, try Flickr if enabled
+        if data is None and self.try_flickr:
+            data = download(row['downloadurl'])
+        # early reject images based on data size
+        # very small image are most likely garbage
+        # 9218 bytes is a Flickr placeholder image
+        if data is None or len(data) < 2600:  # or len(data) == 9218:
+            data = None
+        return data
 
-
-def create_sample(
-        row,
-        data_directory=None,
-        url_prefix=AWS_URL_PREFIX,
-        try_flickr=False,
-        compress=True
-):
-    data = get_data(row, data_directory, url_prefix, try_flickr)
-    if data is None:
-        return None
-    data, compressed = validate_image(data)
-    if data is None:
-        return None
-    if compress and not compressed:
-        arr = decode_jpeg(data)
-        data = encode_fast(arr)
-    row['image' if is_image(row) else 'video'] = data
-    return row
+    def create_sample(self, row):
+        data = self.get_data(row)
+        if data is None:
+            return None
+        data, compressed = validate_image(data)
+        if data is None:
+            return None
+        if self.compress and not compressed:
+            h, w, _, _ = decode_jpeg_header(data)
+            if h * w > 0.5 * self.target_pixels:
+                ts = self.target_size
+                arr = decode_jpeg(data, min_width=ts, min_height=ts)
+                data = encode_fast(arr)
+        row['image' if is_image(row) else 'video'] = data
+        return row
 
 
 def write(files, outdir, args):
     gen = generate_samples_from_db(files['yfcc']['path'])
-    gen = yield_threaded(gen)
-    fun = partial(
-        create_sample,
+    maker = SampleMaker(
         data_directory=args.data_directory,
         url_prefix=args.url_prefix,
         try_flickr=args.try_flickr,
+        compress=args.compress,
     )
-    pool = ThreadPool(args.threads)
-    writer = None
-    offset = 0
-    for j, sample in enumerate(pool.imap(fun, gen)):
-        if sample is None:
-            offset += 1
-            continue
-        i = j - offset
-        if i % 100_000 == 0:
-            if writer is not None:
-                writer.close()
-            path = Path(outdir, 'yfcc.msgpack.%06d' % (i // 100_000))
-            writer = FileWriter(path, total=100_000)
-        # TODO get real rowid
-        sample['key'] = str(i)
-
-        writer.write(sample)
-    if writer is not None:
-        writer.close()
+    stage = pl.thread.from_iterable(gen, maxsize=10000)
+    stage = pl.thread.filter(
+        maker.create_sample,
+        stage,
+        workers=args.threads,
+        maxsize=args.threads,
+    )
+    for i in range(1000):
+        path = Path(outdir, 'yfcc.msgpack.%06d' % i)
+        writer = FileWriter(path, total=100_000, overwrite=args.no_confirm)
+        with writer:
+            for sample in it.islice(stage, 100_000):
+                # TODO get real rowid
+                sample['key'] = str(writer.written)
+                writer.write(sample)
+                if writer.written == 100000:
+                    break
 
 
 def main():
@@ -212,7 +215,7 @@ def main():
     from ..tools.argparse import argument_threads
     from ..tools import prepare_indir
 
-    parser = make_parser(__doc__)
+    parser = make_parser(__doc__, shuffle=False)
     parser.add_argument(
         '--data-directory',
         type=str,
@@ -233,17 +236,22 @@ def main():
         help='Lambda function to select samples.'
     )
     parser.add_argument(
+        '--url-prefix',
+        default=AWS_URL_PREFIX,
+        help='Data url prefix.'
+    )
+    parser.add_argument(
         '--try-flickr',
         action='store_true',
         help='Try to download from Flickr '
              'if image is not available on AWS.'
     )
     parser.add_argument(
-        '--url-prefix',
-        default=AWS_URL_PREFIX,
-        help='Data url prefix.'
+        '--compress',
+        action='store_true',
+        help='Re-compress images with quality 85 and 422 subsampling.'
     )
-    argument_threads(parser, default=100)
+    argument_threads(parser, default=8, max_threads=1000)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
 
