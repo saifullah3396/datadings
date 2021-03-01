@@ -249,6 +249,18 @@ def iter_socket(sock):
         yield str(key, encoding='utf-8'), sample
 
 
+def start_processes(*procs):
+    for proc in procs:
+        proc.start()
+
+
+def stop_processes(*procs):
+    for proc in procs:
+        proc.stop()
+    for proc in procs:
+        proc.terminate()
+
+
 def write(files, outdir, args):
     work_addr = f'ipc://yfcc_work.ipc'
     result_addr = f'ipc://yfcc_result.ipc'
@@ -262,13 +274,11 @@ def write(files, outdir, args):
         compress=args.compress,
     )
     producer = Producer(files['yfcc']['path'], work_addr)
-    producer.start()
     workers = [Worker(maker, work_addr, result_addr) for _ in range(args.threads)]
-    for worker in workers:
-        worker.start()
-    result_iter = iter_socket(result)
+    start_processes(producer, *workers)
 
     try:
+        result_iter = iter_socket(result)
         for i in range(1000):
             path = Path(outdir, 'yfcc.msgpack.%06d' % i)
             writer = RawWriter(path, total=100_000, overwrite=args.no_confirm)
@@ -276,12 +286,7 @@ def write(files, outdir, args):
                 for key, sample in it.islice(result_iter, 100_000):
                     writer.write(key, sample)
     finally:
-        producer.stop()
-        for worker in workers:
-            worker.stop()
-        for worker in workers:
-            worker.terminate()
-        producer.terminate()
+        stop_processes(producer, *workers)
 
 
 def main():
