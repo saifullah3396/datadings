@@ -5,16 +5,20 @@ from hashlib import md5
 import itertools as it
 from math import ceil
 from math import sqrt
+import uuid
+import multiprocessing as mp
 
 from PIL import Image
 import requests
 import numpy as np
-import pypeln as pl
+import zmq
 from simplejpeg import decode_jpeg
 from simplejpeg import decode_jpeg_header
 from simplejpeg import encode_jpeg
 
-from ..writer import FileWriter
+from ..writer import RawWriter
+from ..tools.msgpack import packb
+from ..tools.msgpack import unpackb
 # from ..tools import document_keys
 
 
@@ -105,7 +109,7 @@ def generate_samples_from_db(path, table='yfcc100m_dataset'):
     result = conn.execute(f'select * from {table}')
     for row in result:
         row = dict(zip(cols, row))
-        row['hash'] = yfcc_hash(row['downloadurl'])
+        row['key'] = yfcc_hash(row['downloadurl'])
         yield row
 
 
@@ -144,7 +148,7 @@ class SampleMaker:
     def get_data(self, row):
         kind = ('images',) if is_image(row) else ('videos', 'mp4')
         ext = '.jpg' if is_image(row) else '.mp4'
-        h = row['hash']
+        h = row['key']
         parts = 'data', *kind, h[:3], h[3:6], h+ext
         data = None
         # try to read from disk first
@@ -180,34 +184,104 @@ class SampleMaker:
                 arr = decode_jpeg(data, min_width=ts, min_height=ts)
                 data = encode_fast(arr)
         row['image' if is_image(row) else 'video'] = data
+        # TODO get real rowid from original dataset
         return row
 
 
+class Process(mp.Process):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self._running = mp.Value('b')
+        self.running = True
+
+    @property
+    def running(self):
+        return self._running.value > 0
+
+    @running.setter
+    def running(self, value):
+        self._running.value = bool(value)
+
+    def stop(self):
+        self.running = False
+
+
+class Producer(Process):
+    def __init__(self, dbpath, work_addr):
+        super().__init__()
+        self.dbpath = dbpath
+        self.work_addr = work_addr
+
+    def run(self):
+        ctx = zmq.Context(io_threads=1)
+        work = ctx.socket(zmq.PUSH)
+        work.setsockopt(zmq.SNDHWM, 1000)
+        work.bind(self.work_addr)
+        gen = generate_samples_from_db(self.dbpath)
+        while self.running:
+            work.send(packb(next(gen)))
+
+
+class Worker(Process):
+    def __init__(self, samplemaker, work_addr, result_addr):
+        super().__init__()
+        self.samplemaker = samplemaker
+        self.work_addr = work_addr
+        self.result_addr = result_addr
+
+    def run(self):
+        ctx = zmq.Context(io_threads=1)
+        work = ctx.socket(zmq.PULL)
+        work.connect(self.work_addr)
+        result = ctx.socket(zmq.PUSH)
+        result.connect(self.result_addr)
+        while self.running:
+            row = unpackb(work.recv(copy=False))
+            sample = self.samplemaker.create_sample(row)
+            if sample is not None:
+                data = packb(sample)
+                result.send_multipart((sample['key'].encode('utf-8'), data))
+
+
+def iter_socket(sock):
+    while True:
+        key, sample = sock.recv_multipart(copy=False)
+        yield str(key, encoding='utf-8'), sample
+
+
 def write(files, outdir, args):
-    gen = generate_samples_from_db(files['yfcc']['path'])
+    work_addr = f'ipc://yfcc_work.ipc'
+    result_addr = f'ipc://yfcc_result.ipc'
+    ctx = zmq.Context(io_threads=1)
+    result = ctx.socket(zmq.PULL)
+    result.bind(result_addr)
     maker = SampleMaker(
         data_directory=args.data_directory,
         url_prefix=args.url_prefix,
         try_flickr=args.try_flickr,
         compress=args.compress,
     )
-    stage = pl.thread.from_iterable(gen, maxsize=10000)
-    stage = pl.thread.filter(
-        maker.create_sample,
-        stage,
-        workers=args.threads,
-        maxsize=args.threads,
-    )
-    for i in range(1000):
-        path = Path(outdir, 'yfcc.msgpack.%06d' % i)
-        writer = FileWriter(path, total=100_000, overwrite=args.no_confirm)
-        with writer:
-            for sample in it.islice(stage, 100_000):
-                # TODO get real rowid
-                sample['key'] = str(writer.written)
-                writer.write(sample)
-                if writer.written == 100000:
-                    break
+    producer = Producer(files['yfcc']['path'], work_addr)
+    producer.start()
+    workers = [Worker(maker, work_addr, result_addr) for _ in range(args.threads)]
+    for worker in workers:
+        worker.start()
+    result_iter = iter_socket(result)
+
+    try:
+        for i in range(1000):
+            path = Path(outdir, 'yfcc.msgpack.%06d' % i)
+            writer = RawWriter(path, total=100_000, overwrite=args.no_confirm)
+            with writer:
+                for key, sample in it.islice(result_iter, 100_000):
+                    writer.write(key, sample)
+    finally:
+        producer.stop()
+        for worker in workers:
+            worker.stop()
+        for worker in workers:
+            worker.terminate()
+        producer.terminate()
 
 
 def main():
