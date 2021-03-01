@@ -5,7 +5,6 @@ from hashlib import md5
 import itertools as it
 from math import ceil
 from math import sqrt
-import uuid
 import multiprocessing as mp
 
 from PIL import Image
@@ -191,6 +190,7 @@ class SampleMaker:
 class Process(mp.Process):
     def __init__(self, **kwargs):
         super().__init__()
+        self.daemon = True
         self._running = mp.Value('b')
         self.running = True
 
@@ -214,7 +214,9 @@ class Producer(Process):
 
     def run(self):
         ctx = zmq.Context(io_threads=1)
+        # noinspection PyUnresolvedReferences
         work = ctx.socket(zmq.PUSH)
+        # noinspection PyUnresolvedReferences
         work.setsockopt(zmq.SNDHWM, 1000)
         work.bind(self.work_addr)
         gen = generate_samples_from_db(self.dbpath)
@@ -223,6 +225,8 @@ class Producer(Process):
 
 
 class Worker(Process):
+    error_message = b'Break it down! Oh-oh. Stop! Error time!'
+
     def __init__(self, samplemaker, work_addr, result_addr):
         super().__init__()
         self.samplemaker = samplemaker
@@ -231,16 +235,22 @@ class Worker(Process):
 
     def run(self):
         ctx = zmq.Context(io_threads=1)
+        # noinspection PyUnresolvedReferences
         work = ctx.socket(zmq.PULL)
         work.connect(self.work_addr)
+        # noinspection PyUnresolvedReferences
         result = ctx.socket(zmq.PUSH)
         result.connect(self.result_addr)
-        while self.running:
-            row = unpackb(work.recv(copy=False))
-            sample = self.samplemaker.create_sample(row)
-            if sample is not None:
-                data = packb(sample)
-                result.send_multipart((sample['key'].encode('utf-8'), data))
+        # noinspection PyBroadException
+        try:
+            while self.running:
+                row = unpackb(work.recv(copy=False))
+                sample = self.samplemaker.create_sample(row)
+                if sample is not None:
+                    data = packb(sample)
+                    result.send_multipart((sample['key'].encode('utf-8'), data))
+        except:
+            work.send_multipart(b'', self.error_message)
 
 
 def iter_socket(sock):
@@ -265,6 +275,7 @@ def write(files, outdir, args):
     work_addr = f'ipc://yfcc_work.ipc'
     result_addr = f'ipc://yfcc_result.ipc'
     ctx = zmq.Context(io_threads=1)
+    # noinspection PyUnresolvedReferences
     result = ctx.socket(zmq.PULL)
     result.bind(result_addr)
     maker = SampleMaker(
@@ -284,6 +295,8 @@ def write(files, outdir, args):
             writer = RawWriter(path, total=100_000, overwrite=args.no_confirm)
             with writer:
                 for key, sample in it.islice(result_iter, 100_000):
+                    if sample == Worker.error_message:
+                        raise RuntimeError('a worker encountered an error')
                     writer.write(key, sample)
     finally:
         stop_processes(producer, *workers)
