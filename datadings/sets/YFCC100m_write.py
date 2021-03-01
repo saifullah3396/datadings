@@ -37,10 +37,25 @@ TOTAL = {
 }
 
 
-def encode_fast(arr, quality=85, colorspace='RGB', colorsubsampling='422'):
+def encode_fast(
+        arr,
+        quality=85,
+        colorspace='RGB',
+        colorsubsampling='422',
+        target_size=(500, 375),
+):
+    target_pixels = target_size[0] * target_size[1]
     h, w = arr.shape[:2]
-    if h*w <= 0.5*375*500:
+    # enforce full color resolution for small images
+    if h*w <= 0.5*target_pixels:
         colorsubsampling = '444'
+    # downscale big images
+    if h*w > 1.5*target_pixels:
+        s = max(w, h)
+        r = max(target_size)/s
+        w, h = int(round(r*w)), int(round(r*h))
+        pil = Image.fromarray(arr, 'RGB')
+        arr = np.array(pil.resize((w, h), resample=Image.LANCZOS))
     return encode_jpeg(
         arr,
         quality=quality,
@@ -57,8 +72,8 @@ def decode_fast(data):
             'gray',
             fastdct=True,
             fastupsample=True,
-            min_height=300,
-            min_width=300,
+            min_height=100,
+            min_width=100,
             min_factor=1,
         )
     except ValueError:
