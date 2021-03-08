@@ -408,6 +408,7 @@ class YFCC100mReader(Reader):
             raw=False,
             copy=True,
             chunk_size=16,
+            chunk_stride=16,
             chunk_threshold=3,
     ):
         if start != 0 and self._validator != noop:
@@ -425,9 +426,9 @@ class YFCC100mReader(Reader):
         )
 
         if raw:
-            pack = noop
-        else:
             pack = self._packer.pack
+        else:
+            pack = noop
 
         if yield_key:
             for i in range(start, stop):

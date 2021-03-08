@@ -217,6 +217,7 @@ class Reader(metaclass=ABCMeta):
             raw=False,
             copy=True,
             chunk_size=16,
+            chunk_stride=16,
             chunk_threshold=3,
     ):
         # load chunks
@@ -224,16 +225,6 @@ class Reader(metaclass=ABCMeta):
         # and step size is small
         if chunk_size >= step and step <= chunk_threshold:
             n = stop - start
-            # optimize chunk size for step > 2
-            # removes "dangling" samples that do not need to be loaded
-            # example: chunk size 12, step 4
-            # X---X---X---
-            # (12 - 1) // 4 * 4 + 1 = 9
-            # X---X---X
-            chunk_size = (chunk_size - 1) // step * step + 1
-            # since dangling samples are removed from chunk size,
-            # chunks must start where the next sample in the sequence would be
-            chunk_stride = chunk_size + step - 1
             chunks = int(ceil(n / chunk_size))
             for c in range(chunks):
                 a = c * chunk_stride
@@ -304,6 +295,17 @@ class Reader(metaclass=ABCMeta):
         if step < 1:
             raise ValueError('step size must be >= 1')
 
+        # optimize chunk size for step > 1
+        # removes "dangling" samples that do not need to be loaded
+        # example: chunk size 12, step 4
+        # X---X---X---
+        # (12 - 1) // 4 * 4 + 1 = 9
+        # X---X---X
+        chunk_size = (chunk_size - 1) // step * step + 1
+        # since dangling samples are removed from chunk size,
+        # chunks must start where the next sample in the sequence would be
+        chunk_stride = chunk_size + step - 1
+
         yield from self._iter_impl(
             start,
             stop,
@@ -312,6 +314,7 @@ class Reader(metaclass=ABCMeta):
             raw,
             copy,
             chunk_size,
+            chunk_stride,
             chunk_threshold,
         )
 
