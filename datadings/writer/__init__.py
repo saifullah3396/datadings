@@ -69,6 +69,7 @@ class Writer(object):
         self._packer = make_packer()
         if 'desc' not in kwargs:
             kwargs['desc'] = outfile.name
+        self._disabled = kwargs.get('disabled', False)
         self._printer = make_printer(**kwargs)
 
     def __enter__(self):
@@ -94,7 +95,8 @@ class Writer(object):
             for path in paths:
                 f.write(f'{hash_md5hex(path)}  {path.name}\n')
         self._printer.close()
-        print('%d samples written' % self.written)
+        if not self._disabled:
+            print('%d samples written' % self.written)
 
     def _write_data(self, key, packed):
         if key in self._keys_set:
