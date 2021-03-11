@@ -62,7 +62,7 @@ class ShardedReader(Reader):
             chunk_size=16,
     ):
         reader_start = bisect_left(self._offsets, start)
-        reader_stop = bisect_left(self._offsets, stop) + 1
+        reader_stop = bisect_left(self._offsets, stop)
         for i in range(reader_start, reader_stop):
             offset = self._offsets[i]
             with self._readers[i] as reader:
