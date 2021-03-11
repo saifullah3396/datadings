@@ -17,7 +17,7 @@ class ShardedReader(Reader):
         self._paths = paths
         self._num_shards = len(paths)
         self._offsets = list(it.accumulate(it.chain(
-            (0,), (self._reader(i) for i in range(self._num_shards))
+            (0,), (len(self._reader(i)) for i in range(self._num_shards))
         )))
         self._len = self._offsets.pop(-1)
 
