@@ -256,7 +256,7 @@ def write_filter(keys: Sequence[str], path: Path) -> Path:
     Returns:
         Path that was written to
     """
-    bf = BloomFilter(len(keys))
+    bf = BloomFilter(max(2, len(keys)))
     for k in keys:
         bf += k
     path = path_append_suffix(path, SUFFIX_FILTER)
