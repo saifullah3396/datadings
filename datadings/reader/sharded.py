@@ -1,5 +1,6 @@
 import itertools as it
 from bisect import bisect_left
+from bisect import bisect_right
 from glob import glob
 
 from .reader import Reader
@@ -31,7 +32,7 @@ class ShardedReader(Reader):
             reader.__exit__(exc_type, exc_val, exc_tb)
 
     def find_key(self, index):
-        reader_i = bisect_left(self._offsets, index)
+        reader_i = bisect_right(self._offsets, index) - 1
         offset = index - self._offsets[reader_i]
         with self._readers[reader_i] as reader:
             return reader.find_key(offset)
@@ -44,7 +45,7 @@ class ShardedReader(Reader):
         raise KeyError(key)
 
     def get(self, index, yield_key=False, raw=False, copy=True):
-        reader_i = bisect_left(self._offsets, index)
+        reader_i = bisect_right(self._offsets, index)
         offset = index - self._offsets[reader_i]
         with self._readers[reader_i] as reader:
             return reader.get(offset, yield_key, raw, copy)
@@ -61,7 +62,7 @@ class ShardedReader(Reader):
             copy=True,
             chunk_size=16,
     ):
-        reader_start = bisect_left(self._offsets, start)
+        reader_start = bisect_right(self._offsets, start) - 1
         reader_stop = bisect_left(self._offsets, stop)
         for i in range(reader_start, reader_stop):
             offset = self._offsets[i]
