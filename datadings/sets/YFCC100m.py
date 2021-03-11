@@ -403,20 +403,15 @@ class YFCC100mReader(Reader):
             self,
             start=None,
             stop=None,
-            step=None,
             yield_key=False,
             raw=False,
             copy=True,
             chunk_size=16,
-            chunk_stride=16,
-            chunk_threshold=3,
     ):
         if start != 0 and self._validator != noop:
             raise RuntimeError('can only seek to start while validating')
 
-        start, stop, step = slice(start, stop, step).indices(len(self))
-        if step < 1:
-            raise ValueError('step size must be >= 1')
+        start, stop, _ = slice(start, stop).indices(len(self))
 
         zips, start_index, _ = _find_start(
             self._path, self._rejected, start_index=start
@@ -433,18 +428,16 @@ class YFCC100mReader(Reader):
         if yield_key:
             for i in range(start, stop):
                 sample = self._get_next_sample(gen)
-                if (i - start) % step == 0:
-                    self._i = i
-                    yield sample['key'], pack(sample)
+                self._i = i
+                yield sample['key'], pack(sample)
         else:
             for i in range(start, stop):
                 sample = self._get_next_sample(gen)
-                if (i - start) % step == 0:
-                    self._i = i
-                    yield pack(sample)
+                self._i = i
+                yield pack(sample)
 
-    def slice(self, start, stop=None, step=None, yield_key=False, raw=False, copy=True):
-        return self._iter_impl(start, stop, step, yield_key, raw, copy)
+    def slice(self, start, stop=None, yield_key=False, raw=False, copy=True):
+        return self._iter_impl(start, stop, yield_key, raw, copy)
 
 
 def main():

@@ -182,20 +182,8 @@ class MsgpackReader(Reader):
         else:
             return data
 
-    def slice(self, start, stop=None, step=None, yield_key=False, raw=False, copy=True):
-        start, stop, step = slice(start, stop, step).indices(self._len)
-        if step < 1:
-            raise ValueError('step size must be >= 1')
-
-        # optimize slice length for step > 2
-        # removes "dangling" samples that do not need to be loaded
-        # example: chunk size 12, step 4
-        # X---X---X---
-        # (12 - 1) // 4 * 4 + 1 = 9
-        # X---X---X
-        n = stop - start
-        n = (n - 1) // step * step + 1
-        stop = start + n
+    def slice(self, start, stop=None, yield_key=False, raw=False, copy=True):
+        start, stop, _ = slice(start, stop).indices(self._len)
 
         pos = self._offsets
         # avoid lazy-loading keys if not necessary
@@ -213,17 +201,17 @@ class MsgpackReader(Reader):
 
         if yield_key:
             if raw:
-                for i in range(start, stop, step):
+                for i in range(start, stop):
                     yield key[i], buf[pos[i] - offset:pos[i+1] - offset]
             else:
-                for i in range(start, stop, step):
+                for i in range(start, stop):
                     yield key[i], unpackb(buf[pos[i] - offset:pos[i+1] - offset])
         else:
             if raw:
-                for i in range(start, stop, step):
+                for i in range(start, stop):
                     yield buf[pos[i] - offset:pos[i+1] - offset]
             else:
-                for i in range(start, stop, step):
+                for i in range(start, stop):
                     yield unpackb(buf[pos[i] - offset:pos[i+1] - offset])
 
     def verify_data(self, read_size=512*1024, progress=False):

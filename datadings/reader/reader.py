@@ -117,7 +117,7 @@ class Reader(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def slice(self, start, stop=None, step=None, yield_key=False, raw=False, copy=True):
+    def slice(self, start, stop=None, yield_key=False, raw=False, copy=True):
         """
         Returns a generator of samples selected by the given slice.
 
@@ -129,7 +129,6 @@ class Reader(metaclass=ABCMeta):
         Parameters:
             start: start index of slice
             stop: stop index of slice
-            step: stride of slice
             yield_key: if True, yield (key, sample)
             raw: if True, returns sample as msgpacked message
             copy: if False, allow the reader to return data as
@@ -199,12 +198,14 @@ class Reader(metaclass=ABCMeta):
     def __getitem__(self, index):
         if isinstance(index, slice):
             start, stop, step = index.indices(len(self))
+            if step != 1:
+                raise ValueError('step must be 1')
             # use iter if number of samples is large
             if stop - start >= self.getitem_max_slice_length:
-                return self.iter(start, stop, step, chunk_size=self.getitem_chunk_size)
+                return self.iter(start, stop, chunk_size=self.getitem_chunk_size)
             # otherwise use slice directly
             else:
-                return self.slice(start, stop, step)
+                return self.slice(start, stop)
         else:
             return self.get(index)
 
@@ -212,48 +213,34 @@ class Reader(metaclass=ABCMeta):
             self,
             start=None,
             stop=None,
-            step=None,
             yield_key=False,
             raw=False,
             copy=True,
             chunk_size=16,
-            chunk_stride=16,
-            chunk_threshold=3,
     ):
-        # load chunks
-        # if chunk size is at least as big as step size
-        # and step size is small
-        if chunk_size >= step and step <= chunk_threshold:
-            n = stop - start
-            chunks = int(ceil(n / chunk_size))
-            for c in range(chunks):
-                a = c * chunk_stride
-                b = min(n, a + chunk_size)
-                for sample in self.slice(a, b, step, yield_key, raw, copy):
-                    yield sample
-                    self._i += 1
-        # load individual samples for large step sizes
-        else:
-            for i in range(start, stop, step):
-                yield self.get(i, yield_key=yield_key, raw=raw)
+        n = stop - start
+        chunks = int(ceil(n / chunk_size))
+        for c in range(chunks):
+            a = c * chunk_size
+            b = min(n, a + chunk_size)
+            for sample in self.slice(a, b, yield_key, raw, copy):
+                yield sample
                 self._i += 1
 
     def iter(
             self,
             start=None,
             stop=None,
-            step=None,
             yield_key=False,
             raw=False,
             copy=True,
             chunk_size=16,
-            chunk_threshold=3,
     ):
         """
         Iterate over the dataset.
 
-        ``start``, ``stop``, and ``step`` behave like the parameters of the
-        ``range`` function, though ``step`` must be greater than 0.
+        ``start`` and ``stop`` behave like the parameters of the
+        ``range`` function0.
 
         ``copy=False`` allows the reader to use zero-copy mechanisms.
         Data may be returned as ``memoryview`` objects rather than ``bytes``.
@@ -263,17 +250,13 @@ class Reader(metaclass=ABCMeta):
         Parameters:
             start: start of range; if None, current index is used
             stop: stop of range
-            step: step of range; must be >= 1
             yield_key: if True, yields (key, sample) pairs.
             raw: if True, yields samples as msgpacked messages.
             copy: if False, allow the reader to return data as
                   ``memoryview`` objects instead of ``bytes``
             chunk_size: number of samples read at once;
                         bigger values can increase throughput,
-                        but also memory
-            chunk_threshold: for step sizes greater than this
-                             threshold samples will be loaded
-                             one by one instead of in chunks
+                        but require more memory
 
         Returns:
             Iterator
@@ -291,31 +274,14 @@ class Reader(metaclass=ABCMeta):
             if start < 0 or start >= n:
                 raise IndexError(f'index {start} out of range for length {n} reader')
 
-        start, stop, step = slice(start, stop, step).indices(len(self))
-        if step < 1:
-            raise ValueError('step size must be >= 1')
-
-        # optimize chunk size for step > 1
-        # removes "dangling" samples that do not need to be loaded
-        # example: chunk size 12, step 4
-        # X---X---X---
-        # (12 - 1) // 4 * 4 + 1 = 9
-        # X---X---X
-        chunk_size = (chunk_size - 1) // step * step + 1
-        # since dangling samples are removed from chunk size,
-        # chunks must start where the next sample in the sequence would be
-        chunk_stride = chunk_size + step - 1
-
+        start, stop, _ = slice(start, stop).indices(len(self))
         yield from self._iter_impl(
             start,
             stop,
-            step,
             yield_key,
             raw,
             copy,
             chunk_size,
-            chunk_stride,
-            chunk_threshold,
         )
 
     def __iter__(self):

@@ -48,7 +48,6 @@ class Augment(object):
             raw=False,
             copy=True,
             chunk_size=16,
-            chunk_threshold=3,
     ):
         """
         Create an iterator.
@@ -61,9 +60,6 @@ class Augment(object):
             chunk_size: number of samples read at once;
                         bigger values can increase throughput,
                         but also memory
-            chunk_threshold: for step sizes greater than this
-                             threshold samples will be loaded
-                             one by one instead of in chunks
 
         Returns:
             Iterator
@@ -95,16 +91,15 @@ class Range(Augment):
     """
     Extract a range of samples from a given reader.
 
-    ``start``, ``stop``, and ``step`` behave like the parameters of the
-    ``range`` function, though ``step`` must be greater than 0.
+    ``start`` and ``stop`` behave like the parameters of the
+    ``range`` function.
 
     Parameters:
         reader: reader to sample from
         start: start of range
         stop: stop of range
-        step: step of range; must be >= 1
     """
-    def __init__(self, reader, start=0, stop=None, step=None):
+    def __init__(self, reader, start=0, stop=None):
         super().__init__(reader)
         n = len(reader)
 
@@ -113,7 +108,7 @@ class Range(Augment):
         if start < 0 or start >= n:
             raise IndexError(f'index {start} out of range for length {n} reader')
 
-        self.start, self.stop, self.step = slice(start, stop, step).indices(n)
+        self.start, self.stop, _ = slice(start, stop).indices(n)
 
     def iter(
             self,
@@ -121,17 +116,14 @@ class Range(Augment):
             raw=False,
             copy=True,
             chunk_size=16,
-            chunk_threshold=3,
     ):
         return self._reader.iter(
             start=self.start,
             stop=self.stop,
-            step=self.step,
             yield_key=yield_key,
             raw=raw,
             copy=copy,
             chunk_size=chunk_size,
-            chunk_threshold=chunk_threshold,
         )
 
     def seek(self, index):
@@ -167,7 +159,6 @@ class Shuffler(Augment):
             raw=False,
             copy=True,
             chunk_size=16,
-            chunk_threshold=3,
     ):
         n = self._n
         rand = Random()
@@ -247,7 +238,6 @@ class QuasiShuffler(Augment):
             raw=False,
             copy=True,
             chunk_size=None,
-            chunk_threshold=None,
     ):
         chunk_size = chunk_size or self.chunk_size
         rand = Random()
@@ -332,7 +322,6 @@ class Repeater(Augment):
             raw=False,
             copy=True,
             chunk_size=16,
-            chunk_threshold=3,
     ):
         for _ in range(self.times):
             yield from self._reader.iter(
@@ -340,7 +329,6 @@ class Repeater(Augment):
                 raw=raw,
                 copy=copy,
                 chunk_size=chunk_size,
-                chunk_threshold=chunk_threshold,
             )
 
     def seek(self, index):
@@ -360,7 +348,6 @@ class Cycler(Augment):
             raw=False,
             copy=True,
             chunk_size=16,
-            chunk_threshold=3,
     ):
         while 1:
             yield from self._reader.iter(
@@ -368,7 +355,6 @@ class Cycler(Augment):
                 raw=raw,
                 copy=copy,
                 chunk_size=chunk_size,
-                chunk_threshold=chunk_threshold,
             )
 
     def seek(self, index):

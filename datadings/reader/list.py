@@ -145,7 +145,7 @@ class ListReader(Reader):
         else:
             return sample
 
-    def slice(self, start, stop=None, step=None, yield_key=False, raw=False, copy=True):
-        start, stop, step = slice(start, stop, step).indices(len(self._samples))
-        for index in range(start, stop, step):
+    def slice(self, start, stop=None, yield_key=False, raw=False, copy=True):
+        start, stop, _ = slice(start, stop).indices(len(self._samples))
+        for index in range(start, stop):
             yield self.get(index, yield_key=yield_key, raw=raw)
