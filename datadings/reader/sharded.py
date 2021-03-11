@@ -1,6 +1,6 @@
 import itertools as it
 from bisect import bisect_left
-from glob import iglob
+from glob import glob
 
 from .reader import Reader
 from .msgpack import MsgpackReader
@@ -11,7 +11,7 @@ class ShardedReader(Reader):
         super().__init__()
         if isinstance(paths, str):
             if '*' in paths:
-                paths = iglob(paths)
+                paths = glob(paths)
             else:
                 raise ValueError('need multiple paths or glob pattern')
         self._paths = paths
