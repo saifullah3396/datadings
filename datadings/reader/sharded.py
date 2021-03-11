@@ -14,44 +14,39 @@ class ShardedReader(Reader):
                 paths = glob(paths)
             else:
                 raise ValueError('need multiple paths or glob pattern')
-        self._paths = paths
-        self._num_shards = len(paths)
+        self._readers = [MsgpackReader(path) for path in paths]
         self._offsets = list(it.accumulate(it.chain(
-            (0,), (len(self._reader(i)) for i in range(self._num_shards))
+            (0,), (len(reader) for reader in self._readers)
         )))
         self._len = self._offsets.pop(-1)
-
-    def _reader(self, index):
-        return MsgpackReader(self._paths[index])
 
     def __len__(self):
         return self._len
 
     def __contains__(self, key):
-        return any(key in self._reader(i) for i in range(self._num_shards))
+        return any(key in reader for reader in self._readers)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # for reader in self._readers:
-        #     reader.__exit__(exc_type, exc_val, exc_tb)
-        pass
+        for reader in self._readers:
+            reader.__exit__(exc_type, exc_val, exc_tb)
 
     def find_key(self, index):
         reader_i = bisect_left(self._offsets, index)
         offset = index - self._offsets[reader_i]
-        with self._reader(reader_i) as reader:
+        with self._readers[reader_i] as reader:
             return reader.find_key(offset)
 
     def find_index(self, key):
-        for i in range(self._num_shards):
-            with self._reader(i) as reader:
-                if key in reader:
+        for i, reader in enumerate(self._readers):
+            if key in reader:
+                with reader:
                     return self._offsets[i] + reader.find_index(key)
         raise KeyError(key)
 
     def get(self, index, yield_key=False, raw=False, copy=True):
         reader_i = bisect_left(self._offsets, index)
         offset = index - self._offsets[reader_i]
-        with self._reader(reader_i) as reader:
+        with self._readers[reader_i] as reader:
             return reader.get(offset, yield_key, raw, copy)
 
     def slice(self, start, stop=None, yield_key=False, raw=False, copy=True):
@@ -70,7 +65,7 @@ class ShardedReader(Reader):
         reader_stop = bisect_left(self._offsets, stop) + 1
         for i in range(reader_start, reader_stop):
             offset = self._offsets[i]
-            with self._reader(i) as reader:
+            with self._readers[i] as reader:
                 for sample in reader.iter(
                         max(0, start-offset),
                         stop-offset,

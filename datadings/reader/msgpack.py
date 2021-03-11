@@ -79,8 +79,8 @@ class MsgpackReader(Reader):
 
         # check existence of legacy or new-style index
         _raise_if_none_of_paths_exists(
-            path_append(path, SUFFIX_LEGACY_INDEX),
             path_append(path, SUFFIX_OFFSETS),
+            path_append(path, SUFFIX_LEGACY_INDEX),
         )
         # check existence of optional files
         _warn_if_path_not_exists(path, SUFFIX_KEYS)
@@ -100,8 +100,11 @@ class MsgpackReader(Reader):
         return self._len
 
     def _close(self):
-        if hasattr(self, 'infile') and not self._infile.closed:
-            self._infile.close()
+        if '_infile' in self.__dict__:
+            f = self._infile
+            if not f.closed:
+                f.close()
+            del self.__dict__['_infile']
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._close()
@@ -166,8 +169,9 @@ class MsgpackReader(Reader):
         pos = self._offsets
         offset = pos[index]
         n = pos[index+1] - offset
-        self._infile.seek(offset, 0)
-        data = self._infile.read(n)
+        f = self._infile
+        f.seek(offset, 0)
+        data = f.read(n)
         if not raw:
             data = unpackb(data)
         if yield_key:
@@ -187,8 +191,9 @@ class MsgpackReader(Reader):
 
         offset = pos[start]
         n = pos[stop] - offset
-        self._infile.seek(offset, 0)
-        buf = self._infile.read(n)
+        f = self._infile
+        f.seek(offset, 0)
+        buf = f.read(n)
         if not copy:
             buf = memoryview(buf)
 
