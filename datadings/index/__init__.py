@@ -36,7 +36,7 @@ def keys_len(path: Path) -> int:
         length of dataset
     """
     with path_append_suffix(path, SUFFIX_KEYS).open('rb') as f:
-        return make_unpacker(f).read_array_header()
+        return make_unpacker(f, read_size=5).read_array_header()
 
 
 def load_keys(path: Path) -> Sequence[str]:
@@ -119,7 +119,7 @@ def legacy_index_len(path: Path) -> int:
         length of dataset
     """
     with path_append_suffix(path, SUFFIX_LEGACY_INDEX).open('rb') as f:
-        return make_unpacker(f).read_map_header()
+        return make_unpacker(f, read_size=5).read_map_header()
 
 
 def legacy_load_index(path: Path) -> Tuple[Sequence[str], Sequence[int]]:
