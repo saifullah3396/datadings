@@ -56,16 +56,9 @@ class MsgpackReader(Reader):
     Can optionally verify the integrity of data and index files if
     the md5 file ``some_dir/dataset.msgpack.md5`` is present.
 
-    Note:
-        The default read-ahead buffer size is 4MB.
-        That's a lot of bytes, which is good for fast sequential access.
-        Reduce this to roughly the size of a single sample for best
-        random access performance.
-
     Parameters:
         path: Dataset file to load.
         buffering: Read buffer size in bytes.
-                   Reduce this for faster random access.
 
     Raises:
         IOError: If dataset or index cannot be loaded.
