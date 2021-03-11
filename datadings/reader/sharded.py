@@ -12,7 +12,7 @@ class ShardedReader(Reader):
         super().__init__()
         if isinstance(paths, str):
             if '*' in paths:
-                paths = glob(paths)
+                paths = sorted(glob(paths))
             else:
                 raise ValueError('need multiple paths or glob pattern')
         self._readers = [MsgpackReader(path) for path in paths]
