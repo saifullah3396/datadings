@@ -25,12 +25,12 @@ class ShardedReader(Reader):
     Shards can be specified either as a glob pattern ``dir/*.msgpack``
     for msgpack files, or an iterable of individual shards.
     Each shard can be a string, :py:class:`Path <pathlib.Path>`,
-    or :class:`..reader.Reader`.
+    or :class:`Reader <.reader.Reader>`.
 
     Parameters:
         shards: glob pattern or a list of strings, Path objects or Readers
     """
-    def __init__(self, shards: Union[str, Path, Iterable[str, Path, Reader]]):
+    def __init__(self, shards: Union[str, Path, Iterable[Union[str, Path, Reader]]]):
         super().__init__()
         if isinstance(shards, (str, Path)):
             shards = sorted(glob(str(shards)))

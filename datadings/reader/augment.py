@@ -187,27 +187,29 @@ class QuasiShuffler(Augment):
     order.
     Shuffling follows these steps:
 
-        1. Fill the buffer with chunks.
-        2. Read the next chunk.
-        3. Select a random sample from the buffer and yield it.
-        4. Replace the sample with the next sample from the current chunk.
-        5. If there are chunks left, goto 2.
+    1. Fill the buffer with chunks.
+    2. Read the next chunk.
+    3. Select a random sample from the buffer and yield it.
+    4. Replace the sample with the next sample from the current chunk.
+    5. If there are chunks left, goto 2.
 
     This means there are typically more samples from the current chunk
     in the buffer than there would be if a true shuffle was used.
-    This effect is more pronounced for smaller fractions :math:`\frac{B}{C}`
+    This effect is more pronounced for smaller fractions :math:`\\frac{B}{C}`
     where :math:`C` is the chunk size and :math:`B` the buffer size.
-    As a rule of thumb it is sufficien to keep :math:`\frac{B}{C}` roughly
+    As a rule of thumb it is sufficient to keep :math:`\\frac{B}{C}` roughly
     equal to the number of classes in the dataset.
 
     Note:
-        Seeking or resuming iteration
+        Seeking and resuming iteration with a new iterator are relatively
+        costly operations. If possible create one iterator and use it
+        repeatedly.
 
     Parameters:
         reader: the reader to wrap
-        buf_size: size of the buffer; values < 1 represent fractions of
-                  dataset length; bigger values improve randomness, but
-                  use more memory
+        buf_size: size of the buffer; values less than 1 are interpreted
+                  as fractions of the dataset length; bigger values improve
+                  randomness, but use more memory
         chunk_size: size of each chunk; bigger values improve performance,
                     but reduce randomness
     """
