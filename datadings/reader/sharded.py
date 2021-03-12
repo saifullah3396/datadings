@@ -67,13 +67,11 @@ class ShardedReader(Reader):
         for i in range(reader_start, reader_stop):
             offset = self._offsets[i]
             with self._readers[i] as reader:
-                for sample in reader.iter(
+                yield from reader.iter(
                         max(0, start-offset),
                         stop-offset,
                         yield_key,
                         raw,
                         copy,
                         chunk_size,
-                ):
-                    self._i += 1
-                    yield sample
+                )

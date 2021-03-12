@@ -223,9 +223,7 @@ class Reader(metaclass=ABCMeta):
         for c in range(chunks):
             a = c * chunk_size
             b = min(n, a + chunk_size)
-            for sample in self.slice(a, b, yield_key, raw, copy):
-                yield sample
-                self._i += 1
+            yield from self.slice(a, b, yield_key, raw, copy)
 
     def iter(
             self,
@@ -275,14 +273,16 @@ class Reader(metaclass=ABCMeta):
                 raise IndexError(f'index {start} out of range for length {n} reader')
 
         start, stop, _ = slice(start, stop).indices(len(self))
-        yield from self._iter_impl(
+        for sample in self._iter_impl(
             start,
             stop,
             yield_key,
             raw,
             copy,
             chunk_size,
-        )
+        ):
+            self._i += 1
+            yield sample
 
     def __iter__(self):
         return self.iter()
