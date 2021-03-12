@@ -1,21 +1,40 @@
+from typing import Union
+from typing import Iterable
 import itertools as it
 from bisect import bisect_left
 from bisect import bisect_right
 from glob import glob
+from pathlib import Path
 
 from .reader import Reader
 from .msgpack import MsgpackReader
 
 
+def _canonical_reader(v):
+    if isinstance(v, Reader):
+        return v
+    elif isinstance(v, (str, Path)):
+        return MsgpackReader(v)
+    else:
+        raise ValueError('need either msgpack path or Reader instance')
+
+
 class ShardedReader(Reader):
-    def __init__(self, paths):
+    """
+    A Reader that combines several shards into one.
+    Shards can be specified either as a glob pattern ``dir/*.msgpack``
+    for msgpack files, or an iterable of individual shards.
+    Each shard can be a string, :py:class:`Path <pathlib.Path>`,
+    or :class:`..reader.Reader`.
+
+    Parameters:
+        shards: glob pattern or a list of strings, Path objects or Readers
+    """
+    def __init__(self, shards: Union[str, Path, Iterable[str, Path, Reader]]):
         super().__init__()
-        if isinstance(paths, str):
-            if '*' in paths:
-                paths = sorted(glob(paths))
-            else:
-                raise ValueError('need multiple paths or glob pattern')
-        self._readers = [MsgpackReader(path) for path in paths]
+        if isinstance(shards, (str, Path)):
+            shards = sorted(glob(str(shards)))
+        self._readers = [_canonical_reader(shard) for shard in shards]
         self._offsets = list(it.accumulate(it.chain(
             (0,), (len(reader) for reader in self._readers)
         )))
