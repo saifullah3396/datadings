@@ -17,7 +17,7 @@ Data file
 
 Each sample is a key-value
 `map <https://github.com/msgpack/msgpack/blob/master/spec.md#map-format-family>`_
-with a ``key`` that is unique
+with a string ``key`` that is unique
 for the dataset.
 In Python notation::
 
@@ -64,19 +64,25 @@ Using these keys results in undefined behavior.
 
 
 
-Index file
-----------
+Index
+-----
 
-To enable random access, an index file with the ``.msgpack.index``
-extension is added.
-The index is a map of key-offset pairs.
-In Python notation::
+Datasets are indexed to enable fast sequential and random access.
+Previous versions of datadings created a monolithic index file
+that contained both keys and read offsets of samples.
+New-style indexes are made up of 4 separate files:
 
-    {"sample 1": 0, "sample 2": 1234, ... }
-
-For every ``key`` in the dataset it gives the offset in bytes of
-the respective sample from the beginning of the file.
-Index entries are stored with offsets in ascending order.
+1. ``.msgpack.offsets``:
+   uint64 start offsets for samples in the data file stored in
+   network byte order, where `offset[i]` corresponds to the
+   ith sample.
+2. ``.msgpack.keys``:
+   msgpacked list of keys.
+3. ``.msgpack.key_hashes``:
+   8 byte salt, followed by 8 byte blake2s hashes of all keys.
+4. ``.msgpack.filter``:
+   a Bloom filter for all keys in
+   `simplebloom <https://gitlab.com/jfolz/simplebloom>`_ format.
 
 
 
@@ -103,3 +109,19 @@ This means each dataset is limited to less than 2\ :sup:`32`\  samples
 file size (the largest possible byte offset is 2\ :sup:`64`\-1).
 The same applies to each individual sample regarding the number of
 keys present and its packed size.
+
+
+
+Legacy index file
+-----------------
+
+Previous versions of datadings used a different index arrangement.
+An index file with the ``.msgpack.index`` extension contained a
+map of key-offset pairs.
+In Python notation::
+
+    {"sample 1": 0, "sample 2": 1234, ... }
+
+For every ``key`` in the dataset it gives the offset in bytes of
+the respective sample from the beginning of the file.
+Index entries are stored with offsets in ascending order.
