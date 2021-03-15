@@ -4,10 +4,13 @@ File format
 ===============
 
 The file format datadings uses is simple.
-A dataset is made up of three files:
+A dataset is made up of six files:
 
 - ``.msgpack`` main data file
-- ``.msgpack.index`` index file
+- ``.msgpack.offsets`` sample start offset file
+- ``.msgpack.keys`` key file
+- ``.msgpack.key_hashes`` key hash file
+- ``.msgpack.filter`` Bloom filter file
 - ``.msgpack.md5`` for integrity checks
 
 
