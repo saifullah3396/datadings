@@ -5,13 +5,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [3.1.0] - 2021-03-15
+### Changed
+- Massive improvements to the overall speed and efficiency of the library
+- New index format that allows lazy-loading of keys
+- Add Bloom filter and key hashes for fast contains checks
+- Much faster iteration for MsgpackReader over high-latency network connections or busy disks
+
+### Added
+- Introduce get and slice methods to all Reader classes
+- Readers support __getitem__ indexing including slices, though only for step==1
+- Zero-copy support for MsgpackReader
+- QuasiShuffler for efficient random iteration of readers
+- ShardedReader that combines sharded datasets into one large Reader.
+
+
 ## [3.0.2] - 2020-11-02
 ### Fixed
 - YFCC100m: fix order of key & sample
 
 
 ## [3.0.1] - 2020-06-22
-###Changed
+### Changed
 - ILSVRC2012: use 1 thread by default
 
 ### Fixed
@@ -23,7 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -  Initial public release.
 
 
-[Unreleased]: https://gitlab.com/jfolz/simplejpeg/-/compare/3.0.2...master
+[Unreleased]: https://gitlab.com/jfolz/simplejpeg/-/compare/3.1.0...master
+[3.1.0]: https://gitlab.com/jfolz/simplejpeg/-/compare/3.0.2...3.1.0
 [3.0.2]: https://gitlab.com/jfolz/simplejpeg/-/compare/3.0.1...3.0.2
 [3.0.1]: https://gitlab.com/jfolz/simplejpeg/-/compare/3.0.0...3.0.1
 [3.0.0]: https://gitlab.com/jfolz/simplejpeg/-/tags/3.0.0
