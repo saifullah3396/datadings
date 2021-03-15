@@ -80,9 +80,23 @@ New-style indexes are made up of 4 separate files:
    msgpacked list of keys.
 3. ``.msgpack.key_hashes``:
    8 byte salt, followed by 8 byte blake2s hashes of all keys.
+   The salt is chosen to avoid hash collisions.
 4. ``.msgpack.filter``:
-   a Bloom filter for all keys in
+   A Bloom filter for all keys in
    `simplebloom <https://gitlab.com/jfolz/simplebloom>`_ format.
+   It is setup to provide very low false-positive probabilities.
+
+The advantage of this new style of index is that is allows for
+fast and lazy loading of elements as they are required.
+For typical datasets the keys file is several times larger than
+both offsets and key hashes, and both are several timers larger
+than the bloom filter.
+To check whether the dataset contains a key, only the filter
+and key hashes are required.
+The larger keys file itself is only loaded whenever a method
+returns the sample keys.
+Thus upon initialization the reader only checks for the presence
+of index files and warns if they are missing.
 
 
 
