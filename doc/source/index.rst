@@ -59,13 +59,14 @@ While datadings supports reading from datasets like these with the
 :py:class:`DirectoryReader <datadings.reader.directory.DirectoryReader>`,
 it will only read with a leisurely pace of about 500 samples/s.
 Reading the whole training set takes about 40 minutes.
+This is not fast enough for modern GPUs.
 
 Once converted into the datadings format, you can easily saturate
 10G ethernet reading well over 20000 samples/s using the
 :py:class:`MsgpackReader <datadings.reader.msgpack.MsgpackReader>`.
 
-It also takes over 7 seconds to start reading from the directory tree,
-whereas is takes less than 0.7 seconds to start reading from msgpack files.
+It also takes several seconds to start reading from the directory tree,
+whereas reading from msgpack files is almost instant.
 This makes debugging a breeze.
 Check out the :ref:`file format description<file-format>` description
 if you want to know how this is achieved.
