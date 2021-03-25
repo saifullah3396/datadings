@@ -1,4 +1,7 @@
+from math import ceil
 from io import BytesIO
+from itertools import chain
+from itertools import islice
 
 from ..reader.reader import Reader
 
@@ -29,12 +32,14 @@ class DatasetBase:
             reader: Reader,
             transform=None,
             transform_key='image',
+            batch_size=1,
     ):
         self.reader = reader
         if transform is not None:
             self.transform = _transform_wrapper(transform, transform_key)
         else:
             self.transform = _noop
+        self.batch_size = batch_size
 
 
 class Dataset(DatasetBase, _Dataset):
@@ -48,11 +53,12 @@ class IterableDataset(DatasetBase, _IterableDataset):
             reader: Reader,
             transform=None,
             transform_key='image',
+            batch_size=1,
             copy=True,
             chunk_size=16,
             group=None
     ):
-        DatasetBase.__init__(self, reader, transform, transform_key)
+        DatasetBase.__init__(self, reader, transform, transform_key, batch_size)
         if is_initialized():
             self.rank = get_rank(group)
             self.world_size = get_world_size(group)
@@ -61,6 +67,7 @@ class IterableDataset(DatasetBase, _IterableDataset):
             self.world_size = 1
         self.copy = copy
         self.chunk_size = chunk_size
+        self.epoch = 0
 
     def __len__(self):
         return len(self.reader)
@@ -68,16 +75,18 @@ class IterableDataset(DatasetBase, _IterableDataset):
     def __iter__(self):
         info = get_worker_info()
         n = len(self.reader)
-        rank_iters = n // self.world_size
-        worker_iters = rank_iters // info.num_workers
-        start = self.rank * rank_iters + info.id * worker_iters
+        ws = self.world_size
+        bs = self.batch_size
+        worker_iters = int(ceil(n / ws / info.num_workers / bs)) * bs
+        rank_iters = worker_iters * info.num_workers
+        epoch_offset = (self.epoch * rank_iters * ws) % n
+        rank = (self.rank + self.epoch) % ws
+        self.epoch += 1
+        start = (rank * rank_iters + info.id * worker_iters + epoch_offset) % n
+        r = self.reader
+        it = r.iter(start, copy=self.copy, chunk_size=self.chunk_size)
         with self.reader:
-            for sample in self.reader.iter(
-                    start=start,
-                    stop=start+worker_iters,
-                    copy=self.copy,
-                    chunk_size=self.chunk_size
-            ):
+            for sample in islice(chain(it, r.iter(0)), worker_iters):
                 yield self.transform(sample)
 
 
