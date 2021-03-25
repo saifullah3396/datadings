@@ -7,6 +7,9 @@ from .common import seek_index
 from .common import seek_key
 from .common import find_index
 from .common import find_key
+from .common import iter_start
+from .common import iter_stop
+from .common import iter_range
 
 
 def test_missing_keys():
@@ -31,3 +34,15 @@ def test_find_key():
 
 def test_find_index():
     find_index(ListReader(SAMPLES))
+
+
+def test_iter_start():
+    iter_start(ListReader(SAMPLES))
+
+
+def test_iter_stop():
+    iter_stop(ListReader(SAMPLES))
+
+
+def test_iter_range():
+    iter_range(ListReader(SAMPLES))

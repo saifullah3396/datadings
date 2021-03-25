@@ -5,9 +5,7 @@ from datadings.reader import DirectoryReader
 from .dataset import DIRECTORY_PATH
 from .common import missing_keys
 from .common import return_after_iter
-from .common import seek_index
 from .common import seek_key
-from .common import find_index
 from .common import find_key
 
 

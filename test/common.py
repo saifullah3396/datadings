@@ -66,3 +66,31 @@ def find_key(reader):
             index = reader.find_index(key)
             found = reader.get(index)['key']
             assert key == found, (key, found)
+
+
+def iter_start(reader):
+    keys = list(KEYS)
+    start = random.randrange(len(keys))
+    with reader:
+        for key, sample in zip(keys[start:], reader.iter(start=start)):
+            assert key == sample['key'], (key, sample['key'])
+
+
+def iter_stop(reader):
+    keys = list(KEYS)
+    stop = random.randrange(len(keys))
+    with reader:
+        for key, sample in zip(keys[:stop], reader.iter(start=0, stop=stop)):
+            assert key == sample['key'], (key, sample['key'])
+
+
+def iter_range(reader):
+    keys = list(KEYS)
+    while True:
+        start = random.randrange(len(keys))
+        stop = random.randrange(len(keys))
+        if start < stop:
+            break
+    with reader:
+        for key, sample in zip(keys[start:stop], reader.iter(start=start, stop=stop)):
+            assert key == sample['key'], (key, sample['key'])
