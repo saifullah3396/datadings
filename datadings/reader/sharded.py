@@ -64,7 +64,7 @@ class ShardedReader(Reader):
         raise KeyError(key)
 
     def get(self, index, yield_key=False, raw=False, copy=True):
-        reader_i = bisect_right(self._offsets, index)
+        reader_i = bisect_right(self._offsets, index) - 1
         offset = index - self._offsets[reader_i]
         with self._readers[reader_i] as reader:
             return reader.get(offset, yield_key, raw, copy)
