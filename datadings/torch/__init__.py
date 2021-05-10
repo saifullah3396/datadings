@@ -7,12 +7,26 @@ from ..reader.reader import Reader
 
 from PIL import Image
 from simplejpeg import decode_jpeg
-from torch.utils.data import Dataset as _Dataset
-from torch.utils.data import IterableDataset as _IterableDataset
-from torch.utils.data import get_worker_info
-from torch.distributed import is_initialized
-from torch.distributed import get_rank
-from torch.distributed import get_world_size
+
+try:
+    from torch.utils.data import Dataset as _Dataset
+    from torch.utils.data import IterableDataset as _IterableDataset
+    from torch.utils.data import get_worker_info
+    from torch.distributed import is_initialized
+    from torch.distributed import get_rank
+    from torch.distributed import get_world_size
+except ImportError:
+    # torch is not a hard requirement,
+    # so ignore ImportError for readthedocs builds
+    import os
+    if 'READTHEDOCS' not in os.environ:
+        raise
+
+    class _Dataset:
+        pass
+
+    class _IterableDataset:
+        pass
 
 
 def _noop(sample):
