@@ -9,4 +9,5 @@ API reference
    generated/datadings.reader
    generated/datadings.sets
    generated/datadings.tools
+   generated/datadings.torch
    generated/datadings.writer

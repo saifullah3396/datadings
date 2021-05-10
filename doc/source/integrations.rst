@@ -13,11 +13,13 @@ work as expected with the PyTorch ``DataLoader``.
 
 .. note::
     ``persistent_workers=True`` must be used to let
-    ``IterableDataset`` track the current epoch.
+    :py:class:`~datadings.torch.IterableDataset` track the
+    current epoch.
 
 
 .. warning::
-    ``Dataset`` can be significantly slower than ``IterableDataset``.
+    :py:class:`~datadings.torch.Dataset` can be significantly
+    slower than :py:class:`~datadings.torch.IterableDataset`.
     If shuffling is necessary consider using
     :py:class:`~datadings.reader.augment.QuasiShuffler` instead.
 

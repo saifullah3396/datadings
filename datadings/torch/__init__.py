@@ -48,7 +48,8 @@ class Dataset(DatasetBase, _Dataset):
     Implementation of ``torch.utils.data.Dataset``.
 
     .. warning::
-        ``Dataset`` can be significantly slower than ``IterableDataset``.
+        :py:class:`~datadings.torch.Dataset` can be significantly
+        slower than :py:class:`~datadings.torch.IterableDataset`.
         If shuffling is necessary consider using
         :py:class:`~datadings.reader.augment.QuasiShuffler` instead.
 
@@ -77,22 +78,22 @@ class IterableDataset(DatasetBase, _IterableDataset):
     """
     Implementation of ``torch.utils.data.IterableDataset``.
 
-    .. warning::
+    .. note::
         Set ``batch_size`` must be the same for both dataset
         and ``DataLoader`` to avoid overlap between workers
         (and ranks in a distributed setup).
-
-    .. warning::
-        Set ``persistent_workers=True`` for the ``DataLoader``
-        to let the dataset object track the current epoch.
-        Without this option torch may create new worker processes
-        at any time, which resets the dataset to its initial state.
 
     .. note::
         In contrast to default PyTorch behavior, a small number of
         samples may be repeated per epoch if the number of samples
         in the dataset is not exactly divisible by batch size,
         number of workers, ... 
+
+    .. warning::
+        Set ``persistent_workers=True`` for the ``DataLoader``
+        to let the dataset object track the current epoch.
+        Without this option torch may create new worker processes
+        at any time, which resets the dataset to its initial state.
 
     Example usage with the PyTorch ``DataLoader``::
 
