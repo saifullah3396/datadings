@@ -4,6 +4,10 @@ stages:
   - publish
 
 
+variables:
+  PYVERS: cp37|cp38|cp39
+
+
 .image: &image
   image: quay.io/pypa/manylinux2014_x86_64
 
@@ -45,6 +49,6 @@ publish:
   <<: *image
   stage: publish
   script:
-  - ./publish-wheels.sh
+  - ./publish_wheels.sh
   only:
   - tags

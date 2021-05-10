@@ -1,16 +1,12 @@
 #!/usr/bin/env bash
 set -e -x
+shopt -s extglob
 
-# Python 2.x is not supported
-rm -rf /opt/python/cp2*
-# Don't test Python 3.5
-rm -rf /opt/python/cp35*
-
-for PYBIN in /opt/python/*/bin; do
+for PYBIN in /opt/python/@(${PYVERS})*/bin; do
   (
     cd test
     "${PYBIN}/pip" install -r ../requirements.txt
-    "${PYBIN}/pip" install -r ../test-requirements.txt
+    "${PYBIN}/pip" install --only-binary ":all:" -r ../test-requirements.txt
     "${PYBIN}/pip" install datadings --no-index -f ../dist --no-deps
     LIBDIR=$(
       "${PYBIN}/python" -c \

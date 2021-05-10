@@ -4,12 +4,17 @@ PyTorch integration
 datadings provides experimental integration with PyTorch.
 There are two options:
 
-1. :py:class:`datadings.torch.Dataset`
-1. :py:class:`datadings.torch.IterableDataset`
+#. :py:class:`~datadings.torch.Dataset`
+#. :py:class:`~datadings.torch.IterableDataset`
 
-These work as expected with the PyTorch ``DataLoader``,
-though ``persistent_workers=True`` must be used to let
-``IterableDataset`` track the current epoch.
+These implement the respective PyTorch dataset classes and
+work as expected with the PyTorch ``DataLoader``.
+
+
+.. note::
+    ``persistent_workers=True`` must be used to let
+    ``IterableDataset`` track the current epoch.
+
 
 .. warning::
     ``Dataset`` can be significantly slower than ``IterableDataset``.
@@ -19,18 +24,45 @@ though ``persistent_workers=True`` must be used to let
 
 Example usage with the PyTorch ``DataLoader``::
 
-    path = '.../train.msgpack'
-    batch_size = 256
-    reader = MsgpackReader(path)
-    transform = Compose((CompressedToPIL(), ..., ToTensor()))
-    ds = IterableDataset(reader, transform=transform, batch_size=batch_size)
-    train = DataLoader(
-        dataset=ds,
-        batch_size=batch_size,
-        num_workers=4,
-        persistent_workers=True,
-    )
-    for epoch in range(3):
-        print('Epoch', epoch)
-        for x, y in dict2tuple(tqdm(train)):
-            pass
+    from datadings.reader import MsgpackReader
+    from datadings.torch import IterableDataset
+    from datadings.torch import CompressedToPIL
+    from datadings.torch import dict2tuple
+
+    from tqdm import tqdm
+    from torch.utils.data import DataLoader
+    from torchvision.transforms import ToTensor
+    from torchvision.transforms import RandomResizedCrop
+    from torchvision.transforms import RandomHorizontalFlip
+    from torchvision.transforms import Compose
+
+
+    def main():
+        path = '.../train.msgpack'
+        batch_size = 256
+        transform = Compose((
+            CompressedToPIL(),
+            RandomResizedCrop((224, 224)),
+            RandomHorizontalFlip(),
+            ToTensor(),
+        ))
+        reader = MsgpackReader(path)
+        ds = IterableDataset(
+            reader,
+            transform=transform,
+            batch_size=batch_size,
+        )
+        train = DataLoader(
+            dataset=ds,
+            batch_size=batch_size,
+            num_workers=4,
+            persistent_workers=True,
+        )
+        for epoch in range(3):
+            print('Epoch', epoch)
+            for x, y in dict2tuple(tqdm(train)):
+                pass
+
+
+    if __name__ == "__main__":
+        main()
