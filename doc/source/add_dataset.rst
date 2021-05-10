@@ -20,8 +20,8 @@ Small amounts of data can be added directly to the Python module,
 but we recommend gzipped text, JSON or msgpack files if there is a
 lot of data.
 We usually optimize those files using
-`zopfli <https://github.com/google/zopfli>`_ to keep to size of
-repository and distributed wheels down.
+`zopfli <https://github.com/google/zopfli>`_ to keep the size of
+the repository and distributed wheels down.
 For example, for the
 :py:mod:`ILSVRC2012 <datadings.sets.ILSVRC2012_synsets>` dataset,
 the list of WordNet synsets included with datadings is 31K of text,

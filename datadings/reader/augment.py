@@ -212,6 +212,8 @@ class QuasiShuffler(Augment):
                   randomness, but use more memory
         chunk_size: size of each chunk; bigger values improve performance,
                     but reduce randomness
+        seed: random seed to use;
+              defaults to ``len(reader) * self.buf_size * chunk_size``
     """
     def __init__(self, reader, buf_size=0.01, chunk_size=16, seed=None):
         super().__init__(reader)

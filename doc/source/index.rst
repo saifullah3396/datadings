@@ -99,6 +99,7 @@ Contents
 
     usage.rst
     conventions.rst
+    integrations.rst
     file_format.rst
     add_dataset.rst
     reference.rst

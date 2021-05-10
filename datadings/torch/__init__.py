@@ -32,28 +32,103 @@ class DatasetBase:
             reader: Reader,
             transform=None,
             transform_key='image',
-            batch_size=1,
     ):
         self.reader = reader
         if transform is not None:
             self.transform = _transform_wrapper(transform, transform_key)
         else:
             self.transform = _noop
-        self.batch_size = batch_size
+
+    def __len__(self):
+        return len(self.reader)
 
 
 class Dataset(DatasetBase, _Dataset):
+    """
+    Implementation of ``torch.utils.data.Dataset``.
+
+    .. warning::
+        ``Dataset`` can be significantly slower than ``IterableDataset``.
+        If shuffling is necessary consider using
+        :py:class:`~datadings.reader.augment.QuasiShuffler` instead.
+
+    Example usage with the PyTorch ``DataLoader``::
+
+        path = '.../train.msgpack'
+        batch_size = 256
+        transform = Compose((CompressedToPIL(), ..., ToTensor()))
+        reader = MsgpackReader(path)
+        ds = Dataset(reader, transform=transform)
+        train = DataLoader(dataset=ds, batch_size=batch_size)
+        for epoch in range(3):
+            for x, y in dict2tuple(tqdm(train)):
+                pass
+
+    Parameters:
+        reader: the datadings reader instance
+        transform: the transform function, see torchvision
+        transform_key: which dict key will be transformed, e.g., ``image``
+    """
     def __getitem__(self, index):
         return self.transform(self.reader)
 
 
 class IterableDataset(DatasetBase, _IterableDataset):
+    """
+    Implementation of ``torch.utils.data.IterableDataset``.
+
+    .. warning::
+        Set ``batch_size`` must be the same for both dataset
+        and ``DataLoader`` to avoid overlap between workers
+        (and ranks in a distributed setup).
+
+    .. warning::
+        Set ``persistent_workers=True`` for the ``DataLoader``
+        to let the dataset object track the current epoch.
+        Without this option torch may create new worker processes
+        at any time, which resets the dataset to its initial state.
+
+    .. note::
+        In contrast to default PyTorch behavior, a small number of
+        samples may be repeated per epoch if the number of samples
+        in the dataset is not exactly divisible by batch size,
+        number of workers, ... 
+
+    Example usage with the PyTorch ``DataLoader``::
+
+        path = '.../train.msgpack'
+        batch_size = 256
+        reader = MsgpackReader(path)
+        transform = Compose((CompressedToPIL(), ..., ToTensor()))
+        ds = IterableDataset(reader, transform=transform, batch_size=batch_size)
+        train = DataLoader(
+            dataset=ds,
+            batch_size=batch_size,
+            num_workers=4,
+            persistent_workers=True,
+        )
+        for epoch in range(3):
+            print('Epoch', epoch)
+            for x, y in dict2tuple(tqdm(train)):
+                pass
+
+    Parameters:
+        reader: the datadings reader instance
+        transform: the transform function, see torchvision
+        transform_key: which dict key will be transformed, e.g., ``image``
+        batch_size: same batch size as given to the ``DataLoader``
+        epoch: starting epoch; only relevant when resuming
+        copy: see :py:meth:`datadings.reader.reader.Reader.iter`
+        chunk_size: see :py:meth:`datadings.reader.reader.Reader.iter`
+        group: distributed process group to use (if not using the default)
+    """
     def __init__(
             self,
             reader: Reader,
             transform=None,
             transform_key='image',
             batch_size=1,
+            epoch=1,
             copy=True,
             chunk_size=16,
             group=None
@@ -65,12 +140,10 @@ class IterableDataset(DatasetBase, _IterableDataset):
         else:
             self.rank = 0
             self.world_size = 1
+        self.batch_size = batch_size
+        self.epoch = epoch - 1
         self.copy = copy
         self.chunk_size = chunk_size
-        self.epoch = 0
-
-    def __len__(self):
-        return len(self.reader)
 
     def __iter__(self):
         info = get_worker_info()
@@ -91,6 +164,10 @@ class IterableDataset(DatasetBase, _IterableDataset):
 
 
 class CompressedToPIL:
+    """
+    Compatible torchvision transform that takes a compressed
+    image as bytes (or similar) and returns a PIL image.
+    """
     def __call__(self, buf):
         try:
             img = Image.fromarray(decode_jpeg(buf), 'RGB')
@@ -103,5 +180,9 @@ class CompressedToPIL:
 
 
 def dict2tuple(it, keys=('image', 'label')):
+    """
+    Utility function that extracts and yields the given keys
+    from each sample in the given iterator.
+    """
     for sample in it:
         yield tuple(sample[k] for k in keys)
