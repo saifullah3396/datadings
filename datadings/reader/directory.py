@@ -157,7 +157,7 @@ class DirectoryReader(ListReader):
             initfun=initfun,
             convertfun=self._load_binary,
         )
-        self._convertfun = convertfun
+        self._cust_convertfun = convertfun
         self.bytes_read = 0
 
     def _load_binary(self, sample):
@@ -166,4 +166,4 @@ class DirectoryReader(ListReader):
         self.bytes_read += len(data)
         sample['data'] = data
         # apply custom convert function, if any
-        self._convertfun(sample)
+        self._cust_convertfun(sample)
