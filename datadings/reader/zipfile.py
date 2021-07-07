@@ -16,7 +16,7 @@ from .directory import yield_file
 
 
 def glob_pattern(infos, pattern):
-    parts = pattern.split(os.sep)
+    parts = pattern.split('/')
     label_index = None
     label_start = 0
     try:
@@ -30,7 +30,7 @@ def glob_pattern(infos, pattern):
             continue
         if fnmatch(i.filename, pattern):
             if label_index is not None:
-                label = i.filename.split(os.sep)[label_index]
+                label = i.filename.split('/')[label_index]
             else:
                 label = None
             yield i.filename[label_start:], i.filename, label, []
@@ -118,7 +118,7 @@ class ZipFileReader(ListReader):
             initfun=initfun,
             convertfun=self._load_binary,
         )
-        self._convertfun = convertfun
+        self._cust_convertfun = convertfun
         self.bytes_read = 0
 
     def _load_binary(self, sample):
@@ -126,7 +126,7 @@ class ZipFileReader(ListReader):
         self.bytes_read += len(data)
         sample['data'] = data
         # apply custom convert function, if any
-        self._convertfun(sample)
+        self._cust_convertfun(sample)
 
     def __copy__(self):
         return ZipFileReader(*self._args)

@@ -15,7 +15,7 @@ from .common import iter_range
 
 
 def drop_label_directory(sample):
-    sample['key'] = sample['key'].rpartition(os.sep)[2]
+    sample['key'] = sample['key'].rpartition('/')[2]
 
 
 def test_missing_keys():
