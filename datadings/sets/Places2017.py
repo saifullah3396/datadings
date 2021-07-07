@@ -1,15 +1,9 @@
-import os.path as pt
-import gzip
-import json
-
-import numpy as np
-
+from .tools import load_json
 from .VOC2012 import median_frequency_weights
 from .ADE20k import load_statistics
 from .ADE20k import SCENELABELS
 
-
-ROOT_DIR = pt.abspath(pt.dirname(__file__))
+import numpy as __np
 
 
 CLASSES = [
@@ -47,10 +41,7 @@ CLASSES = [
 ]
 INDEXES, COUNTS = load_statistics('Places2017_counts.json.gz')
 WEIGHTS = median_frequency_weights(COUNTS)
-with gzip.open(
-        pt.join(ROOT_DIR, 'Places2017_colors.json.gz'), 'rt'
-) as f:
-    COLORS = np.array(json.load(f), dtype=np.uint8)
+COLORS = __np.array(load_json('Places2017_colors.json.gz'), dtype=__np.uint8)
 
 
 def index_to_color(array):

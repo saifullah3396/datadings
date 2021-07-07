@@ -1,33 +1,17 @@
-import os.path as pt
-import gzip
-import json
+from .tools import load_json
+from .VOC2012 import median_frequency_weights
 
 import numpy as np
 
-from .VOC2012 import median_frequency_weights
-
-
-ROOT_DIR = pt.abspath(pt.dirname(__file__))
-
-
-def _load_gzip_json(name):
-    path = pt.join(ROOT_DIR, name)
-    with gzip.open(path, mode='rt') as f:
-        return json.load(f)
-
 
 def load_statistics(name):
-    d = _load_gzip_json(name)
+    d = load_json(name)
     return d['INDEXES'], d['COUNTS']
 
 
-def load_scenelabels():
-    return _load_gzip_json('ADE20k_scenelabels.json.gz')
-
-
-INDEXES, COUNTS = load_statistics('ADE20k_counts.json.gz')
+INDEXES, COUNTS = load_statistics('ADE20k_counts.json.xz')
 WEIGHTS = median_frequency_weights(COUNTS)
-SCENELABELS = load_scenelabels()
+SCENELABELS = load_json('ADE20k_scenelabels.json.gz')
 
 
 def index_to_color(array, _index_array=np.array(INDEXES, np.uint16)):

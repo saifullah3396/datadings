@@ -22,7 +22,6 @@ import zipfile
 import re
 import io
 from collections import defaultdict
-import gzip
 
 import numpy as np
 from simplejpeg import decode_jpeg
@@ -35,13 +34,14 @@ from . import ImageData
 from .YFCC100m_counts import FILE_COUNTS
 from .YFCC100m_counts import FILES_TOTAL
 from ..tools import document_keys
+from ..tools.open import open_comp
 
 
 __doc__ += document_keys(ImageData)
 
 
 ROOT = pt.abspath(pt.dirname(__file__))
-REJECTED_PATH = pt.join(ROOT, 'YFCC100m_rejected_images.msgpack.gz')
+REJECTED_PATH = pt.join(ROOT, 'YFCC100m_rejected_images.msgpack.xz')
 
 
 def noop(data):
@@ -190,11 +190,19 @@ def _yield_from_zips(
         start_index = 0
 
 
-def _parse_rejected(f, rejected):
-    new_rejected = unpack(f)
-    for z, r in new_rejected.items():
-        rejected[z].update(r)
-    return rejected
+def _parse_rejected(path, rejected):
+    try:
+        with open_comp(path, "rb") as f:
+            new_rejected = unpack(f)
+        for z, r in new_rejected.items():
+            rejected[z].update(r)
+        return rejected
+    except ValueError:
+        with open_comp(path, "rt", encoding="utf-8") as f:
+            for line in f:
+                z, i = line.strip("\n").split(' ')
+                rejected[z].add(int(i))
+        return rejected
 
 
 class DevNull(object):
@@ -262,8 +270,7 @@ class YFCC100mReader(Reader):
         self._validator = validator
         self._rejected = defaultdict(lambda: set())
         for path in reject_file_paths or ():
-            with gzip.open(path, 'rb') as f:
-                self._rejected = _parse_rejected(f, self._rejected)
+            self._rejected = _parse_rejected(path, self._rejected)
         self._packer = make_packer()
         self._error_file_args = error_file, error_file_mode
         self._error_file = None

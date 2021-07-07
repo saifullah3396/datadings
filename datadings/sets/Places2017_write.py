@@ -57,6 +57,7 @@ from .ADE20k_write import FILES as FILES_ADE20k
 from .ADE20k_write import load_index
 from .ADE20k import SCENELABELS
 from . import Places2017Data
+from .tools import load_json
 from ..tools import document_keys
 
 
@@ -171,14 +172,8 @@ def write_set(
             ))
 
 
-def load_scenelabels():
-    path = pt.join(pt.dirname(__file__), 'Places2017_scenelabels.json.gz')
-    with gzip.open(path, 'rt', encoding='utf-8') as f:
-        return json.load(f)
-
-
 def write_sets(files, outdir, args):
-    scenes = load_scenelabels()
+    scenes = load_json('Places2017_scenelabels.json.xz')
     with TarFile(files['images']['path']) as imagetar, \
             TarFile(files['classes']['path']) as classtar, \
             TarFile(files['instances']['path']) as instancetar, \

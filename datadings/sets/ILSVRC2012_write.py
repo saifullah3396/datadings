@@ -18,7 +18,6 @@ Important:
     command to create a shuffled copy.
 """
 import os.path as pt
-import gzip
 import tarfile
 import io
 from multiprocessing.dummy import Pool as ThreadPool
@@ -30,6 +29,7 @@ from simplejpeg import decode_jpeg_header
 from simplejpeg import encode_jpeg as encode_jpeg
 
 from ..writer import FileWriter
+from .tools import open_comp
 from ..tools import yield_threaded
 from . import ImageClassificationData
 from .ILSVRC2012_synsets import SYNSETS
@@ -65,9 +65,8 @@ def yield_train(tar):
 
 
 def yield_val(tar):
-    path = pt.join(SET_ROOT, 'ILSVRC2012_val.txt.gz')
-    with gzip.open(path, 'rt', encoding='utf8') as f:
-        labels = dict(l.strip('\n').split(' ', 1) for l in f)
+    with open_comp('ILSVRC2012_val.txt.xz', 'rt', encoding='utf8') as f:
+        labels = dict(line.strip('\n').split(' ', 1) for line in f)
     for image in tar:
         yield image.name, tar.extractfile(image).read(), labels[image.name]
 
