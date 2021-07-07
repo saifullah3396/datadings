@@ -33,8 +33,11 @@ Slightly less cynically, datadings aims to make dealing with datasets
 fast and easy.
 datadings currently supports over 20 different datasets for image
 classification, segmentation, saliency prediction, and remote sensing.
-One command lets you download all necessary files and convert them to
-the datadings format.
+``pip install datadings`` and use the
+:py:mod:`datadings-write <datadings.commands.write>` command
+(``datadings-write -h`` for more info)
+to download the source files for any of the included datasets and
+convert them to the datadings format.
 And since it's based on the excellent
 `msgpack <http://msgpack.org>`_, a JSON-like format that supports
 binary data,
@@ -76,12 +79,13 @@ if you want to know how this is achieved.
 TL;DR
 -----
 
-First, use the :py:mod:`datadings-write <datadings.commands.write>`
-command to create the dataset files.
+``pip install datadings`` and use the
+:py:mod:`datadings-write <datadings.commands.write>`
+command to create the dataset files
+(``datadings-write -h`` for more info).
 It creates a ``dataset.msgpack`` file.
 In your code, open this file with the
-:py:class:`MsgpackReader <datadings.reader.msgpack.MsgpackReader>`
-like any other file.
+:py:class:`MsgpackReader <datadings.reader.msgpack.MsgpackReader>`.
 You can now iterate over it::
 
     from datadings.reader import MsgpackReader
@@ -101,7 +105,8 @@ Contents
     conventions.rst
     integrations.rst
     file_format.rst
-    add_dataset.rst
+    custom_dataset.rst
+    contribute_dataset.rst
     reference.rst
 
 
