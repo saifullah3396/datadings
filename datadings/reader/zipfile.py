@@ -69,10 +69,10 @@ class ZipFileReader(ListReader):
                 and sort.
         numeric_labels: If true, convert labels to numeric index to list
                         of all labels.
-        initfun: Callable ``initfun(sample: dict)``.
-                 Applied to given samples during initialization.
-        convertfun: Callable ``loadfun(sample: dict)``.
-                    Applied to samples before they are returned.
+        initfun: Callable ``initfun(sample: dict)`` to modify samples
+                 in-place during initialization.
+        convertfun: Callable ``convertfun(sample: dict)`` to modify samples
+                    in-place before they are returned.
         include: Set of inclusion patterns.
         exclude: Set of exclusion patterns.
         separator: Separator string for file patterns.

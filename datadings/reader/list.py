@@ -74,11 +74,13 @@ class ListReader(Reader):
                 and sort.
         numeric_labels: If true, convert labels to numeric index to list
                         of all labels.
-        initfun: Callable ``convertfun(sample: dict)``.
-                 Applied to samples during initialization.
-        convertfun: Callable ``loadfun(sample: dict)``.
+        initfun: Callable ``initfun(sample: dict)`` to modify samples
+                 in-place during initialization.
+        convertfun: Callable ``convertfun(sample: dict)``.
                     Applied to shallow copies of samples before
                     they are returned.
+        convertfun: Callable ``convertfun(sample: dict)`` to modify a
+                    shallow copy of samples in-place before they are returned.
     """
     def __init__(
             self,
