@@ -25,7 +25,7 @@ sys.path.insert(0, str(REPO_ROOT.absolute()))
 # -- Project information -----------------------------------------------------
 
 project = 'datadings'
-copyright = '2020, Joachim Folz'
+copyright = '2021, Joachim Folz'
 author = 'Joachim Folz'
 
 
