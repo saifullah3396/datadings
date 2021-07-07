@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [3.3.0] - 2021-07-07
+### Fixed
+- DirectoryReader/ZipFileReader: fix convertfun not applied properly
+- ZipFileReader (windows): paths are always separated by / not os.sep
+
+### Changed
+- xz compress some metadata to reduce size of wheel
+
+
 ## [3.2.0] - 2021-05-10
 ### Fixed
 - Reader: fix start/stop iteration
