@@ -44,11 +44,13 @@ packages = find_packages(
 
 package_data = {
     package: [
-        '*.py',
-        '*.json',
-        '*.html',
-        '*.txt',
         '*.gz',
+        '*.html',
+        '*.json',
+        '*.msgpack',
+        '*.py',
+        '*.txt',
+        '*.xz',
         pt.join('assets', '*'),
         pt.join('data', '*')
     ]
