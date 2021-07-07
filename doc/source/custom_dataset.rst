@@ -51,10 +51,10 @@ class to read samples from directory trees.
 Let's assume your dataset is currently stored in a directory tree
 like this::
 
-    yourdataset / nicelabel / aaaa
-                            / file
-                / anotherlabel / alsoafile
-                               / dddd
+    yourdataset / a / a1
+                    / a2
+                / b / b3
+                    / b4
 
 You can now simply replace the ``generate_samples`` function above
 with a
@@ -67,12 +67,22 @@ with a
 
 The names of the directories at the level marked by ``{LABEL}`` are
 used as ``label``, the path to the file from the label onwards is
-used as the ``key``, and the file contents are loaded into ``data``.
-You can now make any additional changes required to the sample
-before handing it off to the writer.
+used as the ``key``, and the file contents are loaded into ``data``::
+
+    {'key': 'a/a1', 'label': 0, 'path': 'yourdataset/a/a1',
+     '_additional_info': [], '_label': 'a', 'data': b'content of a1'}
+    {'key': 'a/a2', 'label': 0, 'path': 'yourdataset/a/a2',
+     '_additional_info': [], '_label': 'a', 'data': b'content of a2'}
+    {'key': 'b/b1', 'label': 1, 'path': 'yourdataset/b/b1',
+     '_additional_info': [], '_label': 'b', 'data': b'content of b1'}
+    {'key': 'b/b2', 'label': 1, 'path': 'yourdataset/b/b2',
+     '_additional_info': [], '_label': 'b', 'data': b'content of b2'}
+
+You can now make any additional changes to the samples before handing
+them off to the writer.
 Check the
 :py:class:`reference <datadings.reader.directory.DirectoryReader>`
-for more details.
+for more details on how you can influence its behavior.
 
 If your dataset is not a directory tree, but stored in a ZIP file
 you can use the
