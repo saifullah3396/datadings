@@ -65,9 +65,11 @@ with a
             for sample in DirectoryReader('yourdataset/{LABEL}/**'):
                 writer.write(sample)
 
-The name of the directories at the level marked by ``{LABEL}`` are
+The names of the directories at the level marked by ``{LABEL}`` are
 used as ``label``, the path to the file from the label onwards is
 used as the ``key``, and the file contents are loaded into ``data``.
+You can now make any additional changes required to the sample
+before handing it off to the writer.
 Check the
 :py:class:`reference <datadings.reader.directory.DirectoryReader>`
 for more details.
@@ -88,6 +90,5 @@ additional metadata, or it is stored in an unusual way
 you will need to write additional code to provide the samples.
 You can take a look at the source code of the
 :py:mod:`included datasets <datadings.sets>`
-like :py:mod:`MIT1003 <datadings.sets.MIT1003_write>`for pointers.
-
-
+like :py:mod:`MIT1003 <datadings.sets.MIT1003_write>`
+for pointers.
