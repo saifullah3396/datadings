@@ -15,13 +15,13 @@ A basic example
 Typically the process of converting individual samples into the
 datadings format is divided into locating/loading/pre-processing
 samples and writing them to the dataset file.
-Here's a ready-to-run example illustrates this::
+Here's a ready-to-run example that illustrates this::
 
     import random
     from datadings.writer import FileWriter
 
 
-    def yield_samples():
+    def generate_samples():
         for i in range(1000):
             data = i.to_bytes(10000, 'big')
             label = random.randrange(10)
@@ -30,7 +30,7 @@ Here's a ready-to-run example illustrates this::
 
     def main():
         with FileWriter('dummy.msgpack') as writer:
-            for sample in yield_samples():
+            for sample in generate_samples():
                 writer.write(sample)
 
 The :py:class:`FileWriter <datadings.writer.FileWriter>` should
