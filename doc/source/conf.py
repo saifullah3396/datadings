@@ -49,6 +49,15 @@ def __get_helptext(modname):
     )
 
 
+def __make_helptext_nice(helptext):
+    return helptext \
+        .replace('Note:', '.. note::') \
+        .replace('See also:', '.. seealso::') \
+        .replace('Important:', '.. important::') \
+        .replace('positional arguments:', 'Positional arguments\n^^^^^^^^^^^^^^^^^^^^\n') \
+        .replace('optional arguments:', 'Optional arguments\n^^^^^^^^^^^^^^^^^^\n')
+
+
 def autodoc_process_docstring(app, what, name, obj, options, lines):
     """
     Replace the parsed docstring with the actual help text of the script.
@@ -58,7 +67,9 @@ def autodoc_process_docstring(app, what, name, obj, options, lines):
         fnmatch(name, 'datadings.sets.*_write')
     ):
         lines.clear()
-        lines.extend(__get_helptext(name).splitlines())
+        helptext = __get_helptext(name)
+        helptext = __make_helptext_nice(helptext)
+        lines.extend(helptext.splitlines())
         lines.append('')
 
 
