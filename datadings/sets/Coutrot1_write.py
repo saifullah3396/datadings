@@ -12,6 +12,12 @@ See also:
 Note:
     ERB3_Stimuli.zip must be downloaded manually as it is hosted on mega.nz.
 
+Warning:
+    OpenCV 2.4+ is required to create this dataset.
+    If you are unsure how to install OpenCV you can use pip:
+
+        pip install opencv-python
+
 Important:
     Samples are extracted from video frames and thus NOT SHUFFLED!
     If this is not desirable the datadings-shuffle command can be used to

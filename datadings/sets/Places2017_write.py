@@ -15,6 +15,13 @@ to extract scene labels with the ``--scenelabels`` option.
 
 See also:
     https://github.com/CSAILVision/placeschallenge
+
+Warning:
+    OpenCV 2.4+ is required to create this dataset.
+    If you are unsure how to install OpenCV you can use pip:
+
+        pip install opencv-python
+
 """
 import csv
 import os

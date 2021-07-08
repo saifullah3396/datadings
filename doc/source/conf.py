@@ -54,6 +54,7 @@ def __make_helptext_nice(helptext):
         .replace('Note:', '.. note::') \
         .replace('See also:', '.. seealso::') \
         .replace('Important:', '.. important::') \
+        .replace('Warning:', '.. warning::') \
         .replace('positional arguments:', 'Positional arguments\n^^^^^^^^^^^^^^^^^^^^\n') \
         .replace('optional arguments:', 'Optional arguments\n^^^^^^^^^^^^^^^^^^\n')
 
