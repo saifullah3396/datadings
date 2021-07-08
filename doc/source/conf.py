@@ -32,6 +32,10 @@ author = 'Joachim Folz'
 # -- Setup -------------------------------------------------------------------
 
 def setup(app):
+    env = dict(
+        os.environ,
+        SPHINX_APIDOC_OPTIONS='members,show-inheritance,undoc-members',
+    )
     subprocess.check_call([
             sys.executable,
             '-m', 'sphinx.ext.apidoc',
@@ -42,7 +46,7 @@ def setup(app):
             '--output-dir', str(DOC_SOURCE / 'generated'),
             str(PACKAGE_DIR),
         ],
-        env={'SPHINX_APIDOC_OPTIONS': 'members,show-inheritance'}
+        env=env,
     )
     os.remove(DOC_SOURCE / 'generated' / 'datadings.rst')
 
@@ -55,10 +59,10 @@ def setup(app):
 extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
-    'sphinx.ext.viewcode',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.viewcode',
     # 'sphinx_autodoc_typehints',
 ]
 
