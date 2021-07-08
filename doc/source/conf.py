@@ -12,8 +12,10 @@
 #
 import os
 import sys
+import locale
 import subprocess
 from pathlib import Path
+from fnmatch import fnmatch
 
 DOC_SOURCE = Path(__file__).parent
 DOC_ROOT = DOC_SOURCE.parent.absolute()
@@ -31,7 +33,37 @@ author = 'Joachim Folz'
 
 # -- Setup -------------------------------------------------------------------
 
+
+def __get_helptext(modname):
+    enc = locale.getpreferredencoding() or sys.stdout.encoding or 'utf-8'
+    env = dict(
+        os.environ,
+        DOCSBUILD='true',
+    )
+    return subprocess.check_output(
+        [sys.executable, '-m', modname, '-h'],
+        stderr=subprocess.STDOUT,
+        encoding=enc,
+        cwd=REPO_ROOT,
+        env=env,
+    )
+
+
+def autodoc_process_docstring(app, what, name, obj, options, lines):
+    """
+    Replace the parsed docstring with the actual help text of the script.
+    """
+    if what == 'module' and (
+        fnmatch(name, 'datadings.commands.*') or
+        fnmatch(name, 'datadings.sets.*_write')
+    ):
+        lines.clear()
+        lines.extend(__get_helptext(name).splitlines())
+        lines.append('')
+
+
 def setup(app):
+    app.connect('autodoc-process-docstring', autodoc_process_docstring)
     env = dict(
         os.environ,
         SPHINX_APIDOC_OPTIONS='members,show-inheritance,undoc-members',

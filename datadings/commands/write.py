@@ -3,8 +3,16 @@ The following datasets are supported:
 
 {datasets}
 
-The help text for each dataset contains more information about requirements
-and possible options.
+The help text and documentation page for each dataset contains more
+information about requirements and possible options. Run
+
+``python -m datadings.commands.write [dataset] -h``
+
+or
+
+``datadings-write [dataset] -h``
+
+to view them.
 """
 import os
 import os.path as pt
@@ -24,6 +32,10 @@ def find_writers():
     ]
 
 
+def writer_link(w):
+    return f':py:mod:`{w} <datadings.sets.{w}_write>`'
+
+
 def format_writers(writers):
     order = OrderedDict()
     first_char = ''
@@ -32,8 +44,11 @@ def format_writers(writers):
             first_char = w.upper()[0]
             order[first_char] = []
         order[first_char].append(w)
-    return '\n'.join('%s:\n    %s' % (char, ', '.join(ws))
-                     for char, ws in order.items())
+    link = os.getenv('DOCSBUILD')
+    return '\n'.join(
+        '%s:\n    %s' % (char, ', '.join(map(writer_link, ws) if link else ws))
+        for char, ws in order.items()
+    )
 
 
 def main():
