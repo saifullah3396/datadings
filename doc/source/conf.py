@@ -163,7 +163,7 @@ intersphinx_mapping = {
 autoclass_content = 'class'
 autodoc_docstring_signature = True
 autodoc_typehints = 'signature'
-# autodoc_mock_imports = ["augpy._augpy"]
+autodoc_mock_imports = ["torch"]
 
 # avoid clashing labels between C++ and Python
 autosectionlabel_prefix_document = True

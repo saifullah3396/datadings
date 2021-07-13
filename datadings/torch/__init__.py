@@ -7,26 +7,12 @@ from ..reader.reader import Reader
 
 from PIL import Image
 from simplejpeg import decode_jpeg
-
-try:
-    from torch.utils.data import Dataset as _Dataset
-    from torch.utils.data import IterableDataset as _IterableDataset
-    from torch.utils.data import get_worker_info
-    from torch.distributed import is_initialized
-    from torch.distributed import get_rank
-    from torch.distributed import get_world_size
-except ImportError:
-    # torch is not a hard requirement,
-    # so ignore ImportError for readthedocs builds
-    import os
-    if 'READTHEDOCS' not in os.environ:
-        raise
-
-    class _Dataset:
-        pass
-
-    class _IterableDataset:
-        pass
+from torch.utils.data import Dataset as _Dataset
+from torch.utils.data import IterableDataset as _IterableDataset
+from torch.utils.data import get_worker_info
+from torch.distributed import is_initialized
+from torch.distributed import get_rank
+from torch.distributed import get_world_size
 
 
 def _noop(sample):
@@ -88,6 +74,7 @@ class Dataset(DatasetBase, _Dataset):
         return self.transform(self.reader)
 
 
+# noinspection PyAbstractClass
 class IterableDataset(DatasetBase, _IterableDataset):
     """
     Implementation of ``torch.utils.data.IterableDataset``.
@@ -148,7 +135,7 @@ class IterableDataset(DatasetBase, _IterableDataset):
             chunk_size=16,
             group=None
     ):
-        DatasetBase.__init__(self, reader, transform, transform_key, batch_size)
+        DatasetBase.__init__(self, reader, transform, transform_key)
         if is_initialized():
             self.rank = get_rank(group)
             self.world_size = get_world_size(group)
