@@ -2,6 +2,8 @@ from math import ceil
 from io import BytesIO
 from itertools import chain
 from itertools import islice
+from typing import Iterable
+import inspect
 
 from ..reader.reader import Reader
 
@@ -19,9 +21,66 @@ def _noop(sample):
     return sample
 
 
-def _transform_wrapper(f, key):
+class Compose:
+    """
+    Compose a sequence of transform functions.
+    Functions must accept the intended value from samples
+    as first argument.
+    They may have an arbitrary number of positional and
+    keyword arguments
+
+    Example usage with :py:class:`.Dataset`::
+
+        def add(v, number):
+            return v + number
+
+        def sub(x, number):
+            return x - number
+
+        def rng():
+            return {'number': random.randrange(1, 10)}
+
+        samples = [{'a': 0, 'b': 0, 'c': 0} for _ in range(10)]
+        reader = ListReader(samples)
+        transforms = {
+            'a': Compose(add),
+            'b': Compose(sub),
+            'c': Compose((add, sub)),
+        }
+        dataset = Dataset(reader, transforms=transforms, rng=rng)
+        for i in range(len(dataset)):
+            print(dataset[i])
+
+    Parameters:
+        transforms: sequence of transform functions,
+                    either one iterable or varargs
+        prefix: string prefix for parameter names, i.e.,
+                if a function normally requires parameter
+                ``size`` given ``prefix='mask_'``
+                the parameter ``'mask_size'``
+    """
+    def __init__(self, *transforms, prefix=''):
+        if len(transforms) == 1 and isinstance(transforms[0], Iterable):
+            transforms = transforms[0]
+        self.transforms = tuple(transforms)
+        self.param_names = [
+            tuple(prefix + arg for arg in inspect.getfullargspec(f).args[1:])
+            for f in transforms
+        ]
+        self.prefix = prefix
+
+    def __call__(self, value, params):
+        for f, ps in zip(self.transforms, self.param_names):
+            value = f(value, **{p: params[p] for p in ps if p in params})
+        return value
+
+
+def _transform_wrapper(funcs, rng):
     def g(sample):
-        sample[key] = f(sample[key])
+        params = rng()
+        sample['__params__'] = params
+        for k, f in funcs.items():
+            sample[k] = f(sample[k], params)
         return sample
     return g
 
@@ -30,12 +89,14 @@ class DatasetBase:
     def __init__(
             self,
             reader: Reader,
-            transform=None,
-            transform_key='image',
+            transforms=None,
+            rng=None,
     ):
         self.reader = reader
-        if transform is not None:
-            self.transform = _transform_wrapper(transform, transform_key)
+        if rng is None:
+            rng = dict
+        if transforms is not None:
+            self.transform = _transform_wrapper(transforms, rng)
         else:
             self.transform = _noop
 
@@ -67,11 +128,15 @@ class Dataset(DatasetBase, _Dataset):
 
     Parameters:
         reader: the datadings reader instance
-        transform: the transform function, see torchvision
-        transform_key: which dict key will be transformed, e.g., ``image``
+        transforms: dict of transform functions, where keys correspond to keys
+                    in the samples and values are either :py:class:`.Compose`
+                    instances or callable with signature ``f(value, params)``
+                    (where value is the corresponding value from a sample and
+                    params the dict returned by the ``rng`` callable)
+        rng: callable that returns a dict of parameters applied to transforms
     """
     def __getitem__(self, index):
-        return self.transform(self.reader)
+        return self.transform(self.reader.get(index))
 
 
 # noinspection PyAbstractClass
@@ -116,8 +181,12 @@ class IterableDataset(DatasetBase, _IterableDataset):
 
     Parameters:
         reader: the datadings reader instance
-        transform: the transform function, see torchvision
-        transform_key: which dict key will be transformed, e.g., ``image``
+        transforms: dict of transform functions, where keys correspond to keys
+                    in the samples and values are either :py:class:`.Compose`
+                    instances or callable with signature ``f(value, params)``
+                    (where value is the corresponding value from a sample and
+                    params the dict returned by the ``rng`` callable)
+        rng: callable that returns a dict of parameters applied to transforms
         batch_size: same batch size as given to the ``DataLoader``
         epoch: starting epoch; only relevant when resuming
         copy: see :py:meth:`datadings.reader.reader.Reader.iter`
@@ -127,15 +196,15 @@ class IterableDataset(DatasetBase, _IterableDataset):
     def __init__(
             self,
             reader: Reader,
-            transform=None,
-            transform_key='image',
+            transforms=None,
+            rng=None,
             batch_size=1,
             epoch=1,
             copy=True,
             chunk_size=16,
             group=None
     ):
-        DatasetBase.__init__(self, reader, transform, transform_key)
+        DatasetBase.__init__(self, reader, transforms, rng)
         if is_initialized():
             self.rank = get_rank(group)
             self.world_size = get_world_size(group)
