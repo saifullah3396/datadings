@@ -27,7 +27,7 @@ class Compose:
     Functions must accept the intended value from samples
     as first argument.
     They may have an arbitrary number of positional and
-    keyword arguments
+    keyword arguments.
 
     Example usage with :py:class:`.Dataset`::
 
