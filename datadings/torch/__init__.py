@@ -31,6 +31,11 @@ class Compose:
 
     Example usage with :py:class:`.Dataset`::
 
+        import random
+        from datadings.torch import Compose
+        from datadings.torch import Dataset
+        from datadings.reader import ListReader
+
         def add(v, number):
             return v + number
 
