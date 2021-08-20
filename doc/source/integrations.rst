@@ -94,16 +94,17 @@ from torchvision.
 Datasets accept a callable ``rng`` parameter with signature
 ``rng(sample: dict) -> dict``.
 ``sample`` is the sample that is going to be transformed and the
-returned dictionary must contain all parameters required by the
-transform functions (including keyword parameters).
-The :py:class:`~datadings.torch.Compose` detects with parameters
-are required by name.
+returned dictionary must contain all positional parameters
+required by the transform functions.
+The :py:class:`~datadings.torch.Compose` object reads the function
+signatures of your transforms to determine which parameters are
+required.
 
 .. note::
-    Parameters produced by callable ``rng`` must contain
-    **all** parameters, including keywords with defaults.
-    Use :py:func:`functools.partial` to fix these and any
-    other parameters to desired values.
+    You can use :py:func:`functools.partial` (or similar)
+    to set constant values for parameters and change defaults
+    for keyword arguments instead of including them in your
+    ``rng`` dictionary.
 
 .. warning::
     Transform functions will receive the same value if they
