@@ -99,6 +99,36 @@ required by the transform functions.
 The :py:class:`~datadings.torch.Compose` object reads the function
 signatures of your transforms to determine which parameters are
 required.
+A minimal example for how this works::
+
+    import random
+    from datadings.torch import Compose
+    from datadings.torch import Dataset
+    from datadings.reader import ListReader
+
+    def add(v, number):
+        return v + number
+
+    def sub(x, value):
+        return x - value
+
+    def rng(_):
+        return {
+            'number': random.randrange(1, 10),
+            'value': random.randrange(1, 10),
+        }
+
+    samples = [{'a': 0, 'b': 0, 'c': 0} for _ in range(10)]
+    reader = ListReader(samples)
+    transforms = {
+        'a': Compose(add),
+        'b': Compose(sub),
+        'c': Compose((add, sub)),
+    }
+    dataset = Dataset(reader, transforms=transforms, rng=rng)
+    for i in range(len(dataset)):
+        print(dataset[i])
+
 
 .. note::
     You can use :py:func:`functools.partial` (or similar)
@@ -110,8 +140,8 @@ required.
     Transform functions will receive the same value if they
     share parameter names.
     If this is not intended you must wrap one of those
-    functions in another function with a different parameter
-    name.
+    functions in another function with and change on of the
+    parameter names.
 
 Alternatively ``transforms`` may be a custom function with
 signature ``t(sample: dict) -> dict``.

@@ -78,11 +78,14 @@ class Compose:
         def add(v, number):
             return v + number
 
-        def sub(x, number):
-            return x - number
+        def sub(x, value):
+            return x - value
 
-        def rng(sample):
-            return {'number': random.randrange(1, 10)}
+        def rng(_):
+            return {
+                'number': random.randrange(1, 10),
+                'value': random.randrange(1, 10),
+            }
 
         samples = [{'a': 0, 'b': 0, 'c': 0} for _ in range(10)]
         reader = ListReader(samples)
