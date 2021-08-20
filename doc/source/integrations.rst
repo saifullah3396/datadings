@@ -30,28 +30,28 @@ Example usage with the PyTorch ``DataLoader``::
     from datadings.torch import IterableDataset
     from datadings.torch import CompressedToPIL
     from datadings.torch import dict2tuple
+    from datadings.torch import Compose
 
     from tqdm import tqdm
     from torch.utils.data import DataLoader
     from torchvision.transforms import ToTensor
     from torchvision.transforms import RandomResizedCrop
     from torchvision.transforms import RandomHorizontalFlip
-    from torchvision.transforms import Compose
 
 
     def main():
         path = '.../train.msgpack'
         batch_size = 256
-        transform = Compose((
+        transforms = {'image': Compose(
             CompressedToPIL(),
             RandomResizedCrop((224, 224)),
             RandomHorizontalFlip(),
             ToTensor(),
-        ))
+        )}
         reader = MsgpackReader(path)
         ds = IterableDataset(
             reader,
-            transform=transform,
+            transforms=transforms,
             batch_size=batch_size,
         )
         train = DataLoader(
@@ -68,3 +68,51 @@ Example usage with the PyTorch ``DataLoader``::
 
     if __name__ == "__main__":
         main()
+
+
+In our example ``transforms`` is a dictionary with one key ``'image'``.
+That means the given transformation is applied to the value
+with this key.
+You can add more keys and transforms to apply functions to
+different keys.
+
+.. note::
+    There will be warnings that transforms only accept varargs
+    when using non-functional torchvision
+    `transforms <https://pytorch.org/vision/stable/transforms.html>`_
+    due to their opaque call signatures.
+    This is fine, since these transforms only need the value as
+    input.
+    Other transforms may not work though.
+
+If you need to share randomness between transformations (e.g. to
+synchronize augmentation steps between image and mask in semantic
+segmentation) you can use functions that accept randomness as
+parameters, like
+`functional transforms <https://pytorch.org/vision/stable/transforms.html#functional-transforms>`_
+from torchvision.
+Datasets accept a callable ``rng`` parameter with signature
+``rng(sample: dict) -> dict``.
+``sample`` is the sample that is going to be transformed and the
+returned dictionary must contain all parameters required by the
+transform functions (including keyword parameters).
+The :py:class:`~datadings.torch.Compose` detects with parameters
+are required by name.
+
+.. note::
+    Parameters produced by callable ``rng`` must contain
+    **all** parameters, including keywords with defaults.
+    Use :py:func:`functools.partial` to fix these and any
+    other parameters to desired values.
+
+.. warning::
+    Transform functions will receive the same value if they
+    share parameter names.
+    If this is not intended you must wrap one of those
+    functions in another function with a different parameter
+    name.
+
+Alternatively ``transforms`` may be a custom function with
+signature ``t(sample: dict) -> dict``.
+This allows you to use multiple values from the sample for a
+transform, create new values based on the sample, etc.

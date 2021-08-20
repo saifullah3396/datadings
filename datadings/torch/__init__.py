@@ -3,7 +3,9 @@ from io import BytesIO
 from itertools import chain
 from itertools import islice
 from typing import Iterable
+from typing import Callable
 import inspect
+import warnings
 
 from ..reader.reader import Reader
 
@@ -19,6 +21,43 @@ from torch.distributed import get_world_size
 
 def _noop(sample):
     return sample
+
+
+def _getargs(f):
+    spec = inspect.getfullargspec(f)
+    args = spec.args + spec.kwonlyargs
+    # f must be callable
+    if isinstance(f, Callable):
+        # remove first arg for callables that are not functions
+        # and warn if name of the arg is not self
+        if not inspect.isfunction(f):
+            if args:
+                if args[0] != 'self':
+                    warnings.warn(
+                        f"expected first argument of {f!r} to be 'self', "
+                        f"but found {args[0]!r}, arguments given to this "
+                        "transform may be incorrect"
+                    )
+                args = args[1:]
+    else:
+        raise ValueError(f'transform must be callable, not {f!r}')
+    # if there are args, return all but the first arg
+    # warn if there are also varargs, which will be ignored
+    if args:
+        if spec.varargs:
+            warnings.warn(f'varargs are ignored for {f!r}')
+        return args[1:]
+    # if there are no args check if there are varargs instead
+    # this is the case for non-functional torchvision transforms
+    # warn that this transform can only accept values and no parameters
+    else:
+        if spec.varargs:
+            warnings.warn(f"{f!r} only accepts varargs so "
+                          "it will only receive sample values")
+        else:
+            raise ValueError('transforms must accept at least one argument '
+                             f'but {f!r} accepts none')
+        return []
 
 
 class Compose:
@@ -42,7 +81,7 @@ class Compose:
         def sub(x, number):
             return x - number
 
-        def rng():
+        def rng(sample):
             return {'number': random.randrange(1, 10)}
 
         samples = [{'a': 0, 'b': 0, 'c': 0} for _ in range(10)]
@@ -69,7 +108,7 @@ class Compose:
             transforms = transforms[0]
         self.transforms = tuple(transforms)
         self.param_names = [
-            tuple(prefix + arg for arg in inspect.getfullargspec(f).args[1:])
+            tuple(prefix + arg for arg in _getargs(f))
             for f in transforms
         ]
         self.prefix = prefix
@@ -82,7 +121,7 @@ class Compose:
 
 def _transform_wrapper(funcs, rng):
     def g(sample):
-        params = rng()
+        params = rng(sample)
         sample['__params__'] = params
         for k, f in funcs.items():
             sample[k] = f(sample[k], params)
@@ -101,7 +140,10 @@ class DatasetBase:
         if rng is None:
             rng = dict
         if transforms is not None:
-            self.transform = _transform_wrapper(transforms, rng)
+            if isinstance(transforms, dict):
+                self.transform = _transform_wrapper(transforms, rng)
+            else:
+                self.transform = transforms
         else:
             self.transform = _noop
 
@@ -123,9 +165,13 @@ class Dataset(DatasetBase, _Dataset):
 
         path = '.../train.msgpack'
         batch_size = 256
-        transform = Compose((CompressedToPIL(), ..., ToTensor()))
         reader = MsgpackReader(path)
-        ds = Dataset(reader, transform=transform)
+        transforms = {'image': Compose(
+            CompressedToPIL(),
+            ...,
+            ToTensor(),
+        )}
+        ds = Dataset(reader, transforms=transforms)
         train = DataLoader(dataset=ds, batch_size=batch_size)
         for epoch in range(3):
             for x, y in dict2tuple(tqdm(train)):
@@ -133,12 +179,17 @@ class Dataset(DatasetBase, _Dataset):
 
     Parameters:
         reader: the datadings reader instance
-        transforms: dict of transform functions, where keys correspond to keys
-                    in the samples and values are either :py:class:`.Compose`
-                    instances or callable with signature ``f(value, params)``
-                    (where value is the corresponding value from a sample and
-                    params the dict returned by the ``rng`` callable)
-        rng: callable that returns a dict of parameters applied to transforms
+        transforms: Transforms applied to samples before they are returned.
+                    Either a dict of transform functions or callable with
+                    signature ``f(sample: dict) -> dict`` that is applied
+                    directly to samples.
+                    In the dict form keys correspond to keys in the sample
+                    and values are callables with signature
+                    ``t(value: any, params: dict) -> any`` (e.g., an
+                    instance of :py:class:`.Compose`) with ``params`` the
+                    value returned by the ``rng`` callable.
+        rng: callable with signature ``rng(params: dict) -> dict`` that
+             returns a dict of parameters applied to transforms
     """
     def __getitem__(self, index):
         return self.transform(self.reader.get(index))
@@ -171,8 +222,16 @@ class IterableDataset(DatasetBase, _IterableDataset):
         path = '.../train.msgpack'
         batch_size = 256
         reader = MsgpackReader(path)
-        transform = Compose((CompressedToPIL(), ..., ToTensor()))
-        ds = IterableDataset(reader, transform=transform, batch_size=batch_size)
+        transforms = {'image': Compose(
+            CompressedToPIL(),
+            ...,
+            ToTensor(),
+        )}
+        ds = IterableDataset(
+            reader,
+            transforms=transforms,
+            batch_size=batch_size,
+        )
         train = DataLoader(
             dataset=ds,
             batch_size=batch_size,
@@ -186,12 +245,17 @@ class IterableDataset(DatasetBase, _IterableDataset):
 
     Parameters:
         reader: the datadings reader instance
-        transforms: dict of transform functions, where keys correspond to keys
-                    in the samples and values are either :py:class:`.Compose`
-                    instances or callable with signature ``f(value, params)``
-                    (where value is the corresponding value from a sample and
-                    params the dict returned by the ``rng`` callable)
-        rng: callable that returns a dict of parameters applied to transforms
+        transforms: Transforms applied to samples before they are returned.
+                    Either a dict of transform functions or callable with
+                    signature ``f(sample: dict) -> dict`` that is applied
+                    directly to samples.
+                    In the dict form keys correspond to keys in the sample
+                    and values are callables with signature
+                    ``t(value: any, params: dict) -> any`` (e.g., an
+                    instance of :py:class:`.Compose`) with ``params`` the
+                    value returned by the ``rng`` callable.
+        rng: callable with signature ``rng(params: dict) -> dict`` that
+             returns a dict of parameters applied to transforms
         batch_size: same batch size as given to the ``DataLoader``
         epoch: starting epoch; only relevant when resuming
         copy: see :py:meth:`datadings.reader.reader.Reader.iter`
