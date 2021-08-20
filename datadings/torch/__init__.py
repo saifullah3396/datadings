@@ -286,16 +286,25 @@ class IterableDataset(DatasetBase, _IterableDataset):
         self.chunk_size = chunk_size
 
     def __iter__(self):
+        # try to get info for Dataloader worker
+        # default to 1 worker of not available
         info = get_worker_info()
+        if info is None:
+            num_workers = 1
+            worker_index = 0
+        else:
+            num_workers = info.num_workers
+            worker_index = info.id
+
         n = len(self.reader)
         ws = self.world_size
         bs = self.batch_size
-        worker_iters = int(ceil(n / ws / info.num_workers / bs)) * bs
-        rank_iters = worker_iters * info.num_workers
+        worker_iters = int(ceil(n / ws / num_workers / bs)) * bs
+        rank_iters = worker_iters * num_workers
         epoch_offset = (self.epoch * rank_iters * ws) % n
         rank = (self.rank + self.epoch) % ws
         self.epoch += 1
-        start = (rank * rank_iters + info.id * worker_iters + epoch_offset) % n
+        start = (rank * rank_iters + worker_index * worker_iters + epoch_offset) % n
         r = self.reader
         it = r.iter(start, copy=self.copy, chunk_size=self.chunk_size)
         with self.reader:
