@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.4.0] - 2021-09-06
 ### Fixed
 - Dataset (torch): missing index
-- datadings.tools.open shadows builtin open in datadings.tools
+- datadings.tools.open renamed to datadings.tools.open to fix shadowed builtin open in datadings.tools
 
 ### Changed
 - torch integration: More flexible transform API, incompatible with previous draft
