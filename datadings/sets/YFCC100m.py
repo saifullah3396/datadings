@@ -34,7 +34,7 @@ from . import ImageData
 from .YFCC100m_counts import FILE_COUNTS
 from .YFCC100m_counts import FILES_TOTAL
 from ..tools import document_keys
-from ..tools.open import open_comp
+from ..tools.compression import open_comp
 
 
 __doc__ += document_keys(ImageData)

@@ -1,7 +1,7 @@
 import os.path as pt
 import json
 
-from ..tools.open import open_comp as __open_comp
+from ..tools.compression import open_comp as __open_comp
 
 
 ROOT_DIR = pt.abspath(pt.dirname(__file__))
