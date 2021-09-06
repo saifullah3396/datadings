@@ -1,6 +1,10 @@
 PyTorch integration
 ===================
 
+.. warning::
+    This functionality is highly experimental
+    and subject to change in future version!
+
 datadings provides experimental integration with PyTorch.
 There are two options:
 
