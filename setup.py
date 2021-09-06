@@ -65,13 +65,12 @@ console_scripts = [
     'datadings-{cmd}=datadings.commands.{cmd}:entry'.format(cmd=cmd)
     for cmd in (
         'bench',
+        'cat'
         'merge',
         'sample',
-        'show',
         'shuffle',
-        'write',
         'split',
-        'cat'
+        'write',
     )
 ]
 
