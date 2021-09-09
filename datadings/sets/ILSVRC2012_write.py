@@ -68,7 +68,7 @@ def yield_val(tar):
     with open_comp('ILSVRC2012_val.txt.xz', 'rt', encoding='utf8') as f:
         labels = dict(line.strip('\n').split(' ', 1) for line in f)
     for image in tar:
-        yield image.name, tar.extractfile(image).read(), labels[image.name]
+        yield image.name, tar.extractfile(image).read(), int(labels[image.name])
 
 
 def yield_samples(split, tar):
