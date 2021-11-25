@@ -117,9 +117,18 @@ class Compose:
         self.prefix = prefix
 
     def __call__(self, value, params):
-        for f, ps in zip(self.transforms, self.param_names):
-            value = f(value, **{p: params[p] for p in ps if p in params})
-        return value
+        try:
+            for f, ps in zip(self.transforms, self.param_names):
+                value = f(value, **{p: params[p] for p in ps if p in params})
+            return value
+        except TypeError as e:
+            raise KeyError('Required parameters for transform function are '
+                           'missing. Incomplete rng function? Missing constants? '
+                           + str(e))
+
+
+def no_rng(_):
+    return {}
 
 
 class DatasetBase:
@@ -130,9 +139,7 @@ class DatasetBase:
             rng=None,
     ):
         self.reader = reader
-        if rng is None:
-            rng = dict
-        self._rng = rng
+        self._rng = rng or no_rng
         self._transforms = transforms
         if transforms is not None:
             if isinstance(transforms, dict):
