@@ -122,16 +122,6 @@ class Compose:
         return value
 
 
-def _transform_wrapper(funcs, rng):
-    def g(sample):
-        params = rng(sample)
-        sample['__params__'] = params
-        for k, f in funcs.items():
-            sample[k] = f(sample[k], params)
-        return sample
-    return g
-
-
 class DatasetBase:
     def __init__(
             self,
@@ -142,13 +132,22 @@ class DatasetBase:
         self.reader = reader
         if rng is None:
             rng = dict
+        self._rng = rng
+        self._transforms = transforms
         if transforms is not None:
             if isinstance(transforms, dict):
-                self.transform = _transform_wrapper(transforms, rng)
+                self.transform = self._transform
             else:
                 self.transform = transforms
         else:
             self.transform = _noop
+
+    def _transform(self, sample):
+        params = self._rng(sample)
+        sample['__params__'] = params
+        for k, f in self._transforms.items():
+            sample[k] = f(sample[k], params)
+        return sample
 
     def __len__(self):
         return len(self.reader)
