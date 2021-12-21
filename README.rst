@@ -12,6 +12,9 @@ For supervised training with images samples are dictionaries like this::
 `msgpack <http://msgpack.org>`_ is used as an efficient storage
 format for most supported datasets.
 
+Check out the `documentation <https://datadings.readthedocs.io>`_
+for more details.
+
 
 
 Supported datasets
