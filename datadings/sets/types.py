@@ -199,6 +199,30 @@ Returns a dictionary::
     }
 
 
+def ImageNet21kData(
+        key,
+        image,
+        label,
+        label_tree
+):
+    """
+Returns a dictionary::
+
+    {
+        'key': key,
+        'image': image,
+        'label': label,
+        'label_tree': label_tree
+    }
+    """
+    return {
+        'key': key,
+        'image': image,
+        'label': label,
+        'label_tree': label_tree
+    }
+
+
 def ImageSegmentationData(
         key,
         image,

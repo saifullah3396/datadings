@@ -79,5 +79,11 @@
     "label_image",
     "instance_image",
     "boundary"
+  ],
+  "ImageNet21kData": [
+    "key",
+    "image",
+    "label",
+    "label_tree"
   ]
 }

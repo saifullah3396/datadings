@@ -158,13 +158,7 @@ def write_sets(files, outdir, args):
             write_set(split, outdir, gen, args)
 
 
-def main():
-    from ..tools.argparse import make_parser
-    from ..tools.argparse import argument_threads
-    from ..tools import prepare_indir
-
-    parser = make_parser(__doc__, shuffle=False)
-    argument_threads(parser, default=1)
+def argument_compress(parser):
     parser.add_argument(
         '--compress',
         nargs='?',
@@ -177,6 +171,9 @@ def main():
              'Default quality is 85. '
              'Big images are resized to roughly fit 500x375. '
     )
+
+
+def argument_subsampling(parser):
     parser.add_argument(
         '--subsampling',
         default='422',
@@ -185,6 +182,17 @@ def main():
         help='Color subsampling factor used with compress option. '
              '444 is forced for small images to preserve details.'
     )
+
+
+def main():
+    from ..tools.argparse import make_parser
+    from ..tools.argparse import argument_threads
+    from ..tools import prepare_indir
+
+    parser = make_parser(__doc__, shuffle=False)
+    argument_threads(parser, default=1)
+    argument_compress(parser)
+    argument_subsampling(parser)
     args = parser.parse_args()
     outdir = args.outdir or args.indir
 
