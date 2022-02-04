@@ -41,6 +41,7 @@ from .ImageNet21k_synsets import SYNSETS
 from .ImageNet21k_synsets import SYNSET_TREE_LIST
 from .ImageNet21k_synsets import NUM_TRAIN_SAMPLES
 from .ImageNet21k_synsets import NUM_VAL_SAMPLES
+from .ImageNet21k_synsets import VAL_SAMPLES_PER_SYNSET
 
 
 __doc__ += document_keys(ImageNet21kData)
@@ -59,9 +60,6 @@ FILES = {
         'md5': 'ab313ce03179fd803a401b02c651c0a2',
     }
 }
-
-
-VAL_SAMPLES_PER_SYNSET = 50
 
 
 def yield_samples(infile):

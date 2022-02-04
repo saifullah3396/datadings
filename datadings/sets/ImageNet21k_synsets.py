@@ -5,6 +5,7 @@ from .tools import open_comp
 
 
 NUM_VALID_SYNSETS = 10450
+VAL_SAMPLES_PER_SYNSET = 50
 
 
 def __load_synsets():
@@ -23,6 +24,6 @@ NUM_TRAIN_SAMPLES = meta['train']
 NUM_VAL_SAMPLES = meta['val']
 
 assert NUM_VALID_SYNSETS == len(SYNSET_LIST)
-assert NUM_VAL_SAMPLES == len(SYNSET_LIST) * 50
+assert NUM_VAL_SAMPLES == len(SYNSET_LIST) * VAL_SAMPLES_PER_SYNSET
 
 del meta
