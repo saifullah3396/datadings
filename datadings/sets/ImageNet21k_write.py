@@ -2,7 +2,6 @@
 
 This tool will look for the following files in the input directory:
 
-- imagenet21k_miil_tree.pth
 - winter21_whole.tar.gz
 
 See also:
@@ -10,11 +9,15 @@ See also:
     https://github.com/Alibaba-MIIL/ImageNet21K
 
 Note:
-    Registration is required to download winter21_whole.tar.gz.
+    Registration is required to download this dataset.
     Please visit the website to download it.
-    If you experience issues downloading you may consider using
-    bittorrent:
+    If you experience issues downloading you may consider using bittorrent:
     https://academictorrents.com/details/8ec0d8df0fbb507594557bce993920442f4f6477
+
+Important:
+    For performance reasons samples are read in same order as they are stored
+    in the source tar files. It is recommended to use the datadings-shuffle
+    command to create a shuffled copy.
 """
 import os
 import gzip
@@ -104,6 +107,8 @@ def write_sets(files, outdir, args):
     )
     with train_writer, val_writer:
         for split, sample in pool.imap_unordered(__verify_inner, gen):
+            if sample['image'] is None:
+                print(f"{split} sample {sample['key']} failed verification")
             if split == 'train':
                 train_writer.write(sample)
             elif split == 'val':

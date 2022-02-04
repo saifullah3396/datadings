@@ -24,6 +24,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 import numpy as np
 from PIL import Image
+from PIL import UnidentifiedImageError
 from simplejpeg import decode_jpeg
 from simplejpeg import decode_jpeg_header
 from simplejpeg import encode_jpeg as encode_jpeg
@@ -103,11 +104,17 @@ def verify_image(
         compress = quality is not None and im.size > 0.5*target_size
     # simplejpeg could not decode image, fall back to Pillow
     # could be faulty JPEG or other image format, e.g. PNG
-    except ValueError:
-        bio = io.BytesIO(data)
-        im = np.array(Image.open(bio).convert('RGB'))
-        colorspace = 'RGB'  # converted to RGB guaranteed
-        compress = True  # force compression since simplejpeg failed
+    except ValueError as e1:
+        try:
+            bio = io.BytesIO(data)
+            im = np.array(Image.open(bio).convert('RGB'))
+            colorspace = 'RGB'  # converted to RGB guaranteed
+            compress = True  # force compression since simplejpeg failed
+        except UnidentifiedImageError as e2:
+            print(f'image could not be decoded, first 8 bytes: {data.hex()[:8]}')
+            print(e1)
+            print(e2)
+            return None
 
     # if images are CMYK or
     if colorspace == 'CMYK' or compress:
