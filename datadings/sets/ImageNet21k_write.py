@@ -70,12 +70,19 @@ def yield_samples(infile):
                 label_tree = SYNSET_TREE_LIST[label]
                 # use streaming mode (r|), since the parent file is not seekable
                 synset_tar = tarfile.open(fileobj=tar.extractfile(synset), mode='r|')
-                images = iter(synset_tar)
+                # sort images by name, as would be done by ls/glob
+                # this ensures the first 50 images used for the validation set
+                # are the same as in the Alibaba preprocessing script:
+                # https://github.com/Alibaba-MIIL/ImageNet21K/blob/653ad536fde814e4cc7d0e19a48c8389e4ac2107/dataset_preprocessing/processing_script.sh#L51
+                images = iter(sorted(
+                    (info.name, synset_tar.extractfile(info).read())
+                    for info in synset_tar
+                ))
                 val_images = it.islice(images, VAL_SAMPLES_PER_SYNSET)
-                for image in val_images:
-                    yield 'val', image.name, synset_tar.extractfile(image).read(), label, label_tree
-                for image in images:
-                    yield 'train', image.name, synset_tar.extractfile(image).read(), label, label_tree
+                for name, data in val_images:
+                    yield 'val', name, data, label, label_tree
+                for name, data in images:
+                    yield 'train', name, data, label, label_tree
 
 
 def write_sets(files, outdir, args):
