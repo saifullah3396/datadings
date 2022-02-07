@@ -30,16 +30,11 @@ from pathlib import Path
 from collections import OrderedDict
 from multiprocessing.dummy import Pool as ThreadPool
 
-import requests
-import tqdm
-import torch
-
 from ..tools import document_keys
 from ..tools import yield_process
 from ..writer import FileWriter
 from . import ImageNet21kData
 from .ILSVRC2012_write import verify_image
-from .ImageNet21k_synsets import NUM_VALID_SYNSETS
 from .ImageNet21k_synsets import SYNSETS
 from .ImageNet21k_synsets import SYNSET_TREE_LIST
 from .ImageNet21k_synsets import NUM_TRAIN_SAMPLES
