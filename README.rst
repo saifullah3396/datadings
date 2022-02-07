@@ -33,6 +33,7 @@ Cityscapes_       Segmentation, Semantic understanding of urban street
 Coutrot1_         Eye-Tracking, Saliency
 FIGRIMFixation_   Eye-Tracking, Saliency
 ILSVRC2012_       Imagenet Large Scale Visual Recognition Challenge
+ImageNet21k_      A superset of ILSVRC2012 with 11 M images for 10450 classes
 InriaBuildings_   Inria Areal Image Labeling Dataset (Buildings),
                   Segmentation, Remote Sensing
 MIT1003_          Eye-Tracking, Saliency, Learning to predict where
@@ -60,6 +61,7 @@ YFCC100m_         Yahoo Flickr Creative Commons 100 M pics
 .. _Coutrot1: http://antoinecoutrot.magix.net/public/databases.html
 .. _FIGRIMFixation: http://figrim.mit.edu/index_eyetracking.html
 .. _ILSVRC2012: http://www.image-net.org/challenges/LSVRC/2012/
+.. _ImageNet21k: https://image-net.org/download.php
 .. _InriaBuildings: https://project.inria.fr/aerialimagelabeling/
 .. _MIT300: http://saliency.mit.edu/results_mit300.html
 .. _MIT1003: http://people.csail.mit.edu/tjudd/WherePeopleLook/index.html
