@@ -35,7 +35,7 @@ import tqdm
 import torch
 
 from ..tools import document_keys
-from ..tools import yield_threaded
+from ..tools import yield_process
 from ..writer import FileWriter
 from . import ImageNet21kData
 from .ILSVRC2012_write import verify_image
@@ -84,7 +84,7 @@ def yield_samples(infile):
 
 
 def write_sets(files, outdir, args):
-    gen = yield_threaded(yield_samples(files['data']['path']))
+    gen = yield_process(yield_samples(files['data']['path']))
 
     def __verify_inner(item):
         split, key, data, label, label_tree = item

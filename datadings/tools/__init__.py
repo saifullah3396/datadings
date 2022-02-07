@@ -3,6 +3,7 @@ import os
 import os.path as pt
 from itertools import product
 import threading as th
+import multiprocessing as mp
 from queue import Queue
 from queue import Full
 from queue import Empty
@@ -431,6 +432,69 @@ def yield_threaded(gen):
                 if obj is end:
                     break
                 if obj is error:
+                    raise RuntimeError()
+                yield obj
+            except Empty:
+                pass
+    finally:
+        yielder.stop()
+
+
+class SentinelEnd:
+    pass
+
+
+class SentinelError:
+    pass
+
+
+class YielderProc(mp.Process):
+    def __init__(self, gen, queue):
+        super().__init__()
+        self.daemon = True
+        self.running = mp.Value('b')
+        self.running.value = True
+        self.gen = gen
+        self.queue = queue
+
+    def run(self):
+        try:
+            for obj in self.gen:
+                if not self.running.value:
+                    break
+                while True:
+                    try:
+                        self.queue.put(obj, timeout=1)
+                        break
+                    except Full:
+                        pass
+            else:
+                self.queue.put(SentinelEnd(), timeout=1)
+        finally:
+            self.queue.put(SentinelError(), timeout=1)
+
+    def stop(self):
+        self.running.value = False
+
+
+def yield_process(gen):
+    """
+    Run a generator in a background thread and yield its
+    output in the current thread.
+
+    Parameters:
+        gen: Generator to yield from.
+    """
+    queue = mp.Queue(maxsize=3)
+    yielder = YielderProc(gen, queue)
+    try:
+        yielder.start()
+        while True:
+            try:
+                obj = queue.get(timeout=1)
+                if isinstance(obj, SentinelEnd):
+                    break
+                if isinstance(obj, SentinelError):
                     raise RuntimeError()
                 yield obj
             except Empty:
