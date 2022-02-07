@@ -33,13 +33,24 @@ from collections import OrderedDict
 
 import requests
 import tqdm
-import torch
 
 from ..tools.argparse import make_parser
 from ..tools import prepare_indir
 from ..tools import query_user
 from .ImageNet21k_write import FILES
 from .ImageNet21k_synsets import NUM_VALID_SYNSETS
+
+
+try:
+    import torch
+except ImportError:
+    import warnings
+    warnings.warn("PyTorch is required to run this tool.")
+    # a dummy replacement for the torch module that raises when used
+    class torch:
+        @staticmethod
+        def load(*_, **__):
+            raise RuntimeError("PyTorch is required to run this tool.")
 
 
 NUM_TOTAL_SYNSETS = 19167
