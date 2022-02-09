@@ -220,7 +220,8 @@ class QuasiShuffler(Augment):
         self._i = 0
         self._n = len(reader)
         if buf_size < 1:
-            buf_size = int(ceil(self._n * 0.01))
+            buf_size = ceil(self._n * 0.01)
+        buf_size = int(buf_size)
         self.reader = reader
         # buf size is a multiple of chunk_size
         self.buf_size = int(ceil(buf_size / chunk_size)) * chunk_size
