@@ -320,7 +320,7 @@ class IterableDataset(DatasetBase, _IterableDataset):
 
     def __len__(self):
         _, _, rank_iters = self._num_iters()
-        return rank_iters * self.batch_size
+        return rank_iters
 
     def __iter__(self):
         r = self.reader
