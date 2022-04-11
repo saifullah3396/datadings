@@ -204,6 +204,21 @@ class Dataset(DatasetBase, _Dataset):
         return self.transform(self.reader.get(index))
 
 
+def worker_info():
+    """
+    Try to get info for Dataloader worker.
+    Default to 1 worker with index 0 if not available.
+
+    Returns:
+        num_workers, worker_index
+    """
+    info = get_worker_info()
+    if info is None:
+        return 1, 0
+    else:
+        return info.num_workers, info.id
+
+
 # noinspection PyAbstractClass
 class IterableDataset(DatasetBase, _IterableDataset):
     """
@@ -294,27 +309,28 @@ class IterableDataset(DatasetBase, _IterableDataset):
         self.copy = copy
         self.chunk_size = chunk_size
 
-    def __iter__(self):
-        # try to get info for Dataloader worker
-        # default to 1 worker of not available
-        info = get_worker_info()
-        if info is None:
-            num_workers = 1
-            worker_index = 0
-        else:
-            num_workers = info.num_workers
-            worker_index = info.id
-
+    def _num_iters(self):
+        num_workers, worker_index = worker_info()
         n = len(self.reader)
         ws = self.world_size
         bs = self.batch_size
         worker_iters = int(ceil(n / ws / num_workers / bs)) * bs
         rank_iters = worker_iters * num_workers
+        return worker_index, worker_iters, rank_iters
+
+    def __len__(self):
+        _, _, rank_iters = self._num_iters()
+        return rank_iters * self.batch_size
+
+    def __iter__(self):
+        r = self.reader
+        n = len(r)
+        ws = self.world_size
+        worker_index, worker_iters, rank_iters = self._num_iters()
         epoch_offset = (self.epoch * rank_iters * ws) % n
         rank = (self.rank + self.epoch) % ws
         self.epoch += 1
         start = (rank * rank_iters + worker_index * worker_iters + epoch_offset) % n
-        r = self.reader
         it = r.iter(start, copy=self.copy, chunk_size=self.chunk_size)
         with self.reader:
             for sample in islice(chain(it, r.iter(0)), worker_iters):
