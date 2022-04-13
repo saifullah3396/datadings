@@ -218,11 +218,10 @@ class Reader(metaclass=ABCMeta):
             copy=True,
             chunk_size=16,
     ):
-        n = len(self)
         chunks = int(ceil((stop - start) / chunk_size))
         for c in range(chunks):
             a = c * chunk_size + start
-            b = min(n, a + chunk_size)
+            b = min(stop, a + chunk_size)
             yield from self.slice(a, b, yield_key, raw, copy)
 
     def iter(
