@@ -1,7 +1,4 @@
-from math import ceil
 from io import BytesIO
-from itertools import chain
-from itertools import islice
 from typing import Iterable
 from typing import Callable
 import inspect
@@ -204,42 +201,36 @@ class Dataset(DatasetBase, _Dataset):
         return self.transform(self.reader.get(index))
 
 
-def worker_info():
-    """
-    Try to get info for Dataloader worker.
-    Default to 1 worker with index 0 if not available.
-
-    Returns:
-        num_workers, worker_index
-    """
-    info = get_worker_info()
-    if info is None:
-        return 1, 0
-    else:
-        return info.num_workers, info.id
-
-
 # noinspection PyAbstractClass
 class IterableDataset(DatasetBase, _IterableDataset):
     """
-    Implementation of ``torch.utils.data.IterableDataset``.
+    Implementation of ``torch.utils.data.IterableDataset`` to use
+    with datadings readers.
+
+    With distributed training the reader is divided into
+    ``world_size * num_workers`` shards.
+    Each dataloader worker of each rank iterates over a different
+    shard.
+    The final batch delivered by a worker may be smaller than the 
+    batch size if the length of the reader is not divisible by
+    ``batch_size * num_shards``.
 
     .. note::
-        Set ``batch_size`` must be the same for both dataset
-        and ``DataLoader`` to avoid overlap between workers
-        (and ranks in a distributed setup).
-
-    .. note::
-        In contrast to default PyTorch behavior, a small number of
-        samples may be repeated per epoch if the number of samples
-        in the dataset is not exactly divisible by batch size,
-        number of workers, ... 
-
-    .. warning::
         Set ``persistent_workers=True`` for the ``DataLoader``
         to let the dataset object track the current epoch.
+        It then cycles through shards
+        This makes ranks cycle through shards of the dataset
         Without this option torch may create new worker processes
         at any time, which resets the dataset to its initial state.
+
+    .. warning::
+        Raises ``RuntimeError`` if ``0 < len(shard) % batch_size < 1``,
+        since this may lead to an uneven number of batches generated
+        by each worker.
+        This can lead to crashes if it happens between rank workers,
+        or deadlock if ranks receive different a number of batches.
+        Change ``num_workers``, ``batch_size``, or ``world_size``
+        to avoid this.
 
     Example usage with the PyTorch ``DataLoader``::
 
@@ -281,7 +272,7 @@ class IterableDataset(DatasetBase, _IterableDataset):
         rng: callable with signature ``rng(params: dict) -> dict`` that
              returns a dict of parameters applied to transforms
         batch_size: same batch size as given to the ``DataLoader``
-        epoch: starting epoch; only relevant when resuming
+        epoch: starting epoch, zero indexed; only relevant when resuming
         copy: see :py:meth:`datadings.reader.reader.Reader.iter`
         chunk_size: see :py:meth:`datadings.reader.reader.Reader.iter`
         group: distributed process group to use (if not using the default)
@@ -291,8 +282,8 @@ class IterableDataset(DatasetBase, _IterableDataset):
             reader: Reader,
             transforms=None,
             rng=None,
-            batch_size=1,
-            epoch=1,
+            batch_size=None,
+            epoch=0,
             copy=True,
             chunk_size=16,
             group=None
@@ -305,36 +296,55 @@ class IterableDataset(DatasetBase, _IterableDataset):
             self.rank = 0
             self.world_size = 1
         self.batch_size = batch_size
-        self.epoch = epoch - 1
+        self.epoch = epoch
         self.copy = copy
         self.chunk_size = chunk_size
 
-    def _num_iters(self):
-        num_workers, worker_index = worker_info()
+    def _start_stop(self):
+        # check which worker this process is
+        info = get_worker_info()
+        if info is None:
+            num_workers, worker_index = 1, 0
+        else:
+            num_workers, worker_index =  info.num_workers, info.id
+        # calculate the number and size of shards
         n = len(self.reader)
-        ws = self.world_size
-        bs = self.batch_size
-        worker_iters = int(ceil(n / ws / num_workers / bs)) * bs
-        rank_iters = worker_iters * num_workers
-        return worker_index, worker_iters, rank_iters
+        num_shards = self.world_size * num_workers
+        shard_iters = n / num_shards
+        # check if given batch_size could lead to empty last batch
+        if self.batch_size is not None:
+            overhang = shard_iters % self.batch_size
+            if 0 < overhang < 1:
+                raise RuntimeError(
+                    f"len(shard) % batch_size = {overhang}, "
+                    "so last batch may be empty; "
+                    "change num_workers, batch_size, or world_size"
+                )
+        # rank is offset by current epoch
+        # this makes ranks cycle through shards during training
+        index = (self.rank + self.epoch) * num_workers + worker_index
+        index %= num_shards
+        start = max(0, int(round(shard_iters * index)))
+        # last shard should include at last sample
+        if index + 1 == num_shards:
+            stop = n
+        else:
+            stop = min(n, int(round(shard_iters * (index + 1))))
+        return start, stop
 
     def __len__(self):
-        _, _, rank_iters = self._num_iters()
-        return rank_iters
+        start, stop = self._start_stop()
+        return stop - start
 
     def __iter__(self):
-        r = self.reader
-        n = len(r)
-        ws = self.world_size
-        worker_index, worker_iters, rank_iters = self._num_iters()
-        epoch_offset = (self.epoch * rank_iters * ws) % n
-        rank = (self.rank + self.epoch) % ws
+        # create the iterator for the current shard
+        start, stop = self._start_stop()
+        it = self.reader.iter(start, stop, copy=self.copy, chunk_size=self.chunk_size)
+        # advance epoch by one
         self.epoch += 1
-        start = (rank * rank_iters + worker_index * worker_iters + epoch_offset) % n
-        it = r.iter(start, copy=self.copy, chunk_size=self.chunk_size)
+        # yield transformed samples
         with self.reader:
-            for sample in islice(chain(it, r.iter(0)), worker_iters):
-                yield self.transform(sample)
+            yield from map(self.transform, it)
 
 
 class CompressedToPIL:

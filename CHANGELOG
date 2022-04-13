@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IterableDataset: fix __len__ with distributed training
 - Reader: fix iterator may return too many samples
 
+### Changed
+- IterableDataset: now yields samples at most once per iteration
+
 
 ## [3.4.4] - 2022-02-09
 ### Added
