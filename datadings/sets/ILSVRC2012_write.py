@@ -20,6 +20,7 @@ Important:
 import os.path as pt
 import tarfile
 import io
+import gzip
 from multiprocessing.dummy import Pool as ThreadPool
 
 import numpy as np
@@ -111,10 +112,24 @@ def verify_image(
             colorspace = 'RGB'  # converted to RGB guaranteed
             compress = True  # force compression since simplejpeg failed
         except UnidentifiedImageError as e2:
-            print(f'image could not be decoded, first 8 bytes: {data.hex()[:8]}')
-            print(e1)
-            print(e2)
-            return None
+            # For ImageNet21k:
+            # check if images are actually gzip file and try to decompress
+            try:
+                if data[:2] == b'\x1f\x8b':
+                    bio.seek(0)
+                    with gzip.open(bio) as zf:
+                        return verify_image(
+                            zf.read(),
+                            quality=quality,
+                            short_side=short_side,
+                            long_side=long_side,
+                            colorsubsampling=colorsubsampling,
+                        )
+            except IOError:
+                print(f'image could not be decoded, first 8 bytes: {data.hex()[:8]}')
+                print(e1)
+                print(e2)
+                return None
 
     # if images are CMYK or
     if colorspace == 'CMYK' or compress:

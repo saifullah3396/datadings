@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [3.4.6] - 2022-07-06
+### Fixed
+- ImageNet21k: decompress images that are gzipped
+
+
 ## [3.4.5] - 2022-04-11
 ### Fixed
 - IterableDataset: fix __len__ with distributed training
@@ -99,7 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -  Initial public release.
 
 
-[Unreleased]: https://gitlab.com/jfolz/datadings/-/compare/3.4.5...master
+[Unreleased]: https://gitlab.com/jfolz/datadings/-/compare/3.4.6...master
+[3.4.6]: https://gitlab.com/jfolz/datadings/-/compare/3.4.5...3.4.6
 [3.4.5]: https://gitlab.com/jfolz/datadings/-/compare/3.4.4...3.4.5
 [3.4.4]: https://gitlab.com/jfolz/datadings/-/compare/3.4.3...3.4.4
 [3.4.3]: https://gitlab.com/jfolz/datadings/-/compare/3.4.2...3.4.3

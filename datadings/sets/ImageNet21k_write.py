@@ -19,15 +19,9 @@ Important:
     in the source tar files. It is recommended to use the datadings-shuffle
     command to create a shuffled copy.
 """
-import os
-import gzip
-import json
-import lzma
-import pickle
 import tarfile
 import itertools as it
 from pathlib import Path
-from collections import OrderedDict
 from multiprocessing.dummy import Pool as ThreadPool
 
 from ..tools import document_keys
@@ -111,6 +105,7 @@ def write_sets(files, outdir, args):
         for split, sample in pool.imap_unordered(__verify_inner, gen):
             if sample['image'] is None:
                 print(f"{split} sample {sample['key']} failed verification")
+                continue
             if split == 'train':
                 train_writer.write(sample)
             elif split == 'val':
@@ -132,7 +127,6 @@ def main():
     argument_compress(parser)
     argument_subsampling(parser)
     args = parser.parse_args()
-    indir = Path(args.indir)
     outdir = Path(args.outdir or args.indir)
 
     files = prepare_indir(FILES, args)
