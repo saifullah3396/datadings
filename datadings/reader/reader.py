@@ -199,18 +199,3 @@ class Reader(metaclass=ABCMeta):
 
     def __iter__(self):
         return self.iter()
-
-    def rawiter(self, yield_key=False):
-        """
-        Create an iterator that yields samples as msgpacked messages.
-
-        Included for backwards compatibility and may be deprecated and
-        subsequently removed in the future.
-
-        Parameters:
-            yield_key: If True, yields (key, sample) pairs.
-
-        Returns:
-            Iterator
-        """
-        return self.iter(yield_key=yield_key, raw=True)

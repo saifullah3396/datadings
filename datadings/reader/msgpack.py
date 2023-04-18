@@ -182,12 +182,6 @@ class MsgpackReader(Reader):
         start, stop, _ = slice(start, stop).indices(self._len)
 
         pos = self._offsets
-        # avoid lazy-loading keys if not necessary
-        if yield_key:
-            key = self._keys
-        else:
-            key = None
-
         offset = pos[start]
         n = pos[stop] - offset
         f = self._infile
@@ -197,6 +191,7 @@ class MsgpackReader(Reader):
             buf = memoryview(buf)
 
         if yield_key:
+            key = self._keys
             if raw:
                 for i in range(start, stop):
                     yield key[i], buf[pos[i] - offset:pos[i+1] - offset]
