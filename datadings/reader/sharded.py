@@ -74,8 +74,8 @@ class ShardedReader(Reader):
 
     def _iter_impl(
             self,
-            start=None,
-            stop=None,
+            start,
+            stop,
             yield_key=False,
             raw=False,
             copy=True,

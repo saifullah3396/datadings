@@ -176,8 +176,7 @@ class MsgpackReader(Reader):
             data = unpackb(data)
         if yield_key:
             return self._keys[index], data
-        else:
-            return data
+        return data
 
     def slice(self, start, stop=None, yield_key=False, raw=False, copy=True):
         start, stop, _ = slice(start, stop).indices(self._len)

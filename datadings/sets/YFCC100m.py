@@ -84,7 +84,7 @@ def _find_zip_key(rejected, zips, key):
     try:
         zip_index = zips.index(z)
     except ValueError:
-        raise IndexError('ZIP file {!r} not found'.format(z))
+        raise IndexError(f'ZIP file {z!r} not found')
 
     partial_index = 0
     for z, count in FILE_COUNTS[:zip_index]:
@@ -100,9 +100,7 @@ def _find_zip_index(rejects, index):
     if index < 0:
         index += total
     if index < 0 or index >= total:
-        raise IndexError('index {} out of range for {} items'.format(
-            index, total - 1
-        ))
+        raise IndexError(f'index {index} out of range for {total - 1} items')
     partial_index = 0
     for i, (z, count) in enumerate(FILE_COUNTS):
         count -= len(rejects[z])
@@ -122,11 +120,9 @@ def _find_member_image(members, rejected, start_image):
     for i, m in enumerate(members):
         if m.filename.split(os.sep)[1] == start_image:
             if i in rejected:
-                raise IndexError(
-                    '{!r} is on the rejected list'.format(m.filename)
-                )
+                raise IndexError(f'{m.filename!r} is on the rejected list')
             return i
-    raise IndexError('{!r} not found'.format(start_image))
+    raise IndexError(f'{start_image!r} not found')
 
 
 def _find_member_index(rejected, start_index):
@@ -265,8 +261,7 @@ class YFCC100mReader(Reader):
         super().__init__()
         self._path = image_packs_dir
         if not callable(validator):
-            raise ValueError('validator must be callable, not %r'
-                             % validator)
+            raise ValueError(f'validator must be callable, not {validator!r}')
         self._validator = validator
         self._rejected = defaultdict(lambda: set())
         for path in reject_file_paths or ():
@@ -275,8 +270,6 @@ class YFCC100mReader(Reader):
         self._error_file_args = error_file, error_file_mode
         self._error_file = None
         self.open_error_file_()
-        self._gen = None
-        self.seek_index(0)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__del__()
@@ -300,7 +293,6 @@ class YFCC100mReader(Reader):
             raise RuntimeError('cannot copy a validating reader')
         reader = super().__copy__()
         reader.open_error_file_()
-        reader.seek_index(self._i)
         return reader
 
     def open_error_file_(self):
@@ -321,14 +313,6 @@ class YFCC100mReader(Reader):
             else:
                 break
         return ImageData(key, sample)
-
-    def next(self):
-        return self._get_next_sample(self._gen)
-
-    __next__ = next
-
-    def rawnext(self):
-        return self._packer.pack(self.next())
 
     def find_index(self, key):
         zips, start_index, index = _find_start(
@@ -360,39 +344,6 @@ class YFCC100mReader(Reader):
         sample, key, _, _ = next(gen)
         return key
 
-    def seek_index(self, index):
-        if index != 0 and self._validator != noop:
-            raise RuntimeError('can only seek to start while validating')
-
-        zips, start_index, _ = _find_start(
-            self._path, self._rejected, start_index=index
-        )
-
-        self._gen = _yield_from_zips(
-            self._path, zips, self._rejected, start_index, self._validator,
-        )
-        self._i = index
-
-    def seek_key(self, key):
-        zips, start_index, index = _find_start(
-            self._path, self._rejected, start_key=key
-        )
-
-        # count up to start_index in zip and all samples
-        # that are not in rejected to index
-        r = self._rejected[zips[0]]
-        for i in range(start_index):
-            if i not in r:
-                index += 1
-
-        if index != 0 and self._validator != noop:
-            raise RuntimeError('can only seek to start while validating')
-
-        self._gen = _yield_from_zips(
-            self._path, zips, self._rejected, start_index, self._validator,
-        )
-        self._i = index
-
     def get(self, index, yield_key=False, raw=False, copy=True):
         if index != 0 and self._validator != noop:
             raise RuntimeError('can only seek to start while validating')
@@ -408,8 +359,8 @@ class YFCC100mReader(Reader):
 
     def _iter_impl(
             self,
-            start=None,
-            stop=None,
+            start,
+            stop,
             yield_key=False,
             raw=False,
             copy=True,
@@ -419,6 +370,7 @@ class YFCC100mReader(Reader):
             raise RuntimeError('can only seek to start while validating')
 
         start, stop, _ = slice(start, stop).indices(len(self))
+        n = stop - start
 
         zips, start_index, _ = _find_start(
             self._path, self._rejected, start_index=start
@@ -433,14 +385,12 @@ class YFCC100mReader(Reader):
             pack = noop
 
         if yield_key:
-            for i in range(start, stop):
+            for _ in range(n):
                 sample = self._get_next_sample(gen)
-                self._i = i
                 yield sample['key'], pack(sample)
         else:
-            for i in range(start, stop):
+            for _ in range(n):
                 sample = self._get_next_sample(gen)
-                self._i = i
                 yield pack(sample)
 
     def slice(self, start, stop=None, yield_key=False, raw=False, copy=True):

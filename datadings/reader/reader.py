@@ -28,7 +28,6 @@ class Reader(metaclass=ABCMeta):
     _do_not_copy = ()
 
     def __init__(self):
-        self._i = 0
         self.getitem_max_slice_length = 512
         self.getitem_chunk_size = 64
 
@@ -69,30 +68,6 @@ class Reader(metaclass=ABCMeta):
         Returns the index of the sample with the given key.
         """
         pass
-
-    def seek_index(self, index):
-        """
-        Seek to the given index.
-        """
-        n = len(self)
-        if index < 0:
-            index += n
-        if index < 0 or index >= n:
-            raise IndexError(f'index {index} out of range for length {n} reader')
-        self._i = index
-
-    def seek(self, index):
-        """
-        Seek to the given index.
-        Alias for ``seek_index``.
-        """
-        self.seek_index(index)
-
-    def seek_key(self, key):
-        """
-        Seek to the sample with the given key.
-        """
-        self.seek_index(self.find_index(key))
 
     @abstractmethod
     def get(self, index, yield_key=False, raw=False, copy=True):
@@ -139,62 +114,6 @@ class Reader(metaclass=ABCMeta):
         """
         pass
 
-    def next(self):
-        """
-        Returns the next sample.
-
-        This can be slow for file-based readers if a lot of
-        samples are to be read.
-        Consider using iter instead::
-
-            it = iter(reader)
-            while 1:
-                next(it)
-                ...
-
-        Or simply loop over the reader::
-
-            for sample in reader:
-                ...
-        """
-        try:
-            sample = self.get(self._i)
-            self._i += 1
-            return sample
-        except IndexError:
-            raise StopIteration
-
-    def __next__(self):
-        return self.next()
-
-    def rawnext(self) -> bytes:
-        """
-        Return the next sample msgpacked as raw bytes.
-
-        This can be slow for file-based readers if a lot of
-        samples are to be read.
-        Consider using iter instead::
-
-            it = iter(reader)
-            while 1:
-                next(it)
-                ...
-
-        Or simply loop over the reader::
-
-            for sample in reader:
-                ...
-
-        Included for backwards compatibility and may be deprecated and
-        subsequently removed in the future.
-        """
-        try:
-            sample = self.get(self._i, raw=True)
-            self._i += 1
-            return sample
-        except IndexError:
-            raise StopIteration
-
     def __getitem__(self, index):
         if isinstance(index, slice):
             start, stop, step = index.indices(len(self))
@@ -211,8 +130,8 @@ class Reader(metaclass=ABCMeta):
 
     def _iter_impl(
             self,
-            start=None,
-            stop=None,
+            start,
+            stop,
             yield_key=False,
             raw=False,
             copy=True,
@@ -261,10 +180,7 @@ class Reader(metaclass=ABCMeta):
         n = len(self)
 
         if start is None:
-            if self._i == n:
-                # return to start
-                self.seek_index(0)
-            start = self._i
+            start = 0
         else:
             if start < 0:
                 start += n
@@ -272,16 +188,14 @@ class Reader(metaclass=ABCMeta):
                 raise IndexError(f'index {start} out of range for length {n} reader')
 
         start, stop, _ = slice(start, stop).indices(len(self))
-        for sample in self._iter_impl(
+        yield from self._iter_impl(
             start,
             stop,
-            yield_key,
-            raw,
-            copy,
-            chunk_size,
-        ):
-            self._i += 1
-            yield sample
+            yield_key=yield_key,
+            raw=raw,
+            copy=copy,
+            chunk_size=chunk_size,
+        )
 
     def __iter__(self):
         return self.iter()
