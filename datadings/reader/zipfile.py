@@ -2,7 +2,6 @@ from typing import Union
 from typing import Sequence
 from typing import Callable
 
-import os
 import os.path as pt
 import itertools as it
 import zipfile
@@ -92,7 +91,7 @@ class ZipFileReader(ListReader):
         self._path = str(path)
         # single patterns must be wrapped in tuple
         if isinstance(patterns, (str, Path)):
-            patterns = patterns,
+            patterns = (patterns,)
         self._args = (
             path,
             patterns,

@@ -20,7 +20,7 @@ def check_included(filename, include, exclude):
 
 
 def yield_file(infile, prefix, separator):
-    with open(infile) as f:
+    with open(infile, encoding='utf-8') as f:
         for line in f:
             parts = line.strip('\n').split(separator)
             path = parts[0]

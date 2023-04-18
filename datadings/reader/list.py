@@ -98,7 +98,7 @@ class ListReader(Reader):
             initfun(sample)
             key = sample.get('key', i)
             if key in self._index:
-                raise ValueError('duplicate key %r' % key)
+                raise ValueError(f'duplicate key {key!r}')
             sample['key'] = key
             self._index[key] = i
         self.labels = labels or sorted_labels(self._samples)
