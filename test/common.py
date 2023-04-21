@@ -4,6 +4,18 @@ from .dataset import KEYS
 from .dataset import make_key
 
 
+def no_repetitions(reader):
+    """
+    Check if a reader repeats keys
+    """
+    seen = set()
+    with reader:
+        for sample in reader:
+            key = sample["key"]
+            assert key not in seen, key
+            seen.add(key)
+
+
 def missing_keys(reader):
     """
     Check if a reader returns all expected keys
@@ -13,6 +25,18 @@ def missing_keys(reader):
         for sample in reader:
             keys.remove(sample["key"])
     assert not keys, keys
+
+
+def correct_length(reader):
+    """
+    Check if a reader returns expected number of samples
+    """
+    n = len(reader)
+    with reader:
+        c = 0
+        for _ in reader:
+            c += 1
+    assert n == c, f"len = {n} != {c} = count"
 
 
 def return_after_iter(reader):
