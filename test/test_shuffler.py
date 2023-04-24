@@ -15,5 +15,35 @@ def test_length():
     correct_length(Shuffler(MsgpackReader(MSGPACK_PATH)))
 
 
+def test_length_empty():
+    r = Shuffler(MsgpackReader(MSGPACK_PATH))
+    for i in range(0, len(r), 809):
+        correct_length(r, start=i, stop=i)
+
+
+def test_length_start():
+    r = Shuffler(MsgpackReader(MSGPACK_PATH))
+    for i in range(0, len(r) // 2, 809):
+        correct_length(r, start=i)
+
+
+def test_length_stop():
+    r = Shuffler(MsgpackReader(MSGPACK_PATH))
+    for i in range(len(r) // 2 + 1, len(r), 809):
+        correct_length(r, stop=i)
+
+
+def test_length_stop_negative():
+    r = Shuffler(MsgpackReader(MSGPACK_PATH))
+    for i in range(0, len(r) // 2, 809):
+        correct_length(r, stop=-i)
+
+
+def test_length_start_stop():
+    r = Shuffler(MsgpackReader(MSGPACK_PATH))
+    for i in range(0, len(r) // 2, 809):
+        correct_length(r, start=i, stop=-i)
+
+
 def test_repetitions():
     no_repetitions(Shuffler(MsgpackReader(MSGPACK_PATH)))

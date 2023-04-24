@@ -244,10 +244,16 @@ class QuasiShuffler(Augment):
             copy=True,
             chunk_size=16,
     ):
+        self._offset += 1
+        n = stop - start
+        # early stop if nothing to do
+        if n <= 0:
+            return
+
         chunk_size = chunk_size or self.chunk_size
         rand = Random()
-        rand.seed(self._seed + self._offset, version=2)
-        self._offset += 1
+        # -1 because we incremented earlier, before early stop
+        rand.seed(self._seed + self._offset - 1, version=2)
 
         chunk_order = list(range(self.num_chunks))
         rand.shuffle(chunk_order)
@@ -290,6 +296,8 @@ class QuasiShuffler(Augment):
             # once index is reached, read samples from reader
             if i >= start:
                 for sample in reader.slice(index, b, yield_key=yield_key, raw=raw):
+                    if n <= 0:
+                        break
                     buffer_pos = rand.randrange(buf_size)
                     buffer_value = buffer[buffer_pos]
                     if type(buffer_value) is _Placeholder:
@@ -298,20 +306,18 @@ class QuasiShuffler(Augment):
                     buffer[buffer_pos] = sample
                     i += 1
                     n -= 1
-                    if n <= 0:
-                        break
             if n <= 0:
                 break
 
         # yield rest of buffer
         buffer_start = max(0, buf_size - self._len + i)
         for buffer_value in buffer[buffer_start:]:
+            if n <= 0:
+                break
             if type(buffer_value) is _Placeholder:
                 buffer_value = reader.get(buffer_value, yield_key=yield_key, raw=raw)
             yield buffer_value
             n -= 1
-            if n <= 0:
-                break
 
     def find_key(self, index):
         raise NotImplementedError("QuasiShuffler does not implement random access")

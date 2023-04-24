@@ -27,16 +27,17 @@ def missing_keys(reader):
     assert not keys, keys
 
 
-def correct_length(reader):
+def correct_length(reader, start=None, stop=None):
     """
     Check if a reader returns expected number of samples
     """
-    n = len(reader)
+    start_ind, stop_ind, _ = slice(start, stop).indices(len(reader))
+    n = stop_ind - start_ind
     with reader:
         c = 0
-        for _ in reader:
+        for _ in reader.iter(start=start, stop=stop):
             c += 1
-    assert n == c, f"len = {n} != {c} = count"
+    assert n == c, f"expected = {n} != {c} = got"
 
 
 def return_after_iter(reader):
