@@ -168,7 +168,7 @@ def write_set(split, outdir, gen, args):
         return ImageClassificationData(key, data, label)
 
     pool = ThreadPool(args.threads)
-    with FileWriter(outfile, total=TOTAL[split]) as writer:
+    with FileWriter(outfile, total=TOTAL[split], overwrite=args.no_confirm) as writer:
         for sample in pool.imap_unordered(__verify_inner, gen):
             writer.write(sample)
 
