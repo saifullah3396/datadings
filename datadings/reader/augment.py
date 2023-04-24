@@ -221,7 +221,7 @@ class QuasiShuffler(Augment):
     def __init__(self, reader, buf_size=0.01, chunk_size=16, seed=None):
         super().__init__(reader)
         if buf_size < 1:
-            buf_size = ceil(self._len * 0.01)
+            buf_size = ceil(self._len * buf_size)
         buf_size = int(buf_size)
         self.reader = reader
         # buf size is a multiple of chunk_size

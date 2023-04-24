@@ -8,6 +8,7 @@ from ..reader import MsgpackReader
 from ..reader import Shuffler
 from ..reader import QuasiShuffler
 from ..writer import RawWriter
+from ..tools import yield_threaded
 
 
 def shuffle(infile, outfile, args):
@@ -22,8 +23,9 @@ def shuffle(infile, outfile, args):
             chunk_size=args.chunk_size,
             seed=random.randrange(2**32)
         )
+    gen = gen = yield_threaded(shuffler.iter(yield_key=True, raw=True))
     with RawWriter(outfile, total=n, overwrite=args.no_confirm) as writer:
-        for key, raw in shuffler.iter(yield_key=True, raw=True):
+        for key, raw in gen:
             writer.write(key, raw)
 
 
@@ -45,6 +47,7 @@ def main():
     parser.add_argument(
         '--buf-size',
         type=float,
+        default=0.01,
         help='size of the shuffling buffer for fast shuffling; '
              'values less than 1 are interpreted as fractions of '
              'the dataset length; bigger values improve '
@@ -53,6 +56,7 @@ def main():
     parser.add_argument(
         '--chunk-size',
         type=int,
+        default=16,
         help='size of chunks read by the fast shuffling algorithm; '
              'bigger values improve performance, but reduce randomness'
     )
