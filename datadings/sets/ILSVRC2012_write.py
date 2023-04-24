@@ -28,7 +28,7 @@ from PIL import Image
 from PIL import UnidentifiedImageError
 from simplejpeg import decode_jpeg
 from simplejpeg import decode_jpeg_header
-from simplejpeg import encode_jpeg as encode_jpeg
+from simplejpeg import encode_jpeg
 
 from ..writer import FileWriter
 from .tools import open_comp
