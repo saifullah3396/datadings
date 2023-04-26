@@ -33,6 +33,9 @@ def create_samples(number=10101, labels=10):
 
 
 def create_dataset():
+    # create the data root directory
+    ROOT.mkdir(parents=True, exist_ok=True)
+
     samples = list(create_samples())
     keys = [sample['key'] for sample in samples]
     # pickle original
