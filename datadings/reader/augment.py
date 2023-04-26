@@ -334,8 +334,8 @@ class QuasiShuffler(Augment):
         raise NotImplementedError("QuasiShuffler does not implement random access")
 
 
-def _repeater_index(i, length, total):
-    if i < -total or i >= total:
+def _repeater_index(i, length, total, is_stop=False):
+    if i < -total or i >= total + is_stop:
         raise IndexError(f'index {i} out of range for length {total} reader')
     if i < 0:
         i += total
@@ -387,7 +387,7 @@ class Repeater(Augment):
         # actual start/stop index in the wrapped reader
         # and which number repetition start/stop fall into
         start, start_rep = _repeater_index(start, self._len, total)
-        stop, stop_rep = _repeater_index(stop, self._len, total)
+        stop, stop_rep = _repeater_index(stop, self._len, total, is_stop=True)
         # for the simplest case, both start and stop are in the same repetition
         if start_rep == stop_rep:
             return self._reader.iter(
