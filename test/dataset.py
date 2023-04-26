@@ -6,7 +6,7 @@ import pickle
 from datadings.writer import FileWriter
 
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent / 'data'
 PICKLE_PATH = ROOT / 'test_dataset.pkl'
 ZIP_PATH = ROOT / 'test_dataset.zip'
 MSGPACK_PATH = ROOT / 'test_dataset.msgpack'
@@ -14,7 +14,7 @@ DIRECTORY_PATH = ROOT / 'test_dataset'
 
 
 def make_key(i):
-    return 'sample_%d.txt' % i
+    return f'sample_{i}.txt'
 
 
 def make_data(i, sample_size=50*1024):
