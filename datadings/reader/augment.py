@@ -191,8 +191,8 @@ class QuasiShuffler(Augment):
     order.
     Shuffling follows these steps:
 
-    1. Fill the buffer with chunks.
-    2. Read the next chunk.
+    1. Fill the buffer with random chunks.
+    2. Read the next random chunk.
     3. Select a random sample from the buffer and yield it.
     4. Replace the sample with the next sample from the current chunk.
     5. If there are chunks left, goto 2.
