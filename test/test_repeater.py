@@ -1,6 +1,9 @@
+from collections import Counter
+
 from datadings.reader import MsgpackReader
 from datadings.reader.augment import Repeater
 
+from .dataset import KEYS
 from .dataset import MSGPACK_PATH
 from .common import missing_keys
 from .common import return_after_iter
@@ -53,3 +56,26 @@ def test_iter_stop():
 
 def test_iter_range():
     iter_range(make_reader())
+
+
+def test_iter_repeat():
+    # check that each key is repeated <times> times
+    times = 5
+    keys = set(KEYS)
+    with make_reader(times=times) as r:
+        count = Counter(sample['key'] for sample in r)
+    assert all(c == times for c in count.values())
+    assert not keys - set(count)
+
+
+def test_iter_repeat_range():
+    # start iterating in the middle of the reader and
+    # stop such that each key is repeated <times - 1> times
+    keys = set(KEYS)
+    times = 5
+    with make_reader(times=times) as r:
+        n = len(r) // times
+        i = n // 2
+        count = Counter(sample['key'] for sample in r.iter(start=i, stop=-(n-i)))
+    assert all(c == times - 1 for c in count.values())
+    assert not keys - set(count)
