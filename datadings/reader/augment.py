@@ -64,7 +64,7 @@ class Range(Augment):
     Extract a range of samples from a given reader.
 
     ``start`` and ``stop`` behave like the parameters of the
-    ``range`` function.
+    :python:`range` function.
 
     Parameters:
         reader: reader to sample from
@@ -347,8 +347,8 @@ class Repeater(Augment):
     Repeat a :py:class:`Reader <datadings.reader.reader.Reader`
     a fixed number of times.
 
-    Warning:
-        Augments are not thread safe!
+    Note:
+        ``find_index`` returns the first occurrence.
     """
     def __init__(self, reader, times):
         super().__init__(reader)
@@ -439,9 +439,8 @@ def _cycler_index(i, length):
 class Cycler(Augment):
     """
     Infinitely cycle a :py:class:`Reader <datadings.reader.reader.Reader`.
-
-    Warning:
-        Augments are not thread safe!
+    Iterators can be requested with any start/stop index.
+    Large indexes simply wrap around.
     """
     def iter(
             self,
@@ -519,3 +518,23 @@ class Cycler(Augment):
                 copy=copy,
                 chunk_size=chunk_size,
             )
+
+
+class Slicer:
+    """
+    A wrapper for :python:`itertools.islice`.
+    ``iter(slicer)`` is equivalent to ``itertools.islice(iterable, length)``.
+
+    Warning:
+        ``len(slicer) == length``,
+        even though there is no way to actually guarantee this.
+    """
+    def __init__(self, iterable, length):
+        self.iterable = iterable
+        self.length = length
+
+    def __len__(self):
+        return self.length
+
+    def __iter__(self):
+        return it.islice(self.iterable, self.length)
