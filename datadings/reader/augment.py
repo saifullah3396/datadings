@@ -6,6 +6,7 @@ How readers are used is largely unaffected.
 """
 
 from abc import ABCMeta
+import itertools as it
 from math import ceil
 from random import Random
 
@@ -195,6 +196,7 @@ class QuasiShuffler(Augment):
     3. Select a random sample from the buffer and yield it.
     4. Replace the sample with the next sample from the current chunk.
     5. If there are chunks left, goto 2.
+    6. Shuffle the buffer and yield its contents.
 
     This means there are typically more samples from the current chunk
     in the buffer than there would be if a true shuffle was used.
@@ -204,31 +206,25 @@ class QuasiShuffler(Augment):
     equal to the number of classes in the dataset.
 
     Note:
-        Seeking and resuming iteration with a new iterator are relatively
-        costly operations. If possible create one iterator and use it
-        repeatedly.
+        Creating a new iterator, especially from a specific start position,
+        is a costly operation. If possible create one iterator and use it
+        until it is exhausted.
 
     Parameters:
         reader: the reader to wrap
         buf_size: size of the buffer; values less than 1 are interpreted
                   as fractions of the dataset length; bigger values improve
                   randomness, but use more memory
-        chunk_size: size of each chunk; bigger values improve performance,
-                    but reduce randomness
         seed: random seed to use;
-              defaults to ``len(reader) * self.buf_size * chunk_size``
+              defaults to ``len(reader) * buf_size * chunk_size``
     """
-    def __init__(self, reader, buf_size=0.01, chunk_size=16, seed=None):
+    def __init__(self, reader, buf_size=0.01, seed=None):
         super().__init__(reader)
         if buf_size < 1:
             buf_size = ceil(self._len * buf_size)
-        buf_size = int(buf_size)
+        self.buf_size = int(buf_size)
         self.reader = reader
-        # buf size is a multiple of chunk_size
-        self.buf_size = int(ceil(buf_size / chunk_size)) * chunk_size
-        self.chunk_size = chunk_size
-        self.num_chunks = ceil(self._len / chunk_size)
-        self._seed = len(reader) * self.buf_size * chunk_size if seed is None else seed
+        self._seed = seed
         self._offset = 0
 
     def seed(self, seed):
@@ -250,12 +246,18 @@ class QuasiShuffler(Augment):
         if n <= 0:
             return
 
-        chunk_size = chunk_size or self.chunk_size
-        rand = Random()
-        # -1 because we incremented earlier, before early stop
-        rand.seed(self._seed + self._offset - 1, version=2)
+        # buf size is a multiple of chunk_size
+        buf_size = int(ceil(self.buf_size / chunk_size)) * chunk_size
+        num_chunks = ceil(self._len / chunk_size)
 
-        chunk_order = list(range(self.num_chunks))
+        rand = Random()
+        seed = self._seed
+        if seed is None:
+            seed = len(self.reader) * self.buf_size * chunk_size
+        # -1 because we incremented offset earlier
+        rand.seed(seed + self._offset - 1, version=2)
+
+        chunk_order = list(range(num_chunks))
         rand.shuffle(chunk_order)
         chunks = ((
             c * chunk_size,
@@ -268,12 +270,12 @@ class QuasiShuffler(Augment):
         buffer = []
 
         # for index < buffer size, fill buffer with actual data
-        if start < self.buf_size:
-            for _, (a, b) in zip(range(self.buf_size // chunk_size), chunks):
+        if start < buf_size:
+            for a, b in it.islice(chunks, buf_size // chunk_size):
                 buffer.extend(reader.slice(a, b, yield_key=yield_key, raw=raw))
         # for larger index, fill with placeholders
         else:
-            for _, (a, b) in zip(range(self.buf_size // chunk_size), chunks):
+            for a, b in it.islice(chunks, buf_size // chunk_size):
                 buffer.extend(map(_Placeholder, range(a, b)))
 
         # buffer may be smaller than requested if last chunk is used and
@@ -309,9 +311,9 @@ class QuasiShuffler(Augment):
             if n <= 0:
                 break
 
-        # yield rest of buffer
-        buffer_start = max(0, buf_size - self._len + i)
-        for buffer_value in buffer[buffer_start:]:
+        # yield the buffer
+        rand.shuffle(buffer)
+        for buffer_value in buffer:
             if n <= 0:
                 break
             if type(buffer_value) is _Placeholder:
