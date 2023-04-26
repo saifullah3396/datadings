@@ -55,8 +55,10 @@ def return_after_iter(reader):
             break
 
 
-def seek_index(reader):
-    index = list(range(len(reader)))
+def seek_index(reader, length=None):
+    if length is None:
+        length = len(reader)
+    index = list(range(length))
     random.shuffle(index)
     with reader:
         for i in index:
@@ -74,8 +76,10 @@ def seek_key(reader):
             assert key == sample['key'], (key, sample['key'])
 
 
-def find_index(reader):
-    index = list(range(len(reader)))
+def find_index(reader, length=None):
+    if length is None:
+        length = len(reader)
+    index = list(range(length))
     random.shuffle(index)
     with reader:
         for i in index:
