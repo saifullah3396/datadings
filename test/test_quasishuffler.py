@@ -45,5 +45,5 @@ def test_length_start_stop():
         correct_length(r, start=i, stop=-i)
 
 
-def test_repetitions():
+def test_no_repetitions():
     no_repetitions(QuasiShuffler(MsgpackReader(MSGPACK_PATH)))
