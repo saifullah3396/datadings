@@ -22,8 +22,9 @@ def missing_keys(reader):
     """
     keys = set(KEYS)
     with reader:
-        for sample in reader:
-            keys.remove(sample["key"])
+        it = iter(reader)
+        while keys:
+            keys.remove(next(it)["key"])
     assert not keys, keys
 
 
