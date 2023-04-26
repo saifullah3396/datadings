@@ -4,8 +4,6 @@ from typing import Callable
 import inspect
 import warnings
 
-from ..reader.reader import Reader
-
 from PIL import Image
 from simplejpeg import decode_jpeg
 from torch.utils.data import Dataset as _Dataset
@@ -14,6 +12,8 @@ from torch.utils.data import get_worker_info
 from torch.distributed import is_initialized
 from torch.distributed import get_rank
 from torch.distributed import get_world_size
+
+from ..reader.reader import Reader
 
 
 def _noop(sample):
