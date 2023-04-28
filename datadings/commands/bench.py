@@ -12,6 +12,8 @@ import os.path as pt
 from ..reader import MsgpackReader
 from ..reader import DirectoryReader
 from ..reader import Shuffler
+from ..tools.argparse import make_parser_simple
+from ..tools.argparse import argument_infile
 from ..tools import make_printer
 
 
@@ -28,7 +30,7 @@ def bench(readerfun, args):
     printer = make_printer(desc='bench ' + pt.basename(args.infile), total=len(reader))
     a = time.time()
     if args.raw:
-        for _ in reader.rawiter():
+        for _ in reader.iter(raw=True):
             printer()
     else:
         for _ in reader:
@@ -40,8 +42,7 @@ def bench(readerfun, args):
         num_bytes = reader.bytes_read
     b = num_bytes / d / 1024 / 1024
     printer.close()
-    print('%s samples read in %.2f seconds, %.2f samples/s, %.2f MB/s'
-          % (n, d, s, b), end='')
+    print(f'{n} samples read in {d:.2f} seconds, {s:.2f} samples/s, {b:.2f} MB/s', end='')
 
 
 def reader_msgpack(args):
@@ -60,9 +61,6 @@ def reader_directory(args):
 
 
 def main():
-    from ..tools.argparse import make_parser_simple
-    from ..tools.argparse import argument_infile
-
     parser = make_parser_simple(__doc__)
     argument_infile(parser)
     parser.add_argument(
@@ -108,7 +106,7 @@ def main():
         default=(),
         help='DirectoryReader only: Exclude patterns.',
     )
-    args, unknown = parser.parse_known_args()
+    args = parser.parse_args()
     if args.infile.endswith('.msgpack'):
         bench(reader_msgpack, args)
     elif args.infile.endswith('.zip'):
