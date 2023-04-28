@@ -103,6 +103,7 @@ Contents
 
     usage.rst
     conventions.rst
+    datasets.rst
     integrations.rst
     file_format.rst
     custom_dataset.rst

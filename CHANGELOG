@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [4.0.0] - 2023-04-28
 ### Added
 - Slicer class to complement updated Augments
+- ImageNet1k alias for ILSVRC2012
 ### Changed
 - Remove legacy seek/next Reader API
 - Update Augments to new Reader API
