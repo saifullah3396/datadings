@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [4.0.0] - 2023-04-28
+### Added
+- Slicer class to complement updated Augments
+### Changed
+- Remove legacy seek/next Reader API
+- Update Augments to new Reader API
+- Deprecate YFCC100m dataset - use https://gitlab.com/jfolz/yfcc100m instead
+### Fixed
+- no-confirm option not working for ILSVRC2012 dataset
+
+
 ## [3.4.6] - 2022-07-06
 ### Fixed
 - ImageNet21k: decompress images that are gzipped
