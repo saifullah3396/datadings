@@ -72,7 +72,7 @@ YFCC100m_         Yahoo Flickr Creative Commons 100 M pics
 .. _SALICON2017: http://salicon.net/challenge-2017/
 .. _Vaihingen: http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-vaihingen.html
 .. _VOC2012: http://host.robots.ox.ac.uk/pascal/VOC/voc2012/
-.. _YFCC100m: http://yfcc100m.appspot.com/about
+.. _YFCC100m: https://multimediacommons.wordpress.com/yfcc100m-core-dataset/
 
 
 
@@ -120,20 +120,19 @@ using a ``MsgpackReader`` as a context manager::
             [do dataset things]
 
 This standard iterator returns dictionaries.
-Use the ``rawiter()`` method to get samples as messagepack encoded
+Use ``reader.iter(raw=True)`` to get samples as messagepack encoded
 bytes instead.
 
 Reading specific samples::
 
-    reader.seek_key('i14020903.jpeg')
-    print(reader.next()['key'])
-    reader.seek_index(100)
-    print(reader.next()['key'])
+    i = reader.find_index('i14020903.jpeg')
+    print(reader[i]['key'])
+    print(reader.get(i)['key'])
 
 Reading samples as raw bytes::
 
-    raw = reader.rawnext()
-    for raw in reader.rawiter():
+    raw = reader.get(100, raw=True)
+    for raw in reader.iter(raw=True):
         print(type(raw), len(raw))
 
 Number of samples::
@@ -150,6 +149,13 @@ in a ``Shuffler``::
         for sample in reader:
             # do dataset things, but in random order!
 
+Alternatively the
+:py:class:`QuasiShuffler <datadings.reader.augment.QuasiShuffler>`
+offers slightly less random, but much faster iteration.
+It keeps a buffer of samples and reads random chunks instead of
+single samples.
+Randomness increases with bigger buffers.
+
 A common use case is to iterate over the whole dataset multiple times.
 This can be done with the ``Cycler``::
 
@@ -157,4 +163,3 @@ This can be done with the ``Cycler``::
     with Cycler(MsgpackReader('MIT1003.msgpack')) as reader:
         for sample in reader:
             # do dataset things, but FOREVER!
-
