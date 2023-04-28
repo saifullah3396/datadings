@@ -102,6 +102,7 @@ Contents
     :maxdepth: 2
 
     usage.rst
+    commands.rst
     conventions.rst
     datasets.rst
     integrations.rst

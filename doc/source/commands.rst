@@ -1,4 +1,7 @@
-"""A number of useful tools are installed with datadings.
+Commands
+========
+
+A number of useful tools are installed with datadings.
 These will be accessible on the command line as ``datadings-*``
 where ``*`` is replaced with one of the submodule names.
 
