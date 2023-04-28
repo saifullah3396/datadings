@@ -1,4 +1,4 @@
-Sphinx==4.0.3
-sphinx-rtd-theme==0.5.2
+Sphinx>=6.2.1,<7.0.0
+sphinx-rtd-theme>=1.2.0,<2.0.0
 opencv-python-headless>=4.0.0.0
 -r requirements.txt
