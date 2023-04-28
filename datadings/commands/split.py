@@ -12,37 +12,31 @@ import sys
 import os.path as pt
 
 from ..reader import MsgpackReader
+from ..tools.argparse import make_parser_simple
+from ..tools.argparse import argument_infile
+from ..tools.argparse import argument_outfiles
+from ..tools.argparse import argument_no_confirm
 from ..writer import RawWriter
 
 
 def split_dataset(infile, outfiles, splits, overwrite):
     reader = MsgpackReader(infile)
     if max(splits) >= len(reader):
-        print('max split = %d >= %d = len(dataset)' % (max(splits), len(reader)))
+        print(f'max split = {max(splits)} >= {len(reader)} = len(dataset)')
         sys.exit(1)
     splits = list(splits) + [len(reader)]
-    i = 1
     with reader:
-        for outfile, split in zip(outfiles, splits):
+        for outfile, start, stop in zip(outfiles, splits, splits[1:]):
             try:
                 with RawWriter(outfile, overwrite=overwrite) as writer:
-                    for i, (key, raw) in enumerate(reader.rawiter(yield_key=True), i):
+                    for key, raw in reader.iter(start=start, stop=stop, yield_key=True, raw=True):
                         writer.write(key, raw)
-                        if i >= split:
-                            break
             # user declined overwriting outfile
             except FileExistsError:
-                pass
-            # seek to split position in case user declined overwriting
-            reader.seek(split)
+                print(f'{outfile} exists, skipping')
 
 
 def main():
-    from ..tools.argparse import make_parser_simple
-    from ..tools.argparse import argument_infile
-    from ..tools.argparse import argument_outfiles
-    from ..tools.argparse import argument_no_confirm
-
     parser = make_parser_simple(__doc__)
     argument_infile(parser, help='File to split.')
     argument_outfiles(parser)
@@ -53,13 +47,13 @@ def main():
         help='Index where infile is split.',
     )
     argument_no_confirm(parser)
-    args, unknown = parser.parse_known_args()
+    args = parser.parse_args()
 
     infile = pt.abspath(args.infile)
     splits = args.split
     if sorted(splits) != splits:
         parser.print_usage()
-        print('Splits positions must be in ascending order.')
+        print('Split positions must be in ascending order.')
         sys.exit(1)
     if min(splits) < 1:
         parser.print_usage()
@@ -69,7 +63,7 @@ def main():
     outfiles = args.outfiles
     if outfiles is None:
         root, ext = pt.splitext(infile)
-        outfiles = ['%s-%d%s' % (root, i, ext) for i in range(len(splits)+1)]
+        outfiles = [f'{root}-{i}{ext}' % (root, i, ext) for i in range(len(splits)+1)]
     outfiles = [pt.abspath(f) for f in outfiles]
 
     if infile in outfiles:
