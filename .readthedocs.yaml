@@ -26,4 +26,4 @@ python:
     - method: pip
       path: .
     # install doc requirements
-    - requirements: docs-requirements.txt
+    - requirements: doc-requirements.txt
