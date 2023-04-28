@@ -12,6 +12,9 @@ import random
 
 from ..reader import MsgpackReader
 from ..reader import Shuffler
+from ..tools.argparse import make_parser_simple
+from ..tools.argparse import argument_infile
+from ..tools.argparse import argument_outfile_positional
 from ..writer import RawWriter
 
 
@@ -22,7 +25,7 @@ def merge_concat(infiles, outfile, shuffle):
             if shuffle:
                 reader = Shuffler(reader)
             with reader:
-                for key, raw in reader.rawiter(yield_key=True):
+                for key, raw in reader.iter(yield_key=True, raw=True):
                     writer.write(key, raw)
 
 
@@ -55,7 +58,7 @@ def merge_random(infiles, outfile, shuffle=False):
         ranges = setup_ranges([len(r) for r in readers])
     except ZeroDivisionError:
         raise ValueError('zero samples found')
-    iters = [r.rawiter(yield_key=True) for r in readers]
+    iters = [r.iter(yield_key=True, raw=True) for r in readers]
     print(len(iters), len(ranges))
     with RawWriter(outfile) as writer:
         while iters:
@@ -69,10 +72,6 @@ def merge_random(infiles, outfile, shuffle=False):
 
 
 def main():
-    from ..tools.argparse import make_parser_simple
-    from ..tools.argparse import argument_infile
-    from ..tools.argparse import argument_outfile_positional
-
     parser = make_parser_simple(__doc__)
     argument_infile(parser, nargs='+', help='Files to merge.')
     argument_outfile_positional(parser)
@@ -87,7 +86,7 @@ def main():
         action='store_true',
         help='Shuffle each dataset before merging.',
     )
-    args, unknown = parser.parse_known_args()
+    args = parser.parse_args()
     infiles = [pt.abspath(f) for f in args.infile + args.infiles]
     outfile = pt.abspath(args.outfile)
     if outfile in infiles:
