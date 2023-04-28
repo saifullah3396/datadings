@@ -22,6 +22,7 @@ import zipfile
 import re
 import io
 from collections import defaultdict
+import warnings
 
 import numpy as np
 from simplejpeg import decode_jpeg
@@ -35,6 +36,14 @@ from .YFCC100m_counts import FILE_COUNTS
 from .YFCC100m_counts import FILES_TOTAL
 from ..tools import document_keys
 from ..tools.compression import open_comp
+
+
+warnings.warn(
+    "the YFCC100m dataset is deprecated, "
+    "please migrate to https://gitlab.com/jfolz/yfcc100m",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 
 __doc__ += document_keys(ImageData)

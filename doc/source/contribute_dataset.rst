@@ -113,9 +113,6 @@ For some datasets it simply does not make sense to convert them
 to the datadings file format.
 Typically conversion requires (at least temporarily) roughly twice
 the space as the original data.
-With the :py:mod:`YFCC100m <datadings.sets.YFCC100m>` dataset for
-example the conversion would take a very long time and take up
-many TiB additional space.
 Other examples are be large video files that should really be
 streamed while decoding instead of loading all of the data at once,
 which datadings does not yet support.
@@ -128,9 +125,6 @@ subclasses.
 An effort should be made to reduce processing times.
 The ``FOOReader`` should read directly from the source files of the
 dataset and perform limited pre-processing.
-For example, datadings includes a list of samples from the
-:py:mod:`YFCC100m <datadings.sets.YFCC100m>` dataset that are not
-useful, because they were either damaged or blank images.
 This slow process of analyzing every image was performed offline
 to speed up subsequent iterations of the dataset.
 
