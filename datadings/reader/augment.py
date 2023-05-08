@@ -459,7 +459,7 @@ class Cycler(Augment):
         # loop forever from start index
         if stop is None:
             yield from self._reader.iter(
-                0,
+                start,
                 stop=self._len,
                 yield_key=yield_key,
                 raw=raw,
